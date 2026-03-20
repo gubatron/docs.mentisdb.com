@@ -49,6 +49,7 @@ COPY --from=builder /app/target/site /app/site
 
 ENV RUST_LOG="info"
 ENV LEPTOS_OUTPUT_NAME="docs-mentisdb-com"
+ENV LEPTOS_SITE_ROOT="site"
 ENV PORT=8080
 
 EXPOSE 8080
