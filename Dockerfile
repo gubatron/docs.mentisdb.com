@@ -14,7 +14,8 @@ RUN rustup target add wasm32-unknown-unknown
 
 # Download pre-built cargo-leptos (avoids ~2GB RAM compile on CI)
 RUN curl -fsSL https://github.com/leptos-rs/cargo-leptos/releases/download/v0.3.5/cargo-leptos-x86_64-unknown-linux-gnu.tar.gz \
-    | tar -xzC /usr/local/bin \
+    | tar -xzC /tmp \
+    && mv /tmp/cargo-leptos-x86_64-unknown-linux-gnu/cargo-leptos /usr/local/bin/cargo-leptos \
     && chmod +x /usr/local/bin/cargo-leptos
 
 RUN cargo install wasm-bindgen-cli --version 0.2.114 --locked
