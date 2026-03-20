@@ -1,24 +1,22 @@
 # === Builder stage ===
-FROM rust:1.86-alpine AS builder
+FROM rust:slim-bookworm AS builder
 
-RUN apk add --no-cache \
-    musl-dev \
-    openssl-dev \
-    openssl-libs-static \
-    perl \
-    pkgconfig \
-    build-base \
-    clang \
-    lld \
-    mold \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
     nodejs \
-    npm
-
-ENV OPENSSL_NO_VENDOR=1
+    npm \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN rustup target add wasm32-unknown-unknown
 
-RUN cargo install cargo-leptos --locked
+# Download pre-built cargo-leptos (avoids ~2GB RAM compile on CI)
+RUN curl -fsSL https://github.com/leptos-rs/cargo-leptos/releases/download/v0.3.5/cargo-leptos-x86_64-unknown-linux-gnu.tar.gz \
+    | tar -xzC /usr/local/bin \
+    && chmod +x /usr/local/bin/cargo-leptos
+
 RUN cargo install wasm-bindgen-cli --version 0.2.114 --locked
 
 WORKDIR /app
@@ -33,15 +31,15 @@ RUN cargo fetch
 COPY . .
 
 ENV RUST_BACKTRACE=full
-RUN cargo leptos build --release -vv
+RUN cargo leptos build --release
 
 # === Runner stage ===
-FROM alpine:3.20 AS runner
+FROM debian:bookworm-slim AS runner
 
-RUN apk add --no-cache \
-    libstdc++ \
-    openssl \
-    ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
