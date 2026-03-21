@@ -666,3 +666,15 @@ img {
 
   strong { color: var(--accent); }
 }
+
+// ── Thought type group headings ───────────────────────────────
+.thought-type-group-label {
+  font-size:     0.8rem;
+  font-weight:   700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color:         var(--text-muted);
+  margin:        28px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}

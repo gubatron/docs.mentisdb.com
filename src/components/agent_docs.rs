@@ -73,43 +73,149 @@ pub fn AgentDocs() -> impl IntoView {
                     // ── Choosing Thought Types ───────────────────────────────
                     <section class="docs-section" id="thought-types">
                         <h2 id="thought-types">"Choosing Thought Types"</h2>
-                        <p>"Use the semantic type that matches the memory's job:"</p>
+                        <p>
+                            "ThoughtType is the semantic label for "
+                            <em>"what changed in the agent's internal model"</em>
+                            ". There are 28 types grouped by purpose. Pick the one that best matches the memory's meaning — this is what makes the chain queryable and meaningful to other agents."
+                        </p>
+
+                        <h3 class="thought-type-group-label">"🧑 About the User"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
-                                <span class="thought-type-name"><code>"Decision"</code></span>
-                                <p>"Chosen design or implementation direction"</p>
+                                <span class="thought-type-name"><code>"PreferenceUpdate"</code></span>
+                                <p>"A user's stated preference changed or became explicit. Use when the human tells you how they like things done."</p>
                             </div>
                             <div class="thought-type-card">
-                                <span class="thought-type-name"><code>"Constraint"</code></span>
-                                <p>"Hard boundary that must not drift"</p>
+                                <span class="thought-type-name"><code>"UserTrait"</code></span>
+                                <p>"A durable characteristic of the user was learned — their background, expertise level, communication style, or persistent goals."</p>
                             </div>
                             <div class="thought-type-card">
-                                <span class="thought-type-name"><code>"LessonLearned"</code></span>
-                                <p>"Retrospective rule distilled from a failure"</p>
+                                <span class="thought-type-name"><code>"RelationshipUpdate"</code></span>
+                                <p>"The agent's model of its relationship with the user changed — trust level, working dynamic, or role boundaries."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"🔬 Observations &amp; Knowledge"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Finding"</code></span>
+                                <p>"A concrete observation was recorded — something seen, measured, or confirmed in the environment."</p>
                             </div>
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Insight"</code></span>
-                                <p>"Non-obvious technical lesson"</p>
+                                <p>"A higher-level synthesis or realization — a non-obvious connection between facts that produces new understanding."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"FactLearned"</code></span>
+                                <p>"A factual piece of information was learned. Atomic and verifiable — not an opinion or synthesis."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"PatternDetected"</code></span>
+                                <p>"A recurring pattern was detected across events or interactions. Use when you notice the same thing happening repeatedly."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Hypothesis"</code></span>
+                                <p>"A tentative explanation or prediction was formed. Not yet verified — record it to track whether it holds."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Surprise"</code></span>
+                                <p>"An unexpected outcome or mismatch was observed — something that violated a prior expectation. Worth capturing to update the model."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"⚠️ Errors &amp; Corrections"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Mistake"</code></span>
+                                <p>"The agent recorded an error in its prior reasoning or action. Pair with a Correction thought that follows."</p>
                             </div>
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Correction"</code></span>
-                                <p>"An earlier assumption was wrong; this replaces it"</p>
+                                <p>"The corrected version of a prior mistake. Reference the Mistake thought via refs[] so the chain shows the full arc."</p>
                             </div>
                             <div class="thought-type-card">
-                                <span class="thought-type-name"><code>"Summary"</code></span>
-                                <p>
-                                    "Compressed state; pair with role "
-                                    <code>"Checkpoint"</code>
-                                    " for restart points"
-                                </p>
+                                <span class="thought-type-name"><code>"LessonLearned"</code></span>
+                                <p>"A durable operating heuristic distilled from prior struggle. What you wish you had known before. Future agents load these first."</p>
                             </div>
                             <div class="thought-type-card">
-                                <span class="thought-type-name"><code>"PreferenceUpdate"</code></span>
-                                <p>"Stable team or user preference"</p>
+                                <span class="thought-type-name"><code>"AssumptionInvalidated"</code></span>
+                                <p>"A previously trusted assumption was proven wrong. Prevents future agents from repeating the same wrong starting point."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"🗺️ Planning &amp; Decisions"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Constraint"</code></span>
+                                <p>"A requirement or hard limit that must not drift. Use for non-negotiable rules — performance budgets, API contracts, brand rules."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Plan"</code></span>
+                                <p>"A plan for future work was created or updated. Broader than a Subgoal — captures the overall approach or roadmap."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Subgoal"</code></span>
+                                <p>"A smaller unit of work carved out from a broader Plan. Use to break decomposed tasks into trackable pieces."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Decision"</code></span>
+                                <p>"A concrete choice was made. Include the rationale and alternatives considered so future agents understand the why."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"StrategyShift"</code></span>
+                                <p>"The agent changed its overall approach. Signals a pivot — explains why the old strategy was abandoned and what replaces it."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"💡 Exploration &amp; Ideas"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Wonder"</code></span>
+                                <p>"An open-ended curiosity or line of exploration worth pursuing. Low-commitment — doesn't demand resolution, just preserves the thread."</p>
                             </div>
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Question"</code></span>
-                                <p>"Unresolved issue worth preserving"</p>
+                                <p>"An unresolved question was recorded. More specific than Wonder — has a concrete answer waiting to be found."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Idea"</code></span>
+                                <p>"A possible future direction or design concept was proposed. Not yet committed to — records creative options before they're lost."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Experiment"</code></span>
+                                <p>"An experiment or trial was proposed or executed. Captures what was tested, the hypothesis, and (once known) the outcome."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"✅ Actions &amp; Progress"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"ActionTaken"</code></span>
+                                <p>"A meaningful action was performed — a command run, a file changed, a service deployed. Creates an audit trail of what the agent actually did."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"TaskComplete"</code></span>
+                                <p>"A task or milestone was completed. Marks a unit of work as done so other agents don't re-attempt it."</p>
+                            </div>
+                        </div>
+
+                        <h3 class="thought-type-group-label">"📍 State &amp; Continuity"</h3>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Checkpoint"</code></span>
+                                <p>"A resumption anchor. Write before a context window fills. Any agent reloading the chain searches for the latest Checkpoint first."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"StateSnapshot"</code></span>
+                                <p>"A broader snapshot of current state — system state, environment variables, project status. Wider scope than a Checkpoint."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Handoff"</code></span>
+                                <p>"Work or context was explicitly transferred to another agent or human. The receiving actor searches for the latest Handoff to pick up where the previous agent left off."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Summary"</code></span>
+                                <p>"A compressed view of prior thoughts. Pair with role "<code>"Summary"</code>" or "<code>"Compression"</code>" when reducing context before a reload."</p>
                             </div>
                         </div>
                     </section>
