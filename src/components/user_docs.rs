@@ -270,6 +270,22 @@ pub fn UserDocs() -> impl IntoView {
                             " — a lightweight alternative to explicit message passing between \
                              agents."
                         </p>
+                        <div class="docs-video">
+                            <p class="docs-video-caption">
+                                "Prefer a walkthrough first? This tutorial shows the fleet \
+                                 coordination flow end to end."
+                            </p>
+                            <div class="docs-video-frame">
+                                <iframe
+                                    src="https://www.youtube.com/embed/cFvq4pVHSU8"
+                                    title="MentisDB fleet coordination tutorial"
+                                    loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen="true"
+                                ></iframe>
+                            </div>
+                        </div>
 
                         <h3>"The pattern"</h3>
                         <ol>
