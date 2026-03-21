@@ -96,7 +96,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"🔬 Observations &amp; Knowledge"</h3>
+                        <h3 class="thought-type-group-label">"🔬 Observations & Knowledge"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Finding"</code></span>
@@ -124,7 +124,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"⚠️ Errors &amp; Corrections"</h3>
+                        <h3 class="thought-type-group-label">"⚠️ Errors & Corrections"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Mistake"</code></span>
@@ -144,7 +144,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"🗺️ Planning &amp; Decisions"</h3>
+                        <h3 class="thought-type-group-label">"🗺️ Planning & Decisions"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Constraint"</code></span>
@@ -168,7 +168,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"💡 Exploration &amp; Ideas"</h3>
+                        <h3 class="thought-type-group-label">"💡 Exploration & Ideas"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Wonder"</code></span>
@@ -188,7 +188,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"✅ Actions &amp; Progress"</h3>
+                        <h3 class="thought-type-group-label">"✅ Actions & Progress"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"ActionTaken"</code></span>
@@ -200,7 +200,7 @@ pub fn AgentDocs() -> impl IntoView {
                             </div>
                         </div>
 
-                        <h3 class="thought-type-group-label">"📍 State &amp; Continuity"</h3>
+                        <h3 class="thought-type-group-label">"📍 State & Continuity"</h3>
                         <div class="thought-type-grid">
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Checkpoint"</code></span>
