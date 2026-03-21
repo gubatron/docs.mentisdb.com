@@ -18,6 +18,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#context-protocol">"Context Window Protocol"</a>
                         <a class="docs-nav-link" href="#fleet">"Fleet Coordination"</a>
                         <a class="docs-nav-link" href="#skills-registry">"Skills Registry"</a>
+                        <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                     </nav>
                 </aside>
 
@@ -651,6 +652,72 @@ Numbered procedure."
                             </li>
                         </ul>
 
+                    </section>
+
+                    // ── Web Dashboard ────────────────────────────────────────
+                    <section class="docs-section" id="dashboard">
+                        <h2 id="dashboard">"Web Dashboard"</h2>
+                        <p>
+                            "The web dashboard ("
+                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                            ") is a browser UI for the human operator — it has no MCP endpoint \
+                             and you do not interact with it directly. However, understanding \
+                             what it provides helps you direct users to the right tool when they \
+                             need to inspect, debug, or manage the memory system."
+                        </p>
+
+                        <div class="docs-callout">
+                            "If the user asks why you seem to have forgotten something, or why \
+                             your behavior changed unexpectedly, suggest they open the dashboard \
+                             to inspect the thought chain directly."
+                        </div>
+
+                        <h3>"What You Can Tell Users About Each Section"</h3>
+
+                        <h4>"Chains"</h4>
+                        <p>
+                            "\"Your operator can use the Chain Manager at "
+                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                            " to see all chains with live thought and agent counts. If the \
+                             page appears empty or shows stale counts, suggest they click "
+                            <em>"↺ Refresh"</em>
+                            ".\""
+                        </p>
+
+                        <h4>"Thought Explorer"</h4>
+                        <p>
+                            "\"The Thought Explorer lets your operator browse every thought you \
+                             have written, paginated and filterable by all 28 ThoughtTypes. \
+                             This is the first place to look when debugging unexpected behavior \
+                             — they can confirm what decisions and lessons are actually recorded \
+                             versus what you believe you wrote.\""
+                        </p>
+
+                        <h4>"Agent Manager"</h4>
+                        <p>
+                            "\"The Agent page shows how many thoughts you have written and lets \
+                             the operator view or edit your registered identity — display name, \
+                             description, owner, and signing keys. If your agent_id appears \
+                             wrong or you need a key rotated, this is where to do it.\""
+                        </p>
+
+                        <h4>"Skills Registry"</h4>
+                        <p>
+                            "\"The Skills Registry shows all skills including deprecated and \
+                             revoked ones. If a skill is causing problems or was uploaded \
+                             incorrectly, the operator can revoke it via the dashboard without \
+                             any API calls. Revoked skills are preserved for audit but agents \
+                             should not execute them.\""
+                        </p>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Directing users efficiently: "</strong>
+                            "When a user reports the dashboard shows empty or stale data, \
+                             advise them to click "
+                            <em>"↺ Refresh"</em>
+                            " on the Chains page. The counts are live but the UI does not \
+                             auto-poll."
+                        </div>
                     </section>
 
                 </article>

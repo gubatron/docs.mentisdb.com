@@ -13,7 +13,9 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#installation">"Installation"</a>
                         <a class="docs-nav-link" href="#running">"Running the Daemon"</a>
                         <a class="docs-nav-link" href="#configuration">"Configuration"</a>
-                        <a class="docs-nav-link" href="#connecting">"Connecting Your AI Tool"</a>
+                        <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
+                        <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
+                        <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
                         <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                         <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                         <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
@@ -69,15 +71,33 @@ pub fn UserDocs() -> impl IntoView {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><code>"MENTISDB_DATA_DIR"</code></td>
-                                    <td><code>"~/.mentisdb"</code></td>
-                                    <td>"Where chain data is stored on disk"</td>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Storage"</strong></td>
                                 </tr>
                                 <tr>
-                                    <td><code>"MENTISDB_PORT"</code></td>
-                                    <td><code>"9471"</code></td>
-                                    <td>"Port for the HTTP server"</td>
+                                    <td><code>"MENTISDB_DIR"</code></td>
+                                    <td><code>"~/.cloudllm/mentisdb"</code></td>
+                                    <td>"Where chain data and TLS files are stored on disk"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_DEFAULT_KEY"</code></td>
+                                    <td><code>"borganism-brain"</code></td>
+                                    <td>
+                                        "The chain key used when no "
+                                        <code>"chain_key"</code>
+                                        " is specified"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_DEFAULT_STORAGE_ADAPTER"</code></td>
+                                    <td><code>"binary"</code></td>
+                                    <td>
+                                        "Storage format: "
+                                        <code>"binary"</code>
+                                        " (compact, default) or "
+                                        <code>"jsonl"</code>
+                                        " (human-readable)"
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>"MENTISDB_AUTO_FLUSH"</code></td>
@@ -88,23 +108,352 @@ pub fn UserDocs() -> impl IntoView {
                                         " for higher throughput (less durability)"
                                     </td>
                                 </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Networking — HTTP"</strong></td>
+                                </tr>
                                 <tr>
-                                    <td><code>"MENTISDB_DEFAULT_CHAIN"</code></td>
-                                    <td><code>"default"</code></td>
+                                    <td><code>"MENTISDB_BIND_HOST"</code></td>
+                                    <td><code>"127.0.0.1"</code></td>
                                     <td>
-                                        "The chain key used when no "
-                                        <code>"chain_key"</code>
-                                        " is specified"
+                                        "IP address the server binds to. Use "
+                                        <code>"0.0.0.0"</code>
+                                        " for network-wide access (combine with a dashboard PIN)"
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_MCP_PORT"</code></td>
+                                    <td><code>"9471"</code></td>
+                                    <td>"HTTP MCP server port"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_REST_PORT"</code></td>
+                                    <td><code>"9472"</code></td>
+                                    <td>"HTTP REST API port"</td>
+                                </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Networking — HTTPS"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_HTTPS_MCP_PORT"</code></td>
+                                    <td><code>"9473"</code></td>
+                                    <td>"HTTPS MCP server port. Set to 0 to disable"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_HTTPS_REST_PORT"</code></td>
+                                    <td><code>"9474"</code></td>
+                                    <td>"HTTPS REST API port. Set to 0 to disable"</td>
+                                </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"TLS"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_TLS_CERT"</code></td>
+                                    <td><code>"~/.cloudllm/mentisdb/tls/cert.pem"</code></td>
+                                    <td>"Path to the TLS certificate PEM (auto-generated on first start)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_TLS_KEY"</code></td>
+                                    <td><code>"~/.cloudllm/mentisdb/tls/key.pem"</code></td>
+                                    <td>"Path to the TLS private key PEM (auto-generated on first start)"</td>
+                                </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Logging"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_VERBOSE"</code></td>
+                                    <td><code>"true"</code></td>
+                                    <td>"Enable verbose startup and request logging"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_LOG_FILE"</code></td>
+                                    <td><em>"unset"</em></td>
+                                    <td>"Optional path to write logs to a file"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"RUST_LOG"</code></td>
+                                    <td><code>"info"</code></td>
+                                    <td>"Log level filter (trace, debug, info, warn, error)"</td>
+                                </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Audio"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_STARTUP_SOUND"</code></td>
+                                    <td><code>"true"</code></td>
+                                    <td>"Play a 4-note jingle on startup"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_THOUGHT_SOUNDS"</code></td>
+                                    <td><code>"false"</code></td>
+                                    <td>"Play a unique sound for each ThoughtType on append"</td>
+                                </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Web Dashboard"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_DASHBOARD_PORT"</code></td>
+                                    <td><code>"9475"</code></td>
+                                    <td>"Dashboard HTTP port. Set to 0 to disable"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_DASHBOARD_PIN"</code></td>
+                                    <td><em>"unset"</em></td>
+                                    <td>"Optional PIN to gate dashboard access. Unset = open (localhost only)"</td>
                                 </tr>
                             </tbody>
                         </table>
                     </section>
 
-                    // ── Connecting Your AI Tool ──────────────────────────────
+                    // ── HTTPS & TLS ──────────────────────────────────────────
+                    <section class="docs-section" id="https">
+                        <h2 id="https">"HTTPS & TLS"</h2>
+                        <p>
+                            "MentisDB automatically generates a self-signed TLS certificate on \
+                             first startup using "
+                            <code>"rcgen"</code>
+                            ". This enables encrypted connections on two dedicated HTTPS ports \
+                             alongside the plain HTTP ports. No manual certificate management \
+                             is required."
+                        </p>
+
+                        <h3>"Port Map"</h3>
+                        <table class="config-table">
+                            <thead>
+                                <tr>
+                                    <th>"Port"</th>
+                                    <th>"Protocol"</th>
+                                    <th>"Purpose"</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>"9471"</code></td>
+                                    <td>"HTTP"</td>
+                                    <td>"MCP server"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"9472"</code></td>
+                                    <td>"HTTP"</td>
+                                    <td>"REST API"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"9473"</code></td>
+                                    <td>"HTTPS"</td>
+                                    <td>"MCP server (TLS)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"9474"</code></td>
+                                    <td>"HTTPS"</td>
+                                    <td>"REST API (TLS)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"9475"</code></td>
+                                    <td>"HTTP"</td>
+                                    <td>"Web Dashboard"</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>"The my.mentisdb.com Hostname"</h3>
+                        <p>
+                            <code>"my.mentisdb.com"</code>
+                            " is a public DNS A-record that resolves to "
+                            <code>"127.0.0.1"</code>
+                            ". The auto-generated certificate includes it as a Subject \
+                             Alternative Name alongside "
+                            <code>"localhost"</code>
+                            " and "
+                            <code>"127.0.0.1"</code>
+                            ". Once you trust the certificate on your machine, you can use \
+                             "
+                            <code>"https://my.mentisdb.com:9473"</code>
+                            " as a friendly, stable hostname in MCP configs — no port-forwarding \
+                             or extra DNS setup required."
+                        </p>
+
+                        <h3>"Trusting the Self-Signed Certificate"</h3>
+                        <p>
+                            "The certificate is saved to "
+                            <code>"~/.cloudllm/mentisdb/tls/cert.pem"</code>
+                            " on first startup. Run the appropriate command once per machine:"
+                        </p>
+
+                        <h4>"macOS"</h4>
+                        <div class="code-block">
+                            <pre><code>{r#"sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain \
+  ~/.cloudllm/mentisdb/tls/cert.pem"#}</code></pre>
+                        </div>
+
+                        <h4>"Linux"</h4>
+                        <div class="code-block">
+                            <pre><code>{r#"sudo cp ~/.cloudllm/mentisdb/tls/cert.pem \
+    /usr/local/share/ca-certificates/mentisdb.crt
+sudo update-ca-certificates"#}</code></pre>
+                        </div>
+
+                        <h4>"Windows"</h4>
+                        <p>
+                            "Double-click "
+                            <code>"cert.pem"</code>
+                            " → "
+                            <em>"Install Certificate"</em>
+                            " → Local Machine → Trusted Root Certification Authorities → Finish."
+                        </p>
+
+                        <div class="docs-callout docs-callout-tip">
+                            "After trusting the certificate, restart your MCP client (e.g. Claude \
+                             Desktop) and use "
+                            <code>"https://my.mentisdb.com:9473"</code>
+                            " as the server URL."
+                        </div>
+
+                        <h3>"Disabling HTTPS"</h3>
+                        <p>"Set both HTTPS ports to 0 to run HTTP-only:"</p>
+                        <div class="code-block">
+                            <pre><code>{r#"MENTISDB_HTTPS_MCP_PORT=0
+MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
+                        </div>
+                    </section>
+
+                    // ── Web Dashboard ────────────────────────────────────────
+                    <section class="docs-section" id="dashboard">
+                        <h2 id="dashboard">"Web Dashboard"</h2>
+                        <p>
+                            "The web dashboard is a self-contained single-page application \
+                             embedded directly in the MentisDB binary — no npm, no separate \
+                             process, no installation required. Open it in any browser at:"
+                        </p>
+                        <div class="code-block">
+                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                        </div>
+                        <p>
+                            "The version number is displayed in the nav header. The dashboard \
+                             connects to the same daemon you already have running."
+                        </p>
+
+                        <div class="docs-callout docs-callout-warning">
+                            <strong>"Security note: "</strong>
+                            "The dashboard is a read/write admin interface. Protect it with a \
+                             PIN ("
+                            <code>"MENTISDB_DASHBOARD_PIN"</code>
+                            ") or keep "
+                            <code>"MENTISDB_BIND_HOST=127.0.0.1"</code>
+                            " (the default) so it is never exposed to the network."
+                        </div>
+
+                        <h3>"PIN Protection"</h3>
+                        <p>
+                            "Set "
+                            <code>"MENTISDB_DASHBOARD_PIN"</code>
+                            " to any string. A login page appears automatically. Leave it unset \
+                             for open (localhost-only) access."
+                        </p>
+                        <div class="code-block">
+                            <code>"MENTISDB_DASHBOARD_PIN=my-secret-pin mentisdbd"</code>
+                        </div>
+
+                        <h3>"Disabling the Dashboard"</h3>
+                        <div class="code-block">
+                            <code>"MENTISDB_DASHBOARD_PORT=0 mentisdbd"</code>
+                        </div>
+
+                        <h3>"Sections"</h3>
+
+                        <h4>"Chain Manager"</h4>
+                        <p>
+                            "Lists all chains with live thought counts and agent counts. Click \
+                             a chain to open its Thought Explorer. You can bootstrap a new chain \
+                             or delete an existing one (a type-to-confirm safety gate prevents \
+                             accidental deletion). Click "
+                            <em>"↺ Refresh"</em>
+                            " to reload live counts."
+                        </p>
+
+                        <h4>"Thought Explorer"</h4>
+                        <p>
+                            "Paginated table of all thoughts in a chain. Filter by any of the \
+                             28 ThoughtTypes using the grouped filter panel — each type is shown \
+                             with a coloured badge. Click any row to open a detail modal with \
+                             the full thought content, metadata, and linked references."
+                        </p>
+
+                        <h4>"Agent Manager"</h4>
+                        <p>
+                            "All registered agents grouped by chain. Click an agent to open \
+                             its detail page where you can edit its display name, description, \
+                             and owner; revoke or re-activate it; add or revoke Ed25519 signing \
+                             keys; and browse its most recent thoughts."
+                        </p>
+
+                        <h4>"Skills Registry"</h4>
+                        <p>
+                            "Browse all skills with their version count and lifecycle status \
+                             (active, deprecated, revoked). Click a skill to view it with three \
+                             tabs: "
+                            <strong>"Rendered"</strong>
+                            " (formatted Markdown), "
+                            <strong>"Source"</strong>
+                            " (raw text), and "
+                            <strong>"Diff"</strong>
+                            " (side-by-side version comparison). Revoke or deprecate a skill \
+                             directly from the UI with a confirmation step."
+                        </p>
+                    </section>
+
+                    // ── Connecting AI Tools ──────────────────────────────────
                     <section class="docs-section" id="connecting">
-                        <h2 id="connecting">"Connecting Your AI Tool"</h2>
+                        <h2 id="connecting">"Connecting AI Tools"</h2>
                         <p>"Once the daemon is running, connect your AI coding tool via MCP:"</p>
+
+                        <h3>"Claude Desktop"</h3>
+                        <p>
+                            "Edit the Claude Desktop config file and add MentisDB as an MCP \
+                             server, then restart Claude Desktop."
+                        </p>
+                        <p>"Config file location:"</p>
+                        <ul>
+                            <li>
+                                <strong>"macOS: "</strong>
+                                <code>"~/Library/Application Support/Claude/claude_desktop_config.json"</code>
+                            </li>
+                            <li>
+                                <strong>"Windows: "</strong>
+                                <code>"%APPDATA%\\Claude\\claude_desktop_config.json"</code>
+                            </li>
+                        </ul>
+                        <p>"HTTP connection (works out of the box):"</p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "http://127.0.0.1:9471"
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <p>
+                            "HTTPS connection via "
+                            <code>"my.mentisdb.com"</code>
+                            " (after trusting the certificate — see the "
+                            <a href="#https">"HTTPS & TLS"</a>
+                            " section above):"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "https://my.mentisdb.com:9473"
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <div class="docs-callout">
+                            "Restart Claude Desktop after saving the config file for changes \
+                             to take effect."
+                        </div>
 
                         <h3>"Claude Code"</h3>
                         <div class="code-block">
@@ -129,6 +478,17 @@ pub fn UserDocs() -> impl IntoView {
   "servers": {
     "mentisdb": {
       "url": "http://127.0.0.1:9471",
+      "type": "http"
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <p>"Or using HTTPS after trusting the certificate:"</p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "servers": {
+    "mentisdb": {
+      "url": "https://my.mentisdb.com:9473",
       "type": "http"
     }
   }
@@ -225,7 +585,7 @@ pub fn UserDocs() -> impl IntoView {
                             <li>"Each chain has its own agent registry, thought ledger, and skill registry"</li>
                             <li>"An agent can read from and write to as many chains as needed"</li>
                             <li>"Set "
-                                <code>"MENTISDB_DEFAULT_CHAIN"</code>
+                                <code>"MENTISDB_DEFAULT_KEY"</code>
                                 " so the most-used chain requires no explicit "
                                 <code>"chain_key"</code>
                                 " parameter"
