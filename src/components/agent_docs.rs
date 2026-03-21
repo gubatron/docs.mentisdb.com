@@ -17,6 +17,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#retrieval">"Retrieval Patterns"</a>
                         <a class="docs-nav-link" href="#context-protocol">"Context Window Protocol"</a>
                         <a class="docs-nav-link" href="#fleet">"Fleet Coordination"</a>
+                        <a class="docs-nav-link" href="#skills-registry">"Skills Registry"</a>
                     </nav>
                 </aside>
 
@@ -395,6 +396,261 @@ pub fn AgentDocs() -> impl IntoView {
                                  broad dumps"
                             </li>
                         </ul>
+                    </section>
+
+                    // ── Skills Registry ─────────────────────────────────────
+                    <section class="docs-section" id="skills-registry">
+                        <h2 id="skills-registry">"Skills Registry"</h2>
+                        <p>
+                            "The Skills Registry is a versioned, append-only library of reusable \
+                             agent skills. Each skill is a Markdown or JSON document that describes \
+                             a technique, workflow, or domain-specific procedure your fleet can \
+                             load at runtime. Skills are immutable once uploaded — every edit \
+                             creates a new version, and the full history is always retrievable."
+                        </p>
+
+                        // ── How it works ─────────────────────────────────────
+                        <h3>"How It Works"</h3>
+                        <ul>
+                            <li>
+                                "Each skill has a stable "
+                                <code>"skill_id"</code>
+                                " (derived from the skill name if not specified explicitly)."
+                            </li>
+                            <li>
+                                "Uploading the same "
+                                <code>"skill_id"</code>
+                                " a second time creates version 2, version 3, and so on — it never overwrites."
+                            </li>
+                            <li>
+                                "Only the "
+                                <em>"uploader agent"</em>
+                                " matters for provenance — any agent with the right "
+                                <code>"agent_id"</code>
+                                " can create new versions unless the skill is "
+                                <strong>"signed"</strong>
+                                " (see below)."
+                            </li>
+                            <li>
+                                "Skills can be marked "
+                                <code>"deprecated"</code>
+                                " (still readable, superseded) or "
+                                <code>"revoked"</code>
+                                " (untrusted, should not be used)."
+                            </li>
+                        </ul>
+
+                        // ── Skill Document Format ────────────────────────────
+                        <h3>"Skill Document Format (Markdown)"</h3>
+                        <p>
+                            "The recommended format is Markdown with YAML-like frontmatter. \
+                             The frontmatter block is delimited by "
+                            <code>"---"</code>
+                            " and supports these fields:"
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+"---\n\
+name: my-skill\n\
+description: One sentence on when and why to use this skill.\n\
+tags: [rust, axum, api]\n\
+triggers: [\"when building an API\", \"when adding endpoints\"]\n\
+warnings: [\"Review rate limits before deploying\"]\n\
+---\n\n\
+# My Skill\n\n\
+Brief intro paragraph.\n\n\
+## When to Use\n\n\
+Describe the conditions.\n\n\
+## Steps\n\n\
+Numbered procedure."
+                            </code></pre>
+                        </div>
+                        <ul>
+                            <li><code>"name"</code>" — becomes the stable skill_id slug (required)"</li>
+                            <li><code>"description"</code>" — surfaced in search results; required"</li>
+                            <li><code>"tags"</code>" — free-form list; used in tag-based searches"</li>
+                            <li><code>"triggers"</code>" — phrases or domains that should suggest this skill to a planning agent"</li>
+                            <li><code>"warnings"</code>" — safety notes; shown to the agent before execution"</li>
+                        </ul>
+
+                        // ── Uploading a skill ────────────────────────────────
+                        <h3>"Uploading a Skill (MCP)"</h3>
+                        <p>
+                            "Use "
+                            <code>"mentisdb_upload_skill"</code>
+                            " to publish or update a skill. Your "
+                            <code>"agent_id"</code>
+                            " must already be registered in the chain."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+"mentisdb_upload_skill(\n\
+  agent_id: \"orion\",\n\
+  content: \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
+  format: \"markdown\"      // or \"json\"\n\
+  skill_id: \"my-skill\",   // optional; derived from name if omitted\n\
+  chain_key: \"default\"    // optional\n\
+)"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "Calling "
+                            <code>"mentisdb_upload_skill"</code>
+                            " with an existing "
+                            <code>"skill_id"</code>
+                            " automatically creates the next version — no separate upsert call needed."
+                        </p>
+
+                        // ── Searching and reading ────────────────────────────
+                        <h3>"Finding and Reading Skills"</h3>
+                        <ul>
+                            <li>
+                                <code>"mentisdb_list_skills"</code>
+                                " — returns a summary list of all skills in the registry (id, name, description, version count, status)"
+                            </li>
+                            <li>
+                                <code>"mentisdb_search_skill(text: \"rust api\")"</code>
+                                " — full-text search across name, description, headings, and body"
+                            </li>
+                            <li>
+                                <code>"mentisdb_search_skill(tags_any: [\"axum\"])"</code>
+                                " — filter by tag"
+                            </li>
+                            <li>
+                                <code>"mentisdb_search_skill(triggers_any: [\"when building an API\"])"</code>
+                                " — match against trigger phrases"
+                            </li>
+                            <li>
+                                <code>"mentisdb_read_skill(skill_id: \"my-skill\")"</code>
+                                " — read latest version content"
+                            </li>
+                            <li>
+                                <code>"mentisdb_read_skill(skill_id: \"my-skill\", version_id: \"<uuid>\")"</code>
+                                " — read a specific historical version"
+                            </li>
+                            <li>
+                                <code>"mentisdb_skill_versions(skill_id: \"my-skill\")"</code>
+                                " — list all versions with metadata (uploader, timestamp, hash)"
+                            </li>
+                        </ul>
+
+                        // ── Lifecycle management ─────────────────────────────
+                        <h3>"Lifecycle Management"</h3>
+                        <ul>
+                            <li>
+                                <code>"mentisdb_deprecate_skill(skill_id: \"my-skill\", reason: \"superseded by v2\")"</code>
+                                " — mark as superseded but still readable"
+                            </li>
+                            <li>
+                                <code>"mentisdb_revoke_skill(skill_id: \"my-skill\", reason: \"security issue\")"</code>
+                                " — mark as untrusted; agents should refuse to execute it"
+                            </li>
+                        </ul>
+                        <div class="docs-callout docs-callout-tip">
+                            "When searching, filter by "
+                            <code>"statuses: [\"active\"]"</code>
+                            " to exclude deprecated and revoked skills from planning queries."
+                        </div>
+
+                        // ── Cryptographically signed skills ──────────────────
+                        <h3>"Cryptographically Signed Skills"</h3>
+                        <p>
+                            "Once an agent registers an Ed25519 public key on their identity, \
+                             every skill upload from that agent "
+                            <strong>"requires a valid signature"</strong>
+                            ". The server verifies the signature before accepting the upload. \
+                             This means only the original key-holder can publish new versions — \
+                             even if another agent uses the same "
+                            <code>"skill_id"</code>
+                            ", the server will reject it."
+                        </p>
+
+                        <h4>"Step 1 — Register a Public Key"</h4>
+                        <p>
+                            "Call "
+                            <code>"mentisdb_add_agent_key"</code>
+                            " to bind an Ed25519 public key to your agent identity:"
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+"mentisdb_add_agent_key(\n\
+  agent_id:         \"orion\",\n\
+  key_id:           \"orion-signing-key-1\",\n\
+  algorithm:        \"ed25519\",\n\
+  public_key_bytes: [<32 raw bytes>]\n\
+)"
+                            </code></pre>
+                        </div>
+
+                        <h4>"Step 2 — Sign the Skill Content"</h4>
+                        <p>
+                            "Produce a detached Ed25519 signature over the "
+                            <strong>"raw skill content bytes"</strong>
+                            " (not a hash — the full UTF-8 bytes of the Markdown or JSON string) \
+                             using your private key. The signature must be exactly 64 bytes."
+                        </p>
+
+                        <h4>"Step 3 — Upload with Signature"</h4>
+                        <div class="docs-callout">
+                            <pre><code>
+"mentisdb_upload_skill(\n\
+  agent_id:        \"orion\",\n\
+  content:         \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
+  format:          \"markdown\",\n\
+  skill_id:        \"orion-secret-skill\",\n\
+  signing_key_id:  \"orion-signing-key-1\",\n\
+  skill_signature: [<64 raw Ed25519 signature bytes>]\n\
+)"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "The server will verify the signature against the registered public key. \
+                             If it does not match, the upload is rejected with an error. \
+                             All future version uploads for this skill "
+                            <em>"must"</em>
+                            " also be signed by the same key (or a non-revoked replacement key \
+                             registered to the same agent)."
+                        </p>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Key rotation:"</strong>
+                            " To rotate your signing key, call "
+                            <code>"mentisdb_add_agent_key"</code>
+                            " with a new "
+                            <code>"key_id"</code>
+                            " and then "
+                            <code>"mentisdb_revoke_agent_key"</code>
+                            " on the old one. New uploads must use the new key_id; old versions \
+                             remain verifiable against their original signature."
+                        </div>
+
+                        // ── Best practices ───────────────────────────────────
+                        <h3>"Best Practices for Skills"</h3>
+                        <ul>
+                            <li>
+                                "Keep each skill focused on "
+                                <em>"one reusable procedure"</em>
+                                ". A 200-line skill is too broad; split it."
+                            </li>
+                            <li>
+                                "Use "
+                                <code>"triggers"</code>
+                                " aggressively — they help planning agents auto-select the right \
+                                 skill during task decomposition."
+                            </li>
+                            <li>
+                                "After a hard-won fix, distil the lesson into a skill so every \
+                                 future agent starts with the knowledge."
+                            </li>
+                            <li>
+                                "Deprecate rather than delete when a skill is superseded — old \
+                                 versions are audit history."
+                            </li>
+                            <li>
+                                "Sign any skill that other agents should not be able to tamper with."
+                            </li>
+                        </ul>
+
                     </section>
 
                 </article>
