@@ -117,9 +117,18 @@ img {
 }
 
 .navbar-logo {
-  width:         32px;
-  height:        32px;
-  border-radius: var(--radius);
+  display:         flex;
+  align-items:     center;
+  gap:             6px;
+  font-size:       1.15rem;
+  font-weight:     800;
+  letter-spacing:  -0.02em;
+  color:           var(--text-primary);
+  text-decoration: none;
+
+  .accent { color: var(--accent); }
+
+  &:hover { opacity: 0.85; color: var(--text-primary); }
 }
 
 .navbar-nav {
