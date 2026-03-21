@@ -13,6 +13,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#why-write">"Why Write to MentisDB"</a>
                         <a class="docs-nav-link" href="#what-to-write">"What Deserves a Memory"</a>
                         <a class="docs-nav-link" href="#thought-types">"Choosing Thought Types"</a>
+                        <a class="docs-nav-link" href="#thought-roles">"Thought Roles"</a>
                         <a class="docs-nav-link" href="#retrieval">"Retrieval Patterns"</a>
                         <a class="docs-nav-link" href="#context-protocol">"Context Window Protocol"</a>
                         <a class="docs-nav-link" href="#fleet">"Fleet Coordination"</a>
@@ -110,6 +111,68 @@ pub fn AgentDocs() -> impl IntoView {
                                 <span class="thought-type-name"><code>"Question"</code></span>
                                 <p>"Unresolved issue worth preserving"</p>
                             </div>
+                        </div>
+                    </section>
+
+                    // ── Thought Roles ────────────────────────────────────────
+                    <section class="docs-section" id="thought-roles">
+                        <h2 id="thought-roles">"Thought Roles"</h2>
+                        <p>
+                            "If "
+                            <code>"thought_type"</code>
+                            " answers "
+                            <em>"what kind of memory is this?"</em>
+                            ", then "
+                            <code>"role"</code>
+                            " answers "
+                            <em>"how is the system using it?"</em>
+                            ". Roles are lifecycle and operational markers — they let you filter by purpose rather than semantics, and drive system-level behaviour like context compression and handoffs."
+                        </p>
+                        <p>"The default role is "<code>"Memory"</code>". Only set a role when you need the chain to express something beyond plain durable memory."</p>
+                        <div class="thought-type-grid">
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Memory"</code></span>
+                                <p>"Default. Durable long-term memory — the vast majority of thoughts. No special lifecycle meaning."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"WorkingMemory"</code></span>
+                                <p>"Shorter-lived or speculative. Use for scratch thoughts, in-progress hypotheses, or intermediate reasoning you may discard."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Summary"</code></span>
+                                <p>"A synthesized roll-up of prior thoughts. Pair with "<code>"thought_type: Summary"</code>" when compressing history before a context-window reload."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Compression"</code></span>
+                                <p>"Emitted automatically (or deliberately) during a context-compression pass. Signals that this thought replaced a sequence of earlier ones."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Checkpoint"</code></span>
+                                <p>"A resumption anchor. Write a Checkpoint before your context window fills so any agent reloading the chain knows exactly where to continue from."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Handoff"</code></span>
+                                <p>"Signals that control or responsibility is being transferred to another agent, process, or human. The receiving actor searches for the latest Handoff to pick up context."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Audit"</code></span>
+                                <p>"Traceability record. Use when a decision or action must leave a tamper-evident trail for compliance, debugging, or post-mortem investigation."</p>
+                            </div>
+                            <div class="thought-type-card thought-role-card">
+                                <span class="thought-type-name"><code>"Retrospective"</code></span>
+                                <p>"Written after a hard failure, repeated mistake, or non-obvious fix. Exists to prevent the same struggle from recurring across sessions or agents. The MCP tool "<code>"mentisdb_append_retrospective"</code>" defaults to this role."</p>
+                            </div>
+                        </div>
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Filtering by role"</strong>
+                            <p>
+                                "All search and traversal tools accept a "
+                                <code>"roles"</code>
+                                " array filter. To bootstrap a new agent session efficiently, load only structural roles first:"
+                            </p>
+                            <pre><code>"roles=[\"Checkpoint\",\"Handoff\",\"Summary\"]"</code></pre>
+                            <p>"Then layer in semantics with a separate search:"</p>
+                            <pre><code>"roles=[\"Retrospective\"] + tags=[\"your-project\"]"</code></pre>
                         </div>
                     </section>
 
