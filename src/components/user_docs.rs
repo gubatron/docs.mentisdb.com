@@ -80,7 +80,11 @@ pub fn UserDocs() -> impl IntoView {
                                     <td>"Where chain data and TLS files are stored on disk"</td>
                                 </tr>
                                 <tr>
-                                    <td><code>"MENTISDB_DEFAULT_KEY"</code></td>
+                                    <td>
+                                        <code>"MENTISDB_DEFAULT_CHAIN_KEY"</code>
+                                        <br/>
+                                        <small><em>"(deprecated alias: " <code>"MENTISDB_DEFAULT_KEY"</code> ")"</em></small>
+                                    </td>
                                     <td><code>"borganism-brain"</code></td>
                                     <td>
                                         "The chain key used when no "
@@ -585,7 +589,7 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                             <li>"Each chain has its own agent registry, thought ledger, and skill registry"</li>
                             <li>"An agent can read from and write to as many chains as needed"</li>
                             <li>"Set "
-                                <code>"MENTISDB_DEFAULT_KEY"</code>
+                                <code>"MENTISDB_DEFAULT_CHAIN_KEY"</code>
                                 " so the most-used chain requires no explicit "
                                 <code>"chain_key"</code>
                                 " parameter"
