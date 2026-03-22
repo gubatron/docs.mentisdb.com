@@ -18,6 +18,8 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#context-protocol">"Context Window Protocol"</a>
                         <a class="docs-nav-link" href="#fleet">"Fleet Coordination"</a>
                         <a class="docs-nav-link" href="#skills-registry">"Skills Registry"</a>
+                        <a class="docs-nav-link" href="#thought-relations">"Thought Relations"</a>
+                        <a class="docs-nav-link" href="#import-tool">"Import MEMORY.md Tool"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                     </nav>
                 </aside>
@@ -78,7 +80,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <p>
                             "ThoughtType is the semantic label for "
                             <em>"what changed in the agent's internal model"</em>
-                            ". There are 28 types grouped by purpose. Pick the one that best matches the memory's meaning — this is what makes the chain queryable and meaningful to other agents."
+                            ". There are 29 types grouped by purpose. Pick the one that best matches the memory's meaning — this is what makes the chain queryable and meaningful to other agents."
                         </p>
 
                         <h3 class="thought-type-group-label">"🧑 About the User"</h3>
@@ -142,6 +144,19 @@ pub fn AgentDocs() -> impl IntoView {
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"AssumptionInvalidated"</code></span>
                                 <p>"A previously trusted assumption was proven wrong. Prevents future agents from repeating the same wrong starting point."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Reframe"</code></span>
+                                <p>
+                                    "The thought was accurate but unhelpfully framed. Use when the underlying fact is still true but the framing no longer serves — a context shift, \
+                                     a strategy pivot, or a refined mental model. Distinct from "
+                                    <code>"Correction"</code>
+                                    " (factually wrong) and "
+                                    <code>"AssumptionInvalidated"</code>
+                                    " (correct but stale). Pair with a "
+                                    <code>"Supersedes"</code>
+                                    " relation pointing at the thought being reframed."
+                                </p>
                             </div>
                         </div>
 
@@ -323,8 +338,13 @@ pub fn AgentDocs() -> impl IntoView {
                         <h3>"Load corrections before acting"</h3>
                         <p>
                             "Before making significant changes, search for "
-                            <code>"thought_types=[\"Correction\"]"</code>
-                            " to make sure you're not acting on outdated assumptions."
+                            <code>"thought_types=[\"Correction\", \"Reframe\"]"</code>
+                            " to make sure you're not acting on outdated assumptions or \
+                             stale framings. A "
+                            <code>"Reframe"</code>
+                            " thought tells you that a prior memory is still factually correct \
+                             but should be interpreted differently — load these alongside \
+                             Corrections."
                         </p>
                     </section>
 
@@ -687,10 +707,15 @@ Numbered procedure."
                         <h4>"Thought Explorer"</h4>
                         <p>
                             "\"The Thought Explorer lets your operator browse every thought you \
-                             have written, paginated and filterable by all 28 ThoughtTypes. \
+                             have written, paginated and filterable by all 29 ThoughtTypes. \
                              This is the first place to look when debugging unexpected behavior \
                              — they can confirm what decisions and lessons are actually recorded \
-                             versus what you believe you wrote.\""
+                             versus what you believe you wrote. Each thought's detail modal \
+                             shows positional back-references (displayed as "
+                            <em>"#N"</em>
+                            ") and typed relations (displayed as "
+                            <em>"kind → target_id (chain: other-chain)"</em>
+                            " for cross-chain edges).\""
                         </p>
 
                         <h4>"Agent Manager"</h4>
@@ -718,6 +743,154 @@ Numbered procedure."
                             " on the Chains page. The counts are live but the UI does not \
                              auto-poll."
                         </div>
+                    </section>
+
+
+                    // ── Thought Relations ────────────────────────────────────
+                    <section class="docs-section" id="thought-relations">
+                        <h2 id="thought-relations">"Thought Relations & Cross-chain References"</h2>
+                        <p>
+                            "Beyond positional back-references ("
+                            <code>"refs: [2, 5]"</code>
+                            "), MentisDB supports typed semantic relations between thoughts via "
+                            <code>"ThoughtRelation"</code>
+                            ". A relation carries a "
+                            <code>"kind"</code>
+                            " (the semantic edge type), a "
+                            <code>"target_id"</code>
+                            " (UUID of the target thought), and an optional "
+                            <code>"chain_key"</code>
+                            " for cross-chain references."
+                        </p>
+
+                        <h3>"Supersedes — the canonical replacement edge"</h3>
+                        <p>
+                            "Use "
+                            <code>"Supersedes"</code>
+                            " when a new thought replaces an older one that was correct but                              is now outdated. Pair it with the "
+                            <code>"Reframe"</code>
+                            " ThoughtType:"
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+"// Old thought #12 said X, new framing says Y.\n\
+mentisdb_append(\n\
+  thought_type: \"Reframe\",\n\
+  content: \"We now frame this as Y instead of X.\",\n\
+  relations: [{ kind: \"Supersedes\", target_id: \"<uuid-of-thought-12>\" }]\n\
+)"
+                            </code></pre>
+                        </div>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Supersedes vs Correction: "</strong>
+                            "Use "
+                            <code>"Correction"</code>
+                            " when the old thought was factually wrong. Use "
+                            <code>"Supersedes"</code>
+                            " + "
+                            <code>"Reframe"</code>
+                            " when the old thought was accurate but the framing no longer serves                              — a context shift, a strategy pivot, or a refined mental model."
+                        </div>
+
+                        <h3>"Cross-chain references"</h3>
+                        <p>
+                            "A "
+                            <code>"ThoughtRelation"</code>
+                            " can point to a thought in a "
+                            <em>"different chain"</em>
+                            " by setting the optional "
+                            <code>"chain_key"</code>
+                            " field:"
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+"mentisdb_append(\n\
+  thought_type: \"Decision\",\n\
+  content: \"Adopted the caching strategy defined in the platform chain.\",\n\
+  relations: [{\n\
+    kind: \"Supersedes\",\n\
+    target_id: \"<uuid-of-thought-in-other-chain>\",\n\
+    chain_key: \"platform-conventions\"\n\
+  }]\n\
+)"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "Intra-chain relations (no "
+                            <code>"chain_key"</code>
+                            ") remain backward-compatible. Cross-chain relations are stored as                              typed edges — they are visible in the dashboard thought detail                              modal as "
+                            <em>"kind → target_id (chain: other-chain)"</em>
+                            "."
+                        </p>
+
+                        <h3>"Positional back-references"</h3>
+                        <p>
+                            "Positional refs ("
+                            <code>"refs: [2, 5]"</code>
+                            ") reference thoughts by their append-order index within the same                              chain. They are shown in the dashboard modal as "
+                            <em>"#2, #5"</em>
+                            ". Use positional refs for lightweight 'this thought follows from                              those' links; use typed relations when the semantic edge matters."
+                        </p>
+                    </section>
+
+                    // ── Import MEMORY.md Tool ────────────────────────────────
+                    <section class="docs-section" id="import-tool">
+                        <h2 id="import-tool">
+                            "Bulk Import: "
+                            <code>"mentisdb_import_memory_markdown"</code>
+                        </h2>
+                        <p>
+                            "If you have an existing "
+                            <code>"MEMORY.md"</code>
+                            " file from a prior session (or any MentisDB-style Markdown                              export), you can bulk-import its contents into a chain using                              the "
+                            <code>"mentisdb_import_memory_markdown"</code>
+                            " MCP tool."
+                        </p>
+
+                        <h3>"What it does"</h3>
+                        <ul>
+                            <li>
+                                "Parses a "
+                                <code>"MEMORY.md"</code>
+                                " Markdown document — each heading section becomes a new thought"
+                            </li>
+                            <li>
+                                "Appends all parsed thoughts to the specified chain under the                                  given "
+                                <code>"default_agent_id"</code>
+                            </li>
+                            <li>"Returns a count of imported thoughts"</li>
+                        </ul>
+
+                        <h3>"Usage"</h3>
+                        <div class="docs-callout">
+                            <pre><code>
+"mentisdb_import_memory_markdown(\n\
+  markdown: \"<full contents of your MEMORY.md>\",\n\
+  default_agent_id: \"orion\",\n\
+  chain_key: \"my-project\"   // optional; uses default chain if omitted\n\
+)"
+                            </code></pre>
+                        </div>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"When to use this: "</strong>
+                            "Use this at the start of a new project to seed your MentisDB                              chain with knowledge from a Markdown memory file you or a prior                              agent maintained manually. After import the memories are fully                              indexed — searchable, filterable by ThoughtType, and attributable                              — no more raw Markdown scanning."
+                        </div>
+
+                        <div class="docs-callout docs-callout-warning">
+                            "The "
+                            <code>"default_agent_id"</code>
+                            " must already be registered in the target chain before importing.                              Register it first with "
+                            <code>"mentisdb_upsert_agent"</code>
+                            "."
+                        </div>
+
+                        <p>
+                            "The same operation is also available via the dashboard — open                              a chain detail page and click "
+                            <strong>"📥 Import MEMORY.md"</strong>
+                            ". Human operators can use this without any MCP or API access."
+                        </p>
                     </section>
 
                 </article>

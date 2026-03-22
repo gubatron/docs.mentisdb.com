@@ -15,6 +15,7 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#configuration">"Configuration"</a>
                         <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
+                        <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
                         <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
                         <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                         <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
@@ -377,9 +378,14 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                         <h4>"Thought Explorer"</h4>
                         <p>
                             "Paginated table of all thoughts in a chain. Filter by any of the \
-                             28 ThoughtTypes using the grouped filter panel — each type is shown \
-                             with a coloured badge. Click any row to open a detail modal with \
-                             the full thought content, metadata, and linked references."
+                             29 ThoughtTypes using the grouped filter panel — each type is shown \
+                             with a coloured badge. Click any row to open a detail modal showing \
+                             the full thought content, metadata, positional back-references \
+                             (displayed as "
+                            <em>"#N"</em>
+                            "), and typed relations (displayed as "
+                            <em>"kind → target_id (chain: other-chain)"</em>
+                            " for cross-chain edges)."
                         </p>
 
                         <h4>"Agent Manager"</h4>
@@ -403,6 +409,80 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                             " (side-by-side version comparison). Revoke or deprecate a skill \
                              directly from the UI with a confirmation step."
                         </p>
+                    </section>
+
+
+                    // ── Import MEMORY.md ─────────────────────────────────────
+                    <section class="docs-section" id="import-memory-md">
+                        <h2 id="import-memory-md">"Import MEMORY.md"</h2>
+                        <p>
+                            "The chain detail page in the dashboard has a "
+                            <strong>"📥 Import MEMORY.md"</strong>
+                            " button. Use it to bulk-import an existing Markdown memory file \
+                             into the chain — no CLI or API calls required."
+                        </p>
+
+                        <h3>"How to use it"</h3>
+                        <ol>
+                            <li>
+                                "Open the dashboard at "
+                                <code>"http://127.0.0.1:9475/dashboard"</code>
+                                " and click into a chain."
+                            </li>
+                            <li>
+                                "Click "
+                                <strong>"📥 Import MEMORY.md"</strong>
+                                " — a modal appears."
+                            </li>
+                            <li>
+                                "Paste your Markdown content into the text area."
+                            </li>
+                            <li>
+                                "Enter a "
+                                <strong>"Default Agent ID"</strong>
+                                " — all imported thoughts are attributed to this agent. \
+                                 The agent must already be registered in the chain."
+                            </li>
+                            <li>
+                                "Click "
+                                <strong>"Import"</strong>
+                                " — the dashboard reports how many thoughts were created."
+                            </li>
+                        </ol>
+
+                        <h3>"Expected format"</h3>
+                        <p>
+                            "Any Markdown file where each top-level or second-level heading \
+                             introduces a distinct memory. The "
+                            <code>"mentisdb_memory_markdown"</code>
+                            " MCP tool produces this format automatically, as does any \
+                             MentisDB export. Example:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"## LessonLearned — 2025-01-10
+Use `signal()` not `create_signal()` in Leptos 0.7.
+All `create_*` APIs were removed in the 0.7 redesign.
+
+## Decision — 2025-01-11
+Adopted binary storage adapter for production.
+Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
+                        </div>
+                        <p>
+                            "After import the memories are fully indexed — searchable, \
+                             filterable by ThoughtType, and attributable by agent — exactly \
+                             like any thought appended via MCP or API."
+                        </p>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Migrating from a MEMORY.md workflow: "</strong>
+                            "If you previously kept project memory in a hand-edited "
+                            <code>"MEMORY.md"</code>
+                            " file, use this button once to seed your chain. From that point \
+                             forward let MentisDB be the source of truth — the agent writes \
+                             directly to the chain, and you export with "
+                            <code>"mentisdb_memory_markdown"</code>
+                            " whenever you need a portable snapshot."
+                        </div>
                     </section>
 
                     // ── Connecting AI Tools ──────────────────────────────────
