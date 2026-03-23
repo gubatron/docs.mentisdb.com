@@ -490,12 +490,25 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         <h2 id="connecting">"Connecting AI Tools"</h2>
                         <p>"Once the daemon is running, connect your AI coding tool via MCP:"</p>
 
-                        <h3>"Claude Desktop"</h3>
+                        <h3>"Claude for Desktop"</h3>
                         <p>
-                            "Edit the Claude Desktop config file and add MentisDB as an MCP \
-                             server, then restart Claude Desktop."
+                            "Claude for Desktop connects to MCP servers via the "
+                            <code>"claude_desktop_config.json"</code>
+                            " file. MentisDB uses "
+                            <a href="https://www.npmjs.com/package/mcp-remote" target="_blank" rel="noopener noreferrer">
+                                <code>"mcp-remote"</code>
+                            </a>
+                            " as the bridge between Claude Desktop and the local MentisDB HTTPS server."
                         </p>
-                        <p>"Config file location:"</p>
+
+                        <h4>"Step 1 — Install mcp-remote"</h4>
+                        <p>"Install it globally with npm (Node.js required):"</p>
+                        <div class="code-block">
+                            <pre><code>"npm install -g mcp-remote"</code></pre>
+                        </div>
+
+                        <h4>"Step 2 — Edit the config file"</h4>
+                        <p>"Config file location by OS:"</p>
                         <ul>
                             <li>
                                 <strong>"macOS: "</strong>
@@ -505,38 +518,89 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                                 <strong>"Windows: "</strong>
                                 <code>"%APPDATA%\\Claude\\claude_desktop_config.json"</code>
                             </li>
+                            <li>
+                                <strong>"Linux: "</strong>
+                                <code>"~/.config/Claude/claude_desktop_config.json"</code>
+                            </li>
                         </ul>
-                        <p>"HTTP connection (works out of the box):"</p>
+
+                        <h4>"macOS"</h4>
                         <div class="code-block">
                             <pre><code>{r#"{
   "mcpServers": {
     "mentisdb": {
-      "type": "http",
-      "url": "http://127.0.0.1:9471"
-    }
-  }
-}"#}</code></pre>
-                        </div>
-                        <p>
-                            "HTTPS connection via "
-                            <code>"my.mentisdb.com"</code>
-                            " (after trusting the certificate — see the "
-                            <a href="#https">"HTTPS & TLS"</a>
-                            " section above):"
-                        </p>
-                        <div class="code-block">
-                            <pre><code>{r#"{
-  "mcpServers": {
-    "mentisdb": {
-      "type": "http",
-      "url": "https://my.mentisdb.com:9473"
+      "command": "/opt/homebrew/bin/mcp-remote",
+      "args": ["https://my.mentisdb.com:9473"],
+      "env": { "NODE_TLS_REJECT_UNAUTHORIZED": "0" }
     }
   }
 }"#}</code></pre>
                         </div>
                         <div class="docs-callout">
-                            "Restart Claude Desktop after saving the config file for changes \
-                             to take effect."
+                            "The "
+                            <code>"NODE_TLS_REJECT_UNAUTHORIZED: \"0\""</code>
+                            " env var is required because MentisDB uses a self-signed TLS \
+                             certificate. Node.js rejects self-signed certs by default; this \
+                             env var disables that check for the mcp-remote process only. \
+                             Alternatively, add the MentisDB cert to your system keychain (see \
+                             the HTTPS & TLS section above) and remove the env block."
+                        </div>
+                        <p>
+                            "If you installed Node.js via "
+                            <code>"nvm"</code>
+                            " or a non-Homebrew path, find the mcp-remote binary with:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>"which mcp-remote"</code></pre>
+                        </div>
+                        <p>"and use that full path as the "
+                            <code>"command"</code>
+                            " value."
+                        </p>
+
+                        <h4>"Windows"</h4>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "command": "mcp-remote",
+      "args": ["https://my.mentisdb.com:9473"],
+      "env": { "NODE_TLS_REJECT_UNAUTHORIZED": "0" }
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <p>
+                            "On Windows, "
+                            <code>"npm install -g mcp-remote"</code>
+                            " places the binary on your PATH automatically. \
+                             If Claude Desktop cannot find it, supply the full path, e.g.:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#""command": "C:\\Users\\YourName\\AppData\\Roaming\\npm\\mcp-remote.cmd""#}</code></pre>
+                        </div>
+
+                        <h4>"Linux"</h4>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "command": "/usr/local/bin/mcp-remote",
+      "args": ["https://my.mentisdb.com:9473"],
+      "env": { "NODE_TLS_REJECT_UNAUTHORIZED": "0" }
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <p>
+                            "Verify the path with "
+                            <code>"which mcp-remote"</code>
+                            " and substitute it if different."
+                        </p>
+
+                        <div class="docs-callout">
+                            "Restart Claude for Desktop after saving the config file for \
+                             changes to take effect."
                         </div>
 
                         <h3>"Claude Code"</h3>
