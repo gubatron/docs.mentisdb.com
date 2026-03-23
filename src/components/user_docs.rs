@@ -211,8 +211,8 @@ pub fn UserDocs() -> impl IntoView {
                                 </tr>
                                 <tr>
                                     <td><code>"MENTISDB_UPDATE_CHECK"</code></td>
-                                    <td><code>"false"</code></td>
-                                    <td>"Opt-in GitHub release check for mentisdbd. Truthy values enable a background update prompt."</td>
+                                    <td><code>"true"</code></td>
+                                    <td>"Background GitHub release check for mentisdbd. Set it to false to disable the startup-time prompt."</td>
                                 </tr>
                                 <tr>
                                     <td><code>"MENTISDB_UPDATE_REPO"</code></td>
@@ -227,22 +227,22 @@ pub fn UserDocs() -> impl IntoView {
                     <section class="docs-section" id="self-update">
                         <h2 id="self-update">"Self-Update"</h2>
                         <p>
-                            "MentisDB's daemon can optionally check GitHub for a newer release \
-                             after startup. This is disabled by default. When enabled on an \
-                             interactive terminal, the daemon finishes booting, then shows an \
-                             ASCII prompt asking whether it should update itself with "
+                            "MentisDB's daemon checks GitHub for a newer release after startup \
+                             by default. On an interactive terminal, the daemon finishes \
+                             booting, then shows an ASCII prompt asking whether it should \
+                             update itself with "
                             <code>"cargo install"</code>
                             "."
                         </p>
                         <div class="code-block">
-                            <code>"MENTISDB_UPDATE_CHECK=1 mentisdbd"</code>
+                            <code>"MENTISDB_UPDATE_CHECK=0 mentisdbd"</code>
                         </div>
                         <p>
                             "Version comparison uses the first three numeric components only. \
                              That means a release tag like "
-                            <code>"0.6.0.13"</code>
+                            <code>"0.6.1.14"</code>
                             " is treated as core version "
-                            <code>"0.6.0"</code>
+                            <code>"0.6.1"</code>
                             ", and the fourth number is only the monotonically increasing \
                              release counter."
                         </p>
@@ -251,6 +251,11 @@ pub fn UserDocs() -> impl IntoView {
                              It prints the exact "
                             <code>"cargo install --git ... --tag ..."</code>
                             " command you can run manually instead."
+                        </p>
+                        <p>
+                            "Use "
+                            <code>"MENTISDB_UPDATE_CHECK=0"</code>
+                            " when you want a quiet daemon with no release prompt."
                         </p>
                     </section>
 
