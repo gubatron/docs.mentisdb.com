@@ -13,6 +13,7 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#installation">"Installation"</a>
                         <a class="docs-nav-link" href="#running">"Running the Daemon"</a>
                         <a class="docs-nav-link" href="#configuration">"Configuration"</a>
+                        <a class="docs-nav-link" href="#self-update">"Self-Update"</a>
                         <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                         <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
@@ -55,7 +56,7 @@ pub fn UserDocs() -> impl IntoView {
                         </div>
                         <p>
                             "The daemon serves both MCP (for AI tools) and REST endpoints \
-                             from the same port."
+                             plus an HTTPS dashboard for human operators."
                         </p>
                     </section>
 
@@ -198,15 +199,59 @@ pub fn UserDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"MENTISDB_DASHBOARD_PORT"</code></td>
                                     <td><code>"9475"</code></td>
-                                    <td>"Dashboard HTTP port. Set to 0 to disable"</td>
+                                    <td>"Dashboard HTTPS port. Set to 0 to disable"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"MENTISDB_DASHBOARD_PIN"</code></td>
                                     <td><em>"unset"</em></td>
                                     <td>"Optional PIN to gate dashboard access. Unset = open (localhost only)"</td>
                                 </tr>
+                                <tr class="config-group-header">
+                                    <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_UPDATE_CHECK"</code></td>
+                                    <td><code>"false"</code></td>
+                                    <td>"Opt-in GitHub release check for mentisdbd. Truthy values enable a background update prompt."</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"MENTISDB_UPDATE_REPO"</code></td>
+                                    <td><code>"CloudLLM-ai/mentisdb"</code></td>
+                                    <td>"Optional owner/repo override for the GitHub release source used by the updater."</td>
+                                </tr>
                             </tbody>
                         </table>
+                    </section>
+
+                    // ── Self-Update ────────────────────────────────────────
+                    <section class="docs-section" id="self-update">
+                        <h2 id="self-update">"Self-Update"</h2>
+                        <p>
+                            "MentisDB's daemon can optionally check GitHub for a newer release \
+                             after startup. This is disabled by default. When enabled on an \
+                             interactive terminal, the daemon finishes booting, then shows an \
+                             ASCII prompt asking whether it should update itself with "
+                            <code>"cargo install"</code>
+                            "."
+                        </p>
+                        <div class="code-block">
+                            <code>"MENTISDB_UPDATE_CHECK=1 mentisdbd"</code>
+                        </div>
+                        <p>
+                            "Version comparison uses the first three numeric components only. \
+                             That means a release tag like "
+                            <code>"0.6.0.13"</code>
+                            " is treated as core version "
+                            <code>"0.6.0"</code>
+                            ", and the fourth number is only the monotonically increasing \
+                             release counter."
+                        </p>
+                        <p>
+                            "If the terminal is non-interactive, MentisDB never blocks on stdin. \
+                             It prints the exact "
+                            <code>"cargo install --git ... --tag ..."</code>
+                            " command you can run manually instead."
+                        </p>
                     </section>
 
                     // ── HTTPS & TLS ──────────────────────────────────────────
@@ -253,7 +298,7 @@ pub fn UserDocs() -> impl IntoView {
                                 </tr>
                                 <tr>
                                     <td><code>"9475"</code></td>
-                                    <td>"HTTP"</td>
+                                    <td>"HTTPS"</td>
                                     <td>"Web Dashboard"</td>
                                 </tr>
                             </tbody>
@@ -286,8 +331,8 @@ pub fn UserDocs() -> impl IntoView {
                         <h4>"macOS"</h4>
                         <div class="code-block">
                             <pre><code>{r#"sudo security add-trusted-cert -d -r trustRoot \
-  -k /Library/Keychains/System.keychain \
-  ~/.cloudllm/mentisdb/tls/cert.pem"#}</code></pre>
+    -k /Library/Keychains/System.keychain \
+    ~/.cloudllm/mentisdb/tls/cert.pem"#}</code></pre>
                         </div>
 
                         <h4>"Linux"</h4>
@@ -317,7 +362,7 @@ sudo update-ca-certificates"#}</code></pre>
                         <p>"Set both HTTPS ports to 0 to run HTTP-only:"</p>
                         <div class="code-block">
                             <pre><code>{r#"MENTISDB_HTTPS_MCP_PORT=0
-MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
+    MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                         </div>
                     </section>
 
@@ -330,11 +375,14 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                              process, no installation required. Open it in any browser at:"
                         </p>
                         <div class="code-block">
-                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                            <code>"https://127.0.0.1:9475/dashboard"</code>
                         </div>
                         <p>
                             "The version number is displayed in the nav header. The dashboard \
-                             connects to the same daemon you already have running."
+                             connects to the same daemon you already have running, and it keeps \
+                             showing newly appended thoughts while the daemon stays up — no \
+                             restart is required to see fresh chain counts or an agent's latest \
+                             thoughts."
                         </p>
 
                         <div class="docs-callout docs-callout-warning">
@@ -393,7 +441,8 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                             "All registered agents grouped by chain. Click an agent to open \
                              its detail page where you can edit its display name, description, \
                              and owner; revoke or re-activate it; add or revoke Ed25519 signing \
-                             keys; and browse its most recent thoughts."
+                             keys; browse its most recent thoughts; or copy that agent's memories \
+                             into another chain while preserving its metadata."
                         </p>
 
                         <h4>"Skills Registry"</h4>
@@ -426,7 +475,7 @@ MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                         <ol>
                             <li>
                                 "Open the dashboard at "
-                                <code>"http://127.0.0.1:9475/dashboard"</code>
+                                <code>"https://127.0.0.1:9475/dashboard"</code>
                                 " and click into a chain."
                             </li>
                             <li>
@@ -874,18 +923,18 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         <h3>"Example task graph"</h3>
                         <div class="docs-callout">
                             <pre><code>
-"PM writes:\n\
-  Plan  [tag: task-pending, id: design-schema]   → dispatches Orion\n\
-  Plan  [tag: task-pending, id: write-tests]     → dispatches Apollo (blocks on design-schema)\n\
-  Plan  [tag: task-pending, id: implement-api]   → dispatches Astro  (blocks on design-schema)\n\
-\n\
-Orion finishes, writes:\n\
-  TaskComplete [tag: task-done, id: design-schema, content: \"...schema decisions...\"]\n\
-\n\
-PM queries tags_any=[\"task-done\"] → unblocks Apollo + Astro\n\
-Apollo + Astro run in parallel, each reading Orion's TaskComplete for shared context.\n\
-\n\
-PM final query: all TaskComplete thoughts → synthesises result."
+    "PM writes:\n\
+    Plan  [tag: task-pending, id: design-schema]   → dispatches Orion\n\
+    Plan  [tag: task-pending, id: write-tests]     → dispatches Apollo (blocks on design-schema)\n\
+    Plan  [tag: task-pending, id: implement-api]   → dispatches Astro  (blocks on design-schema)\n\
+    \n\
+    Orion finishes, writes:\n\
+    TaskComplete [tag: task-done, id: design-schema, content: \"...schema decisions...\"]\n\
+    \n\
+    PM queries tags_any=[\"task-done\"] → unblocks Apollo + Astro\n\
+    Apollo + Astro run in parallel, each reading Orion's TaskComplete for shared context.\n\
+    \n\
+    PM final query: all TaskComplete thoughts → synthesises result."
                             </code></pre>
                         </div>
                     </section>

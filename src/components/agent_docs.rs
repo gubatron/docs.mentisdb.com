@@ -471,19 +471,19 @@ pub fn AgentDocs() -> impl IntoView {
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-"---\n\
-name: my-skill\n\
-description: One sentence on when and why to use this skill.\n\
-tags: [rust, axum, api]\n\
-triggers: [\"when building an API\", \"when adding endpoints\"]\n\
-warnings: [\"Review rate limits before deploying\"]\n\
----\n\n\
-# My Skill\n\n\
-Brief intro paragraph.\n\n\
-## When to Use\n\n\
-Describe the conditions.\n\n\
-## Steps\n\n\
-Numbered procedure."
+    "---\n\
+    name: my-skill\n\
+    description: One sentence on when and why to use this skill.\n\
+    tags: [rust, axum, api]\n\
+    triggers: [\"when building an API\", \"when adding endpoints\"]\n\
+    warnings: [\"Review rate limits before deploying\"]\n\
+    ---\n\n\
+    # My Skill\n\n\
+    Brief intro paragraph.\n\n\
+    ## When to Use\n\n\
+    Describe the conditions.\n\n\
+    ## Steps\n\n\
+    Numbered procedure."
                             </code></pre>
                         </div>
                         <ul>
@@ -505,13 +505,13 @@ Numbered procedure."
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-"mentisdb_upload_skill(\n\
-  agent_id: \"orion\",\n\
-  content: \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
-  format: \"markdown\"      // or \"json\"\n\
-  skill_id: \"my-skill\",   // optional; derived from name if omitted\n\
-  chain_key: \"default\"    // optional\n\
-)"
+    "mentisdb_upload_skill(\n\
+    agent_id: \"orion\",\n\
+    content: \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
+    format: \"markdown\"      // or \"json\"\n\
+    skill_id: \"my-skill\",   // optional; derived from name if omitted\n\
+    chain_key: \"default\"    // optional\n\
+    )"
                             </code></pre>
                         </div>
                         <p>
@@ -594,12 +594,12 @@ Numbered procedure."
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-"mentisdb_add_agent_key(\n\
-  agent_id:         \"orion\",\n\
-  key_id:           \"orion-signing-key-1\",\n\
-  algorithm:        \"ed25519\",\n\
-  public_key_bytes: [<32 raw bytes>]\n\
-)"
+    "mentisdb_add_agent_key(\n\
+    agent_id:         \"orion\",\n\
+    key_id:           \"orion-signing-key-1\",\n\
+    algorithm:        \"ed25519\",\n\
+    public_key_bytes: [<32 raw bytes>]\n\
+    )"
                             </code></pre>
                         </div>
 
@@ -614,14 +614,14 @@ Numbered procedure."
                         <h4>"Step 3 — Upload with Signature"</h4>
                         <div class="docs-callout">
                             <pre><code>
-"mentisdb_upload_skill(\n\
-  agent_id:        \"orion\",\n\
-  content:         \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
-  format:          \"markdown\",\n\
-  skill_id:        \"orion-secret-skill\",\n\
-  signing_key_id:  \"orion-signing-key-1\",\n\
-  skill_signature: [<64 raw Ed25519 signature bytes>]\n\
-)"
+    "mentisdb_upload_skill(\n\
+    agent_id:        \"orion\",\n\
+    content:         \"--- ...frontmatter... ---\\n\\n# My Skill\\n...\",\n\
+    format:          \"markdown\",\n\
+    skill_id:        \"orion-secret-skill\",\n\
+    signing_key_id:  \"orion-signing-key-1\",\n\
+    skill_signature: [<64 raw Ed25519 signature bytes>]\n\
+    )"
                             </code></pre>
                         </div>
                         <p>
@@ -679,7 +679,7 @@ Numbered procedure."
                         <h2 id="dashboard">"Web Dashboard"</h2>
                         <p>
                             "The web dashboard ("
-                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                            <code>"https://127.0.0.1:9475/dashboard"</code>
                             ") is a browser UI for the human operator — it has no MCP endpoint \
                              and you do not interact with it directly. However, understanding \
                              what it provides helps you direct users to the right tool when they \
@@ -697,11 +697,12 @@ Numbered procedure."
                         <h4>"Chains"</h4>
                         <p>
                             "\"Your operator can use the Chain Manager at "
-                            <code>"http://127.0.0.1:9475/dashboard"</code>
+                            <code>"https://127.0.0.1:9475/dashboard"</code>
                             " to see all chains with live thought and agent counts. If the \
-                             page appears empty or shows stale counts, suggest they click "
+                             page appears empty, suggest they click "
                             <em>"↺ Refresh"</em>
-                            ".\""
+                            ". Newly appended thoughts should appear without restarting \
+                             mentisdbd.\""
                         </p>
 
                         <h4>"Thought Explorer"</h4>
@@ -723,7 +724,9 @@ Numbered procedure."
                             "\"The Agent page shows how many thoughts you have written and lets \
                              the operator view or edit your registered identity — display name, \
                              description, owner, and signing keys. If your agent_id appears \
-                             wrong or you need a key rotated, this is where to do it.\""
+                             wrong, your description is missing, or you need a key rotated, \
+                             this is where to do it. The latest-thoughts list should also stay \
+                             current while the daemon is running.\""
                         </p>
 
                         <h4>"Skills Registry"</h4>
@@ -773,12 +776,12 @@ Numbered procedure."
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-"// Old thought #12 said X, new framing says Y.\n\
-mentisdb_append(\n\
-  thought_type: \"Reframe\",\n\
-  content: \"We now frame this as Y instead of X.\",\n\
-  relations: [{ kind: \"Supersedes\", target_id: \"<uuid-of-thought-12>\" }]\n\
-)"
+    "// Old thought #12 said X, new framing says Y.\n\
+    mentisdb_append(\n\
+    thought_type: \"Reframe\",\n\
+    content: \"We now frame this as Y instead of X.\",\n\
+    relations: [{ kind: \"Supersedes\", target_id: \"<uuid-of-thought-12>\" }]\n\
+    )"
                             </code></pre>
                         </div>
 
@@ -805,15 +808,15 @@ mentisdb_append(\n\
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-"mentisdb_append(\n\
-  thought_type: \"Decision\",\n\
-  content: \"Adopted the caching strategy defined in the platform chain.\",\n\
-  relations: [{\n\
+    "mentisdb_append(\n\
+    thought_type: \"Decision\",\n\
+    content: \"Adopted the caching strategy defined in the platform chain.\",\n\
+    relations: [{\n\
     kind: \"Supersedes\",\n\
     target_id: \"<uuid-of-thought-in-other-chain>\",\n\
     chain_key: \"platform-conventions\"\n\
-  }]\n\
-)"
+    }]\n\
+    )"
                             </code></pre>
                         </div>
                         <p>
@@ -865,11 +868,11 @@ mentisdb_append(\n\
                         <h3>"Usage"</h3>
                         <div class="docs-callout">
                             <pre><code>
-"mentisdb_import_memory_markdown(\n\
-  markdown: \"<full contents of your MEMORY.md>\",\n\
-  default_agent_id: \"orion\",\n\
-  chain_key: \"my-project\"   // optional; uses default chain if omitted\n\
-)"
+    "mentisdb_import_memory_markdown(\n\
+    markdown: \"<full contents of your MEMORY.md>\",\n\
+    default_agent_id: \"orion\",\n\
+    chain_key: \"my-project\"   // optional; uses default chain if omitted\n\
+    )"
                             </code></pre>
                         </div>
 

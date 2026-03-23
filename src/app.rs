@@ -1,16 +1,12 @@
+use crate::components::{
+    agent_docs::AgentDocs, developer_docs::DeveloperDocs, footer::DocsFooter, home::DocsHome,
+    navbar::DocsNavBar, user_docs::UserDocs,
+};
 use leptos::prelude::*;
-use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title, Meta};
+use leptos_meta::{provide_meta_context, Meta, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
-};
-use crate::components::{
-    navbar::DocsNavBar,
-    footer::DocsFooter,
-    home::DocsHome,
-    user_docs::UserDocs,
-    agent_docs::AgentDocs,
-    developer_docs::DeveloperDocs,
 };
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
