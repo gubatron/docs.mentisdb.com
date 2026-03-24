@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 
 /// DeveloperDocs page — Rust library integration guide.
-/// Primary CTA: send developers to https://docs.rs/mentisdb/0.6.0/mentisdb/
+/// Primary CTA: send developers to https://docs.rs/mentisdb/latest/mentisdb/
 #[component]
 pub fn DeveloperDocs() -> impl IntoView {
     view! {
@@ -21,6 +21,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#taxonomy"          class="docs-nav-link">"Thought Taxonomy"</a>
                             <a href="#thought-relations" class="docs-nav-link">"Thought Relations"</a>
                             <a href="#storage"           class="docs-nav-link">"Storage Adapters"</a>
+                            <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
                     </aside>
@@ -74,7 +75,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 ", and the HTTP server."
                             </p>
                             <a
-                                href="https://docs.rs/mentisdb/0.6.0/mentisdb/"
+                                href="https://docs.rs/mentisdb/latest/mentisdb/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="btn-primary"
@@ -386,6 +387,191 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <code>"StorageAdapter"</code>
                             " trait to plug in your own backend (S3, SQLite, etc.). \
                              See docs.rs for the trait definition."
+                        </p>
+
+                        // ── Benchmarking ────────────────────────────────────
+                        <h2 id="benchmarking">"Benchmarking"</h2>
+                        <p>
+                            "MentisDB ships with two benchmark styles:"
+                        </p>
+                        <ul>
+                            <li>
+                                <strong>"Criterion microbenchmarks"</strong>
+                                " for in-process append, query, traversal, import, and skill-registry hot paths"
+                            </li>
+                            <li>
+                                <strong>"HTTP concurrency benchmarks"</strong>
+                                " for live "
+                                <code>"mentisdbd"</code>
+                                " write/read waves under concurrent client load"
+                            </li>
+                        </ul>
+                        <p>
+                            "Run the full benchmark suite with:"
+                        </p>
+                        <div class="code-block">
+                            <code>"make bench"</code>
+                        </div>
+                        <p>
+                            "This currently runs "
+                            <code>"cargo bench"</code>
+                            " and saves stdout to "
+                            <code>"/tmp/mentisdb_bench_results.txt"</code>
+                            "."
+                        </p>
+
+                        <h3>"Durable vs Buffered Write Mode"</h3>
+                        <p>
+                            "Benchmark write-heavy changes in both persistence modes. They now behave differently enough that one run is not representative of the other:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"MENTISDB_BENCH_AUTO_FLUSH=true"</code>
+                                " — durable mode. Appends are queued to the bounded background writer and the request only returns after the writer flushes them. Concurrent appends may share a short group-commit window."
+                            </li>
+                            <li>
+                                <code>"MENTISDB_BENCH_AUTO_FLUSH=false"</code>
+                                " — buffered mode. Appends are queued and acknowledged before the worker flushes them, trading durability for higher write throughput."
+                            </li>
+                        </ul>
+                        <div class="code-block">
+                            <pre><code>
+    "MENTISDB_BENCH_AUTO_FLUSH=true  cargo bench --bench http_concurrency\n\
+    MENTISDB_BENCH_AUTO_FLUSH=false cargo bench --bench http_concurrency"
+                            </code></pre>
+                        </div>
+
+                        <h3>"Criterion Baselines"</h3>
+                        <p>
+                            "Criterion benchmarks such as "
+                            <code>"thought_chain"</code>
+                            " and "
+                            <code>"skill_registry"</code>
+                            " automatically compare the current run against the saved baseline in "
+                            <code>"target/criterion/"</code>
+                            ". That is why the output includes messages like "
+                            <code>"Performance has improved"</code>
+                            ", "
+                            <code>"Performance has regressed"</code>
+                            ", or "
+                            <code>"No change in performance detected"</code>
+                            "."
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"time: [low mid high]"</code>
+                                " — lower is better"
+                            </li>
+                            <li>
+                                <code>"thrpt: [low mid high]"</code>
+                                " — higher is better"
+                            </li>
+                            <li>
+                                <code>"change"</code>
+                                " — percentage delta versus the saved baseline"
+                            </li>
+                            <li>
+                                <code>"p &lt; 0.05"</code>
+                                " — the change is statistically meaningful"
+                            </li>
+                        </ul>
+                        <p>
+                            "If you have changed the benchmark harness itself or want a fresh comparison, clear the old Criterion baseline before trusting the regression/improvement messages."
+                        </p>
+
+                        <h3>"HTTP Concurrency Baselines"</h3>
+                        <p>
+                            "The custom "
+                            <code>"http_concurrency"</code>
+                            " benchmark now persists its own baselines under "
+                            <code>"target/http_concurrency/"</code>
+                            " and prints delta tables on later runs. This means you no longer need to manually compare the Markdown output tables by eye."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>
+    "MENTISDB_BENCH_AUTO_FLUSH=true  MENTISDB_BENCH_BASELINE=durable  cargo bench --bench http_concurrency\n\
+    MENTISDB_BENCH_AUTO_FLUSH=false MENTISDB_BENCH_BASELINE=buffered cargo bench --bench http_concurrency"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "Useful environment variables:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"MENTISDB_BENCH_CONCURRENCY"</code>
+                                " — comma-separated client counts such as "
+                                <code>"100,1000,10000"</code>
+                            </li>
+                            <li>
+                                <code>"MENTISDB_BENCH_AUTO_FLUSH"</code>
+                                " — "
+                                <code>"true"</code>
+                                " for durable group commit, "
+                                <code>"false"</code>
+                                " for buffered throughput mode"
+                            </li>
+                            <li>
+                                <code>"MENTISDB_BENCH_BASELINE"</code>
+                                " — names the saved baseline file so you can keep separate durable, buffered, nightly, or branch-specific histories"
+                            </li>
+                        </ul>
+
+                        <h3>"How to Read the HTTP Table"</h3>
+                        <ul>
+                            <li>
+                                <code>"wall_ms"</code>
+                                " — total time for the whole wave"
+                            </li>
+                            <li>
+                                <code>"req/s"</code>
+                                " — throughput"
+                            </li>
+                            <li>
+                                <code>"p50_ms"</code>
+                                ", "
+                                <code>"p95_ms"</code>
+                                ", "
+                                <code>"p99_ms"</code>
+                                " — median and tail latency"
+                            </li>
+                            <li>
+                                <code>"errors"</code>
+                                " — non-2xx responses or transport failures"
+                            </li>
+                        </ul>
+                        <p>
+                            "For write-path work, focus on the "
+                            <code>"Write — POST /v1/thoughts"</code>
+                            " table at high concurrency. Read-path changes should primarily move the "
+                            <code>"Read — POST /v1/head"</code>
+                            " table and the query/traversal Criterion benches."
+                        </p>
+
+                        <h3>"What to Benchmark After Storage Changes"</h3>
+                        <ul>
+                            <li>
+                                <code>"cargo bench --bench thought_chain append_single -- --noplot"</code>
+                                " — strict append latency"
+                            </li>
+                            <li>
+                                <code>"cargo bench --bench thought_chain query_by_tag -- --noplot"</code>
+                                " — indexed query path"
+                            </li>
+                            <li>
+                                <code>"cargo bench --bench thought_chain traverse_filtered_miss_10 -- --noplot"</code>
+                                " — full-scan traversal miss path"
+                            </li>
+                            <li>
+                                <code>"cargo bench --bench http_concurrency"</code>
+                                " — live daemon concurrency behavior"
+                            </li>
+                        </ul>
+                        <p>
+                            "A useful workflow is to measure a clean baseline on "
+                            <code>"master"</code>
+                            ", apply the storage change, rerun the same focused benches, and only then trust the wider "
+                            <code>"make bench"</code>
+                            " output."
                         </p>
 
                         // ── Contributing ─────────────────────────────────────
