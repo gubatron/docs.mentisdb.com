@@ -13,6 +13,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#why-write">"Why Write to MentisDB"</a>
                         <a class="docs-nav-link" href="#what-to-write">"What Deserves a Memory"</a>
                         <a class="docs-nav-link" href="#thought-types">"Choosing Thought Types"</a>
+                        <a class="docs-nav-link" href="#session-bootstrap">"Session Bootstrap"</a>
                         <a class="docs-nav-link" href="#thought-roles">"Thought Roles"</a>
                         <a class="docs-nav-link" href="#retrieval">"Retrieval Patterns"</a>
                         <a class="docs-nav-link" href="#context-protocol">"Context Window Protocol"</a>
@@ -72,6 +73,46 @@ pub fn AgentDocs() -> impl IntoView {
                             " raw transcripts, every action you took, duplicate git history, \
                              secrets or tokens."
                         </p>
+                    </section>
+
+                    // ── Session Bootstrap ───────────────────────────────────
+                    <section class="docs-section" id="session-bootstrap">
+                        <h2 id="session-bootstrap">"Session Bootstrap"</h2>
+                        <p>
+                            "When you connect over MCP, MentisDB teaches you how to use it during the "
+                            <code>"initialize"</code>
+                            " handshake. Read those startup instructions first, then load the embedded skill resource "
+                            <code>"mentisdb://skill/core"</code>
+                            "."
+                        </p>
+                        <ol>
+                            <li>
+                                "After MCP "
+                                <code>"initialize"</code>
+                                ", call "
+                                <code>"resources/read(mentisdb://skill/core)"</code>
+                                " to load the official operating instructions into context"
+                            </li>
+                            <li>
+                                "If the user did not name a chain, call "
+                                <code>"mentisdb_list_chains"</code>
+                                " and prefer a "
+                                <code>"chain_key"</code>
+                                " whose name matches the current project, repository, or working-folder name"
+                            </li>
+                            <li>
+                                "If several chains look plausible, inspect recent context or head metadata on the best candidates before writing"
+                            </li>
+                            <li>
+                                "Reuse the best existing specialist "
+                                <code>"agent_id"</code>
+                                " for the work instead of inventing a fresh identity unless the user explicitly wants a new one"
+                            </li>
+                            <li>
+                                "Only if your client cannot read MCP resources should you fall back to the REST compatibility endpoint "
+                                <code>"GET /mentisdb_skill_md"</code>
+                            </li>
+                        </ol>
                     </section>
 
                     // ── Choosing Thought Types ───────────────────────────────
@@ -302,13 +343,15 @@ pub fn AgentDocs() -> impl IntoView {
                     // ── Retrieval Patterns ───────────────────────────────────
                     <section class="docs-section" id="retrieval">
                         <h2 id="retrieval">"Retrieval Patterns"</h2>
-
                         <h3>"Start with recent context"</h3>
                         <p>
-                            "At the start of every session, call "
+                            "After loading "
+                            <code>"mentisdb://skill/core"</code>
+                            " and choosing the right chain, call "
                             <code>"mentisdb_recent_context(last_n=30)"</code>
                             ". This gives you the team's latest decisions, active constraints, \
-                             and lessons learned."
+                             and lessons learned. If the chain was ambiguous, compare recent context \
+                             from the top candidates before appending anything new."
                         </p>
 
                         <h3>"Search by project first"</h3>

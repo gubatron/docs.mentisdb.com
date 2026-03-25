@@ -960,17 +960,22 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         <h2 id="priming">"Priming Your Agent"</h2>
                         <p>
                             "Before your agent starts any task, tell it about MentisDB so it \
-                             knows to write durable memories and load prior context. A simple \
-                             opening message goes a long way:"
+                             knows to write durable memories and load prior context. MentisDB now \
+                             exposes startup instructions plus the embedded MCP resource "
+                            <code>"mentisdb://skill/core"</code>
+                            " automatically during the MCP handshake, but a short opening message \
+                             still improves consistency across clients."
                         </p>
                         <div class="docs-callout">
                             <p>
                                 <em>
                                     "\"You have access to MentisDB via MCP. At the start of each \
-                                     session load recent context with mentisdb_recent_context. \
-                                     During work, write important decisions, lessons, and \
-                                     corrections as thoughts. Before your context fills up, write \
-                                     a Summary checkpoint. Your agent_id is 'orion'.\""
+                                     session read the MCP resource mentisdb://skill/core, choose the \
+                                     chain whose name best matches this project if none was specified, \
+                                     then load recent context with mentisdb_recent_context. During \
+                                     work, write important decisions, lessons, and corrections as \
+                                     thoughts. Before your context fills up, write a Summary \
+                                     checkpoint. Your agent_id is 'orion'.\""
                                 </em>
                             </p>
                         </div>
@@ -990,6 +995,16 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                                 "Instruct it to load memories "
                                 <em>"before starting"</em>
                                 " — not after it has already made decisions"
+                            </li>
+                            <li>
+                                "If your client supports MCP resources, tell the agent to read "
+                                <code>"mentisdb://skill/core"</code>
+                                " first; only use "
+                                <code>"GET /mentisdb_skill_md"</code>
+                                " as a fallback for non-MCP or limited clients"
+                            </li>
+                            <li>
+                                "If you do not specify a chain up front, tell the agent to prefer a chain whose name matches the current repo or working folder"
                             </li>
                             <li>
                                 "Ask it to write a "

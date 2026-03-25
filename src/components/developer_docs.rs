@@ -91,10 +91,19 @@ pub fn DeveloperDocs() -> impl IntoView {
                              server. Enable it with the "
                             <code>"server"</code>
                             " feature. The server exposes all MentisDB operations as MCP \
-                             tools, making it compatible with any MCP-capable AI tool."
+                             tools, making it compatible with any MCP-capable AI tool. The canonical \
+                             onboarding path is not a separate URL: it happens during MCP "
+                            <code>"initialize"</code>
+                            " via startup instructions plus the embedded resource "
+                            <code>"mentisdb://skill/core"</code>
+                            " exposed through "
+                            <code>"resources/list"</code>
+                            " and "
+                            <code>"resources/read"</code>
+                            "."
                         </p>
                         <p>
-                            "Default endpoint: "
+                            "Default streamable HTTP endpoint: "
                             <code>"http://127.0.0.1:9471"</code>
                         </p>
                         <p>
@@ -130,6 +139,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td>"Search/query thoughts"</td>
                                 </tr>
                                 <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/lexical-search"</code></td>
+                                    <td>"Ranked lexical search with scores and matched-term diagnostics"</td>
+                                </tr>
+                                <tr>
                                     <td><code>"GET"</code></td>
                                     <td><code>"/v1/chains"</code></td>
                                     <td>"List available chain keys"</td>
@@ -138,6 +152,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/agents"</code></td>
                                     <td>"List agents in a chain or inspect the registry"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/mentisdb_skill_md"</code></td>
+                                    <td>"Compatibility fallback for clients that cannot use MCP resources; MCP-native clients should read mentisdb://skill/core after initialize"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -161,6 +180,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                             </tbody>
                         </table>
+                        <p>
+                            "For MCP-native agents, prefer the streamable HTTP root at "
+                            <code>"POST /"</code>
+                            " and let the agent bootstrap itself from the initialize instructions and resource catalog."
+                        </p>
 
                         // ── Schema Version ───────────────────────────────────
                         <h2 id="schema">"Schema Version"</h2>
