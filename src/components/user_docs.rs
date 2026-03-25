@@ -18,6 +18,8 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                         <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
                         <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
+                        <a class="docs-nav-link" href="#connecting-automated">"Automated Setup"</a>
+                        <a class="docs-nav-link" href="#connecting-manual">"Manual MCP Config"</a>
                         <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                         <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                         <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
@@ -542,9 +544,159 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                     // ── Connecting AI Tools ──────────────────────────────────
                     <section class="docs-section" id="connecting">
                         <h2 id="connecting">"Connecting AI Tools"</h2>
-                        <p>"Once the daemon is running, connect your AI coding tool via MCP:"</p>
+                        <p>
+                            "Once the daemon is running, connect your AI tools via MCP. The fastest \
+                             path is to let MentisDB detect what is installed and configure it \
+                             automatically. Alternatively, configure any tool manually."
+                        </p>
 
-                        <h3>"Claude for Desktop"</h3>
+                        // ── Automated setup ──────────────────────────────────
+                        <h3 id="connecting-automated">"Automated Setup (Recommended)"</h3>
+                        <p>
+                            "MentisDB ships with two built-in commands that detect which clients are \
+                             installed on your machine and write the correct MCP configuration for you."
+                        </p>
+
+                        <h4>"Setup Wizard"</h4>
+                        <p>
+                            "Interactive. Scans your machine, shows every detected tool, lets you \
+                             choose which to configure, and applies changes with your confirmation."
+                        </p>
+                        <div class="code-block">
+                            <code>"mentisdbd wizard"</code>
+                        </div>
+                        <p>
+                            "Accept all defaults and skip already-configured integrations (non-interactive):"
+                        </p>
+                        <div class="code-block">
+                            <code>"mentisdbd wizard --yes"</code>
+                        </div>
+                        <p>
+                            "Point all selected integrations at a custom MCP URL:"
+                        </p>
+                        <div class="code-block">
+                            <code>"mentisdbd wizard --url https://my.mentisdb.com:9473"</code>
+                        </div>
+
+                        <h4>"Setup One Agent"</h4>
+                        <p>
+                            "Target a specific integration by name. Prints a plan first, then writes \
+                             the config file. Use "
+                            <code>"--dry-run"</code>
+                            " to preview without touching anything."
+                        </p>
+                        <div class="code-block">
+                            <code>"mentisdbd setup claude-code"</code>
+                        </div>
+                        <p>"Setup all detected agents at once:"</p>
+                        <div class="code-block">
+                            <code>"mentisdbd setup all"</code>
+                        </div>
+                        <p>"Preview what would be written without writing anything:"</p>
+                        <div class="code-block">
+                            <code>"mentisdbd setup all --dry-run"</code>
+                        </div>
+                        <p>"Use a custom MCP URL:"</p>
+                        <div class="code-block">
+                            <code>"mentisdbd setup all --url https://my.mentisdb.com:9473"</code>
+                        </div>
+
+                        <h4>"Supported integrations"</h4>
+                        <p>
+                            "Use any of these names with "
+                            <code>"mentisdbd setup"</code>
+                            ":"
+                        </p>
+                        <table class="config-table">
+                            <thead>
+                                <tr>
+                                    <th>"Name"</th>
+                                    <th>"Tool"</th>
+                                    <th>"Config location"</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>"claude-code"</code></td>
+                                    <td>"Claude Code CLI"</td>
+                                    <td><code>"~/.claude/mcp/mentisdb.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"claude-desktop"</code></td>
+                                    <td>"Claude for Desktop"</td>
+                                    <td><code>"~/Library/Application Support/Claude/claude_desktop_config.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"codex"</code></td>
+                                    <td>"OpenAI Codex CLI"</td>
+                                    <td><code>"~/.codex/config.toml"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"copilot"</code></td>
+                                    <td>"GitHub Copilot CLI"</td>
+                                    <td><code>"~/.copilot/mcp-config.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"gemini"</code></td>
+                                    <td>"Google Gemini CLI"</td>
+                                    <td><code>"~/.gemini/settings.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"opencode"</code></td>
+                                    <td>"OpenCode"</td>
+                                    <td><code>"~/.config/opencode/opencode.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"qwen"</code></td>
+                                    <td>"Qwen Code Assistant"</td>
+                                    <td><code>"~/.qwen/settings.json"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"vscode-copilot"</code></td>
+                                    <td>"VS Code + Copilot"</td>
+                                    <td>
+                                        <code>"~/Library/Application Support/Code/User/mcp.json"</code>
+                                        " (macOS) · "
+                                        <code>"~/.config/Code/User/mcp.json"</code>
+                                        " (Linux) · "
+                                        <code>"%APPDATA%\\Code\\User\\mcp.json"</code>
+                                        " (Windows)"
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>"How it works"</h4>
+                        <p>
+                            "Both commands use "
+                            <code>"PathEnvironment"</code>
+                            " to resolve paths consistently — honouring "
+                            <code>"HOME"</code>
+                            ", "
+                            <code>"XDG_CONFIG_HOME"</code>
+                            ", "
+                            <code>"USERPROFILE"</code>
+                            ", and "
+                            <code>"APPDATA"</code>
+                            " on their respective platforms. They detect whether an integration is \
+                             already configured, is installed but unconfigured, or is not present, \
+                             and adapt their output accordingly. They never overwrite an existing \
+                             MentisDB entry without explicit confirmation."
+                        </p>
+
+                        // ── Manual setup ────────────────────────────────────
+                        <h3 id="connecting-manual">"Manual MCP Configuration"</h3>
+                        <p>
+                            "If you prefer to configure manually, or need a custom URL, copy the \
+                             relevant snippet below. All tools connect to "
+                            <code>"http://127.0.0.1:9471"</code>
+                            " by default (HTTP, localhost). After trusting the self-signed TLS \
+                             certificate you can use "
+                            <code>"https://my.mentisdb.com:9473"</code>
+                            " instead."
+                        </p>
+
+                        <h4>"Claude for Desktop"</h4>
                         <p>
                             "Claude for Desktop connects to MCP servers via the "
                             <code>"claude_desktop_config.json"</code>
@@ -657,19 +809,19 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                              changes to take effect."
                         </div>
 
-                        <h3>"Claude Code"</h3>
+                        <h4>"Claude Code"</h4>
                         <div class="code-block">
                             <code>
                                 "claude mcp add --transport http mentisdb http://127.0.0.1:9471"
                             </code>
                         </div>
 
-                        <h3>"OpenAI Codex"</h3>
+                        <h4>"OpenAI Codex"</h4>
                         <div class="code-block">
                             <code>"codex mcp add mentisdb --url http://127.0.0.1:9471"</code>
                         </div>
 
-                        <h3>"GitHub Copilot CLI"</h3>
+                        <h4>"GitHub Copilot CLI"</h4>
                         <p>
                             "Add to "
                             <code>"~/.copilot/mcp-config.json"</code>
@@ -697,11 +849,109 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
 }"#}</code></pre>
                         </div>
 
-                        <h3>"Qwen Code"</h3>
+                        <h4>"Qwen Code"</h4>
                         <div class="code-block">
                             <code>
                                 "qwen mcp add --transport http mentisdb http://127.0.0.1:9471"
                             </code>
+                        </div>
+
+                        <h4>"OpenCode"</h4>
+                        <p>
+                            "OpenCode stores MCP configuration in "
+                            <code>"~/.config/opencode/opencode.json"</code>
+                            " on Linux and macOS. Add the "
+                            <code>"mentisdb"</code>
+                            " block under the top-level "
+                            <code>"mcp"</code>
+                            " key:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcp": {
+    "mentisdb": {
+      "type": "remote",
+      "url": "http://127.0.0.1:9471",
+      "enabled": true
+    }
+  }
+}"#}</code></pre>
+                        </div>
+                        <p>"Or using HTTPS after trusting the certificate:"</p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcp": {
+    "mentisdb": {
+      "type": "remote",
+      "url": "https://my.mentisdb.com:9473",
+      "enabled": true
+    }
+  }
+}"#}</code></pre>
+                        </div>
+
+                        <h4>"Google Gemini CLI"</h4>
+                        <p>
+                            "Gemini CLI reads MCP server configuration from "
+                            <code>"~/.gemini/settings.json"</code>
+                            ". Add the "
+                            <code>"mentisdb"</code>
+                            " block under the top-level "
+                            <code>"mcpServers"</code>
+                            " key. The "
+                            <code>"httpUrl"</code>
+                            " field is required alongside "
+                            <code>"url"</code>
+                            " for HTTP transport:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "http://127.0.0.1:9471",
+      "httpUrl": "http://127.0.0.1:9471"
+    }
+  }
+}"#}</code></pre>
+                        </div>
+
+                        <h4>"VS Code + Copilot"</h4>
+                        <p>
+                            "VS Code stores MCP server configuration in "
+                            <code>"mcp.json"</code>
+                            " inside the VS Code user settings directory. The path varies by OS:"
+                        </p>
+                        <ul>
+                            <li>
+                                <strong>"macOS: "</strong>
+                                <code>"~/Library/Application Support/Code/User/mcp.json"</code>
+                            </li>
+                            <li>
+                                <strong>"Linux: "</strong>
+                                <code>"~/.config/Code/User/mcp.json"</code>
+                            </li>
+                            <li>
+                                <strong>"Windows: "</strong>
+                                <code>"%APPDATA%\\Code\\User\\mcp.json"</code>
+                            </li>
+                        </ul>
+                        <p>
+                            "Add the "
+                            <code>"mentisdb"</code>
+                            " block under the top-level "
+                            <code>"servers"</code>
+                            " key:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"{
+  "servers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "http://127.0.0.1:9471"
+    }
+  }
+}"#}</code></pre>
                         </div>
                     </section>
 
