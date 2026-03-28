@@ -130,7 +130,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <tbody>
                                 <tr>
                                     <td><code>"POST"</code></td>
-                                    <td><code>"/v1/thought"</code></td>
+                                    <td><code>"/v1/thoughts"</code></td>
                                     <td>"Append a new thought to a chain"</td>
                                 </tr>
                                 <tr>
@@ -142,6 +142,16 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/lexical-search"</code></td>
                                     <td>"Ranked lexical search with scores and matched-term diagnostics"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/ranked-search"</code></td>
+                                    <td>"Canonical flat ranked retrieval with lexical + graph-aware score breakdowns"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/context-bundles"</code></td>
+                                    <td>"Seed-anchored grouped support context for agent reasoning and dashboard inspection"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"GET"</code></td>
@@ -170,8 +180,13 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
-                                    <td><code>"/v1/import-markdown"</code></td>
-                                    <td>"Bulk import a MEMORY.md into a chain"</td>
+                                    <td><code>"/v1/recent-context"</code></td>
+                                    <td>"Render a compact resumption prompt for recent, important context"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/memory-markdown"</code></td>
+                                    <td>"Export a chain as MentisDB-flavored MEMORY.md markdown"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -185,11 +200,18 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <code>"POST /"</code>
                             " and let the agent bootstrap itself from the initialize instructions and resource catalog."
                         </p>
+                        <p>
+                            "For direct crate users, 0.7.0 also adds additive ranked retrieval \
+                             and optional vector sidecars: use ranked search first, graph \
+                             expansion/context bundles when you need supporting context, and \
+                             vector sidecars only when you want rebuildable semantic retrieval \
+                             without changing the canonical append-only chain."
+                        </p>
 
                         // ── Schema Version ───────────────────────────────────
                         <h2 id="schema">"Schema Version"</h2>
                         <p>
-                            "MentisDB 0.6.0 uses schema version 2 ("
+                            "MentisDB 0.7.0 uses schema version 2 ("
                             <code>"MENTISDB_SCHEMA_V2 = 2"</code>
                             "). All new chains are created at V2 automatically. \
                              Legacy V0 chains (created before 0.5.2) are migrated \

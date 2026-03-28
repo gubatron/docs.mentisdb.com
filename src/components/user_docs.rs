@@ -434,13 +434,18 @@ sudo update-ca-certificates"#}</code></pre>
                         <p>
                             "Paginated table of all thoughts in a chain. Filter by any of the \
                              29 ThoughtTypes using the grouped filter panel — each type is shown \
-                             with a coloured badge. Click any row to open a detail modal showing \
+                             with a coloured badge. The explorer also supports chain-scoped text \
+                             search plus a live agent dropdown; when text search is active it \
+                             returns ranked results and grouped context bundles instead of a plain \
+                             substring list. Click any row to open a detail modal showing \
                              the full thought content, metadata, positional back-references \
                              (displayed as "
                             <em>"#N"</em>
                             "), and typed relations (displayed as "
                             <em>"kind → target_id (chain: other-chain)"</em>
-                            " for cross-chain edges)."
+                            " for cross-chain edges), plus ranked-search provenance such as \
+                             score breakdowns, matched terms, graph distance, and bundle support \
+                             preview when the row came from search."
                         </p>
 
                         <h4>"Agent Manager"</h4>

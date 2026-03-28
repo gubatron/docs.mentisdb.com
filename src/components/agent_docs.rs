@@ -363,6 +363,33 @@ pub fn AgentDocs() -> impl IntoView {
                             <code>"thought_types=[\"Decision\",\"Constraint\"]"</code>
                         </p>
 
+                        <h3>"Use ranked search when you remember the gist, not the exact words"</h3>
+                        <p>
+                            "Use "
+                            <code>"mentisdb_ranked_search"</code>
+                            " when you need the best flat matches for a topic, paraphrase, or \
+                             partial recollection. It returns lexical and graph-aware ranking \
+                             signals such as "
+                            <code>"matched_terms"</code>
+                            ", "
+                            <code>"match_sources"</code>
+                            ", "
+                            <code>"graph_distance"</code>
+                            ", and score breakdowns so you can inspect why a memory surfaced."
+                        </p>
+
+                        <h3>"Use context bundles when supporting context matters as much as the seed"</h3>
+                        <p>
+                            "Use "
+                            <code>"mentisdb_context_bundles"</code>
+                            " when you want the best lexical seed thoughts plus grouped support \
+                             beneath each seed. This is the right tool for understanding the \
+                             decision together with the follow-on summaries, corrections, or \
+                             implementation notes that hang off it through "
+                            <code>"refs"</code>
+                            " and typed relations."
+                        </p>
+
                         <h3>"Traverse for ordered history"</h3>
                         <p>
                             "Use "
@@ -751,7 +778,9 @@ pub fn AgentDocs() -> impl IntoView {
                         <h4>"Thought Explorer"</h4>
                         <p>
                             "\"The Thought Explorer lets your operator browse every thought you \
-                             have written, paginated and filterable by all 29 ThoughtTypes. \
+                             have written, paginated and filterable by all 29 ThoughtTypes. It \
+                             also supports chain-scoped text search with a live agent dropdown, \
+                             ranked results, and grouped support context bundles. \
                              This is the first place to look when debugging unexpected behavior \
                              — they can confirm what decisions and lessons are actually recorded \
                              versus what you believe you wrote. Each thought's detail modal \
