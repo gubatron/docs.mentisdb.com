@@ -37,7 +37,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                              Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.6""#</code>
+                            <code>r#"mentisdb = "0.7""#</code>
                         </div>
                         <p>
                             "The crate provides the full memory engine, skill registry, \
@@ -146,7 +146,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + graph-aware score breakdowns"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available)"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -201,17 +201,25 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " and let the agent bootstrap itself from the initialize instructions and resource catalog."
                         </p>
                         <p>
-                            "For direct crate users, 0.7.0 also adds additive ranked retrieval \
-                             and optional vector sidecars: use ranked search first, graph \
-                             expansion/context bundles when you need supporting context, and \
-                             vector sidecars only when you want rebuildable semantic retrieval \
-                             without changing the canonical append-only chain."
+                            "For direct crate users, 0.7.2 keeps vector sidecars additive and \
+                             rebuildable, but ranked search now blends lexical, graph, and \
+                             managed-sidecar vector signals automatically when sidecars are \
+                             enabled. The append-only chain remains canonical; sidecars are \
+                             derived acceleration state."
+                        </p>
+                        <p>
+                            "The daemon now applies persisted managed-vector settings whenever \
+                             it opens a chain. By default each chain gets the built-in \
+                             local-text provider ("
+                            <code>"local-text-v1"</code>
+                            "), and ranked search across REST, MCP, and dashboard surfaces \
+                             upgrades to hybrid scoring when that sidecar is available."
                         </p>
 
                         // ── Schema Version ───────────────────────────────────
                         <h2 id="schema">"Schema Version"</h2>
                         <p>
-                            "MentisDB 0.7.0 uses schema version 2 ("
+                            "MentisDB 0.7.2 uses schema version 2 ("
                             <code>"MENTISDB_SCHEMA_V2 = 2"</code>
                             "). All new chains are created at V2 automatically. \
                              Legacy V0 chains (created before 0.5.2) are migrated \

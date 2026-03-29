@@ -436,8 +436,10 @@ sudo update-ca-certificates"#}</code></pre>
                              29 ThoughtTypes using the grouped filter panel — each type is shown \
                              with a coloured badge. The explorer also supports chain-scoped text \
                              search plus a live agent dropdown; when text search is active it \
-                             returns ranked results and grouped context bundles instead of a plain \
-                             substring list. Click any row to open a detail modal showing \
+                             returns hybrid ranked results and grouped context bundles instead of \
+                             a plain substring list. If a managed vector sidecar is enabled for \
+                             the chain, the ranking transparently blends lexical, graph, and \
+                             semantic vector signals. Click any row to open a detail modal showing \
                              the full thought content, metadata, positional back-references \
                              (displayed as "
                             <em>"#N"</em>
@@ -446,6 +448,21 @@ sudo update-ca-certificates"#}</code></pre>
                             " for cross-chain edges), plus ranked-search provenance such as \
                              score breakdowns, matched terms, graph distance, and bundle support \
                              preview when the row came from search."
+                        </p>
+
+                        <h4>"Vector Sidecars"</h4>
+                        <p>
+                            "Each chain page also has a "
+                            <strong>"Vector Sidecars"</strong>
+                            " panel for the daemon's managed embedding indexes. By default \
+                             `mentisdbd` keeps a local `local-text-v1` sidecar in sync for each \
+                             chain it opens. Operators can expand the panel to inspect freshness, \
+                             indexed-thought counts, and the sidecar path; disable or re-enable \
+                             append-time sync; run "
+                            <strong>"Sync now"</strong>
+                            "; or "
+                            <strong>"Rebuild from scratch"</strong>
+                            " after an explicit delete-and-recreate confirmation."
                         </p>
 
                         <h4>"Agent Manager"</h4>
@@ -624,7 +641,7 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                                 <tr>
                                     <td><code>"claude-code"</code></td>
                                     <td>"Claude Code CLI"</td>
-                                    <td><code>"~/.claude/mcp/mentisdb.json"</code></td>
+                                    <td><code>"~/.claude.json"</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>"claude-desktop"</code></td>
@@ -815,6 +832,15 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         </div>
 
                         <h4>"Claude Code"</h4>
+                        <p>
+                            "`mentisdbd setup claude-code` writes the MCP entry under "
+                            <code>"mcpServers.mentisdb"</code>
+                            " in "
+                            <code>"~/.claude.json"</code>
+                            " (or the platform-equivalent home directory on Windows). The older "
+                            <code>"~/.claude/mcp/mentisdb.json"</code>
+                            " file is treated as a legacy companion path, not the canonical target."
+                        </p>
                         <div class="code-block">
                             <code>
                                 "claude mcp add --transport http mentisdb http://127.0.0.1:9471"
@@ -834,10 +860,12 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         </p>
                         <div class="code-block">
                             <pre><code>{r#"{
-  "servers": {
+  "mcpServers": {
     "mentisdb": {
+      "type": "http",
       "url": "http://127.0.0.1:9471",
-      "type": "http"
+      "headers": {},
+      "tools": ["*"]
     }
   }
 }"#}</code></pre>
@@ -845,10 +873,12 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                         <p>"Or using HTTPS after trusting the certificate:"</p>
                         <div class="code-block">
                             <pre><code>{r#"{
-  "servers": {
+  "mcpServers": {
     "mentisdb": {
+      "type": "http",
       "url": "https://my.mentisdb.com:9473",
-      "type": "http"
+      "headers": {},
+      "tools": ["*"]
     }
   }
 }"#}</code></pre>

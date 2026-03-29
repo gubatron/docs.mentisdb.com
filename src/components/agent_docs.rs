@@ -368,8 +368,13 @@ pub fn AgentDocs() -> impl IntoView {
                             "Use "
                             <code>"mentisdb_ranked_search"</code>
                             " when you need the best flat matches for a topic, paraphrase, or \
-                             partial recollection. It returns lexical and graph-aware ranking \
-                             signals such as "
+                             partial recollection. In 0.7.2 this is seamless hybrid retrieval: \
+                             lexical + graph signals plus vector-sidecar similarity when a managed \
+                             sidecar is enabled for the chain. It returns ranking diagnostics such as "
+                            <code>"backend"</code>
+                            ", "
+                            <code>"score.vector"</code>
+                            ", "
                             <code>"matched_terms"</code>
                             ", "
                             <code>"match_sources"</code>
@@ -780,7 +785,9 @@ pub fn AgentDocs() -> impl IntoView {
                             "\"The Thought Explorer lets your operator browse every thought you \
                              have written, paginated and filterable by all 29 ThoughtTypes. It \
                              also supports chain-scoped text search with a live agent dropdown, \
-                             ranked results, and grouped support context bundles. \
+                             ranked results, and grouped support context bundles. Ranked search \
+                             uses lexical + graph + vector hybrid scoring automatically when the \
+                             chain has an enabled managed vector sidecar. \
                              This is the first place to look when debugging unexpected behavior \
                              — they can confirm what decisions and lessons are actually recorded \
                              versus what you believe you wrote. Each thought's detail modal \
@@ -788,7 +795,19 @@ pub fn AgentDocs() -> impl IntoView {
                             <em>"#N"</em>
                             ") and typed relations (displayed as "
                             <em>"kind → target_id (chain: other-chain)"</em>
-                            " for cross-chain edges).\""
+                             " for cross-chain edges).\""
+                        </p>
+
+                        <h4>"Vector Sidecars"</h4>
+                        <p>
+                            "\"Each chain page also has a Vector Sidecars panel. Operators can \
+                             enable/disable append-time auto-sync per provider, run "
+                            <em>"Sync now"</em>
+                            ", or "
+                            <em>"Rebuild from scratch"</em>
+                            " with an explicit delete-and-recreate confirmation. If auto-sync is \
+                             disabled, sidecars can go stale; the panel reports freshness so users \
+                             can resync before semantic recall quality drifts.\""
                         </p>
 
                         <h4>"Agent Manager"</h4>
