@@ -994,27 +994,68 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                     <section class="docs-section" id="priming">
                         <h2 id="priming">"Priming Your Agent"</h2>
                         <p>
-                            "Before your agent starts any task, tell it about MentisDB so it \
-                             knows to write durable memories and load prior context. MentisDB now \
-                             exposes startup instructions plus the embedded MCP resource "
-                            <code>"mentisdb://skill/core"</code>
-                            " automatically during the MCP handshake, but a short opening message \
-                             still improves consistency across clients."
+                            "Once MentisDB is running you need to hand your agent a short \
+                             bootstrap sequence so it knows how to initialise memory for the \
+                             current project. MentisDB prints this exact sequence in the \
+                             terminal at startup — or you can copy it from the block below \
+                             and paste it directly into your AI chat."
                         </p>
-                        <div class="docs-callout">
+
+                        <h3>"Three-step init sequence"</h3>
+                        <ol>
+                            <li>
+                                <strong>"Bootstrap the chain"</strong>
+                                " — call "
+                                <code>"mentisdb_bootstrap(chain_key=\"<your-project>\")"</code>
+                                ". This creates or reopens the named chain and returns the list of \
+                                 available skills."
+                            </li>
+                            <li>
+                                <strong>"Load the skill rules"</strong>
+                                " — read the MCP resource "
+                                <code>"mentisdb://skill/core"</code>
+                                ". This loads the embedded "
+                                <code>"MENTISDB_SKILL.md"</code>
+                                " which tells the agent exactly how to write thoughts, use search, \
+                                 and manage context."
+                            </li>
+                            <li>
+                                <strong>"Write a Summary checkpoint"</strong>
+                                " — after loading, the agent writes a brief "
+                                <code>"Summary"</code>
+                                " thought describing what it just learned. This seeds the chain so \
+                                 future sessions recover context automatically via "
+                                <code>"mentisdb_recent_context"</code>
+                                "."
+                            </li>
+                        </ol>
+
+                        <h3>"Copy-paste primer"</h3>
+                        <p>
+                            "Paste this into your AI chat (replacing "
+                            <code>"&lt;mcp-address&gt;"</code>
+                            " with the address shown by "
+                            <code>"mentisdbd"</code>
+                            " at startup):"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>
+"MentisDB is running at <mcp-address>.
+Call mentisdb_bootstrap('<your-project>'), then
+resources/read mentisdb://skill/core to load rules,
+then write a Summary of what you just learned."
+                            </code></pre>
+                        </div>
+                        <div class="docs-callout-tip">
                             <p>
-                                <em>
-                                    "\"You have access to MentisDB via MCP. At the start of each \
-                                     session read the MCP resource mentisdb://skill/core, choose the \
-                                     chain whose name best matches this project if none was specified, \
-                                     then load recent context with mentisdb_recent_context. During \
-                                     work, write important decisions, lessons, and corrections as \
-                                     thoughts. Before your context fills up, write a Summary \
-                                     checkpoint. Your agent_id is 'orion'.\""
-                                </em>
+                                <strong>"Tip:"</strong>
+                                " Add this to your tool's system-prompt or project instructions \
+                                 file so every new session is automatically primed — you will \
+                                 never need to repeat it manually."
                             </p>
                         </div>
-                        <p>"You can make this permanent by adding it to your tool's system prompt or project instructions file. Tips:"</p>
+
+                        <h3>"Additional tips"</h3>
                         <ul>
                             <li>
                                 "Give the agent a stable "
@@ -1039,7 +1080,8 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
                                 " as a fallback for non-MCP or limited clients"
                             </li>
                             <li>
-                                "If you do not specify a chain up front, tell the agent to prefer a chain whose name matches the current repo or working folder"
+                                "If you do not specify a chain up front, tell the agent to prefer \
+                                 a chain whose name matches the current repo or working folder"
                             </li>
                             <li>
                                 "Ask it to write a "
