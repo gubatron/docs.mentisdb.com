@@ -13,6 +13,7 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#installation">"Installation"</a>
                         <a class="docs-nav-link" href="#running">"Running the Daemon"</a>
                         <a class="docs-nav-link" href="#configuration">"Configuration"</a>
+                        <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                         <a class="docs-nav-link" href="#self-update">"Self-Update"</a>
                         <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
@@ -20,7 +21,6 @@ pub fn UserDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
                         <a class="docs-nav-link" href="#connecting-automated">"Automated Setup"</a>
                         <a class="docs-nav-link" href="#connecting-manual">"Manual MCP Config"</a>
-                        <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                         <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                         <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                         <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
@@ -223,6 +223,107 @@ pub fn UserDocs() -> impl IntoView {
                                 </tr>
                             </tbody>
                         </table>
+                    </section>
+
+                    // ── Priming Your Agent ───────────────────────────────────
+                    <section class="docs-section" id="priming">
+                        <h2 id="priming">"Priming Your Agent"</h2>
+                        <p>
+                            "Once MentisDB is running you need to hand your agent a short \
+                             bootstrap sequence so it knows how to initialise memory for the \
+                             current project. MentisDB prints this exact sequence in the \
+                             terminal at startup — or you can copy it from the block below \
+                             and paste it directly into your AI chat."
+                        </p>
+
+                        <h3>"Three-step init sequence"</h3>
+                        <ol>
+                            <li>
+                                <strong>"Bootstrap the chain"</strong>
+                                " — call "
+                                <code>"mentisdb_bootstrap(chain_key=\"<your-project>\")"</code>
+                                ". This creates or reopens the named chain and returns the list of \
+                                 available skills."
+                            </li>
+                            <li>
+                                <strong>"Load the skill rules"</strong>
+                                " — read the MCP resource "
+                                <code>"mentisdb://skill/core"</code>
+                                ". This loads the embedded "
+                                <code>"MENTISDB_SKILL.md"</code>
+                                " which tells the agent exactly how to write thoughts, use search, \
+                                 and manage context."
+                            </li>
+                            <li>
+                                <strong>"Write a Summary checkpoint"</strong>
+                                " — after loading, the agent writes a brief "
+                                <code>"Summary"</code>
+                                " thought describing what it just learned. This seeds the chain so \
+                                 future sessions recover context automatically via "
+                                <code>"mentisdb_recent_context"</code>
+                                "."
+                            </li>
+                        </ol>
+
+                        <h3>"Copy-paste primer"</h3>
+                        <p>
+                            "Paste this into your AI chat (replacing "
+                            <code>"&lt;mcp-address&gt;"</code>
+                            " with the address shown by "
+                            <code>"mentisdbd"</code>
+                            " at startup):"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>
+"MentisDB is running at <mcp-address>.
+Call mentisdb_bootstrap('<your-project>'), then
+resources/read mentisdb://skill/core to load rules,
+then write a Summary of what you just learned."
+                            </code></pre>
+                        </div>
+                        <div class="docs-callout-tip">
+                            <p>
+                                <strong>"Tip:"</strong>
+                                " Add this to your tool's system-prompt or project instructions \
+                                 file so every new session is automatically primed — you will \
+                                 never need to repeat it manually."
+                            </p>
+                        </div>
+
+                        <h3>"Additional tips"</h3>
+                        <ul>
+                            <li>
+                                "Give the agent a stable "
+                                <code>"agent_id"</code>
+                                " — this is how its memories are attributed and retrieved later"
+                            </li>
+                            <li>
+                                "Tell it which "
+                                <code>"chain_key"</code>
+                                " to use if you run multiple chains (e.g. one per project)"
+                            </li>
+                            <li>
+                                "Instruct it to load memories "
+                                <em>"before starting"</em>
+                                " — not after it has already made decisions"
+                            </li>
+                            <li>
+                                "If your client supports MCP resources, tell the agent to read "
+                                <code>"mentisdb://skill/core"</code>
+                                " first; only use "
+                                <code>"GET /mentisdb_skill_md"</code>
+                                " as a fallback for non-MCP or limited clients"
+                            </li>
+                            <li>
+                                "If you do not specify a chain up front, tell the agent to prefer \
+                                 a chain whose name matches the current repo or working folder"
+                            </li>
+                            <li>
+                                "Ask it to write a "
+                                <code>"Summary"</code>
+                                " checkpoint before compacting its context or ending a long session"
+                            </li>
+                        </ul>
                     </section>
 
                     // ── Self-Update ────────────────────────────────────────
@@ -988,107 +1089,6 @@ Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
   }
 }"#}</code></pre>
                         </div>
-                    </section>
-
-                    // ── Priming Your Agent ───────────────────────────────────
-                    <section class="docs-section" id="priming">
-                        <h2 id="priming">"Priming Your Agent"</h2>
-                        <p>
-                            "Once MentisDB is running you need to hand your agent a short \
-                             bootstrap sequence so it knows how to initialise memory for the \
-                             current project. MentisDB prints this exact sequence in the \
-                             terminal at startup — or you can copy it from the block below \
-                             and paste it directly into your AI chat."
-                        </p>
-
-                        <h3>"Three-step init sequence"</h3>
-                        <ol>
-                            <li>
-                                <strong>"Bootstrap the chain"</strong>
-                                " — call "
-                                <code>"mentisdb_bootstrap(chain_key=\"<your-project>\")"</code>
-                                ". This creates or reopens the named chain and returns the list of \
-                                 available skills."
-                            </li>
-                            <li>
-                                <strong>"Load the skill rules"</strong>
-                                " — read the MCP resource "
-                                <code>"mentisdb://skill/core"</code>
-                                ". This loads the embedded "
-                                <code>"MENTISDB_SKILL.md"</code>
-                                " which tells the agent exactly how to write thoughts, use search, \
-                                 and manage context."
-                            </li>
-                            <li>
-                                <strong>"Write a Summary checkpoint"</strong>
-                                " — after loading, the agent writes a brief "
-                                <code>"Summary"</code>
-                                " thought describing what it just learned. This seeds the chain so \
-                                 future sessions recover context automatically via "
-                                <code>"mentisdb_recent_context"</code>
-                                "."
-                            </li>
-                        </ol>
-
-                        <h3>"Copy-paste primer"</h3>
-                        <p>
-                            "Paste this into your AI chat (replacing "
-                            <code>"&lt;mcp-address&gt;"</code>
-                            " with the address shown by "
-                            <code>"mentisdbd"</code>
-                            " at startup):"
-                        </p>
-                        <div class="code-block">
-                            <pre><code>
-"MentisDB is running at <mcp-address>.
-Call mentisdb_bootstrap('<your-project>'), then
-resources/read mentisdb://skill/core to load rules,
-then write a Summary of what you just learned."
-                            </code></pre>
-                        </div>
-                        <div class="docs-callout-tip">
-                            <p>
-                                <strong>"Tip:"</strong>
-                                " Add this to your tool's system-prompt or project instructions \
-                                 file so every new session is automatically primed — you will \
-                                 never need to repeat it manually."
-                            </p>
-                        </div>
-
-                        <h3>"Additional tips"</h3>
-                        <ul>
-                            <li>
-                                "Give the agent a stable "
-                                <code>"agent_id"</code>
-                                " — this is how its memories are attributed and retrieved later"
-                            </li>
-                            <li>
-                                "Tell it which "
-                                <code>"chain_key"</code>
-                                " to use if you run multiple chains (e.g. one per project)"
-                            </li>
-                            <li>
-                                "Instruct it to load memories "
-                                <em>"before starting"</em>
-                                " — not after it has already made decisions"
-                            </li>
-                            <li>
-                                "If your client supports MCP resources, tell the agent to read "
-                                <code>"mentisdb://skill/core"</code>
-                                " first; only use "
-                                <code>"GET /mentisdb_skill_md"</code>
-                                " as a fallback for non-MCP or limited clients"
-                            </li>
-                            <li>
-                                "If you do not specify a chain up front, tell the agent to prefer \
-                                 a chain whose name matches the current repo or working folder"
-                            </li>
-                            <li>
-                                "Ask it to write a "
-                                <code>"Summary"</code>
-                                " checkpoint before compacting its context or ending a long session"
-                            </li>
-                        </ul>
                     </section>
 
                     // ── Chain Topologies ─────────────────────────────────────
