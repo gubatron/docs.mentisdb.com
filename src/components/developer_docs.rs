@@ -69,10 +69,8 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 ", "
                                 <code>"SkillRegistry"</code>
                                 ", "
-                                <code>"BinaryStorageAdapter"</code>
-                                ", "
-                                <code>"JsonlStorageAdapter"</code>
-                                ", and the HTTP server."
+                                 <code>"BinaryStorageAdapter"</code>
+                                 ", and the HTTP server."
                             </p>
                             <a
                                 href="https://docs.rs/mentisdb/latest/mentisdb/"
@@ -425,15 +423,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " trait:"
                         </p>
                         <ul>
-                            <li>
+                             <li>
                                 <strong>"BinaryStorageAdapter"</strong>
-                                " — Default. Compact binary format with write buffering. \
+                                " — Default (and only supported adapter for new chains). \
+                                 Compact binary format with write buffering. \
                                  Best for production."
-                            </li>
-                            <li>
-                                <strong>"JsonlStorageAdapter"</strong>
-                                " — Line-oriented JSON. Human-readable, inspectable with \
-                                 standard tools. Good for debugging."
                             </li>
                         </ul>
                         <p>

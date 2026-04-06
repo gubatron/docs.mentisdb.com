@@ -99,12 +99,10 @@ pub fn UserDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"MENTISDB_DEFAULT_STORAGE_ADAPTER"</code></td>
                                     <td><code>"binary"</code></td>
-                                    <td>
-                                        "Storage format: "
+                                     <td>
+                                        "Storage format: only "
                                         <code>"binary"</code>
-                                        " (compact, default) or "
-                                        <code>"jsonl"</code>
-                                        " (human-readable)"
+                                        " is supported for new chains (compact, default)"
                                     </td>
                                 </tr>
                                 <tr>
@@ -621,7 +619,7 @@ All `create_*` APIs were removed in the 0.7 redesign.
 
 ## Decision — 2025-01-11
 Adopted binary storage adapter for production.
-Rationale: 3x smaller on-disk footprint vs JSONL."#}</code></pre>
+Rationale: binary is the only supported format for new chains."#}</code></pre>
                         </div>
                         <p>
                             "After import the memories are fully indexed — searchable, \

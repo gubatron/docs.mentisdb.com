@@ -218,6 +218,13 @@ img {
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+
+    .docs-sidebar {
+      position:   static;
+      top:        auto;
+      max-height: none;
+      overflow-y: visible;
+    }
   }
 }
 
