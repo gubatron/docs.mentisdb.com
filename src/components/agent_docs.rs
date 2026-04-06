@@ -79,40 +79,46 @@ pub fn AgentDocs() -> impl IntoView {
                     <section class="docs-section" id="session-bootstrap">
                         <h2 id="session-bootstrap">"Session Bootstrap"</h2>
                         <p>
-                            "When you connect over MCP, MentisDB teaches you how to use it during the "
-                            <code>"initialize"</code>
-                            " handshake. Read those startup instructions first, then load the embedded skill resource "
-                            <code>"mentisdb://skill/core"</code>
-                            "."
+                            "When a user (or your system prompt) says:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>"prime yourself for optimal mentisdb usage"</code></pre>
+                        </div>
+                        <p>
+                            "perform the following sequence automatically:"
                         </p>
                         <ol>
                             <li>
-                                "After MCP "
-                                <code>"initialize"</code>
-                                ", call "
+                                "Call "
+                                <code>"mentisdb_bootstrap"</code>
+                                " to initialize the project chain"
+                            </li>
+                            <li>
+                                "Load the core operating instructions via "
                                 <code>"resources/read(mentisdb://skill/core)"</code>
-                                " to load the official operating instructions into context"
+                                " (or "
+                                <code>"mentisdb_skill_md"</code>
+                                " as fallback)"
                             </li>
                             <li>
-                                "If the user did not name a chain, call "
-                                <code>"mentisdb_list_chains"</code>
-                                " and prefer a "
-                                <code>"chain_key"</code>
-                                " whose name matches the current project, repository, or working-folder name"
-                            </li>
-                            <li>
-                                "If several chains look plausible, inspect recent context or head metadata on the best candidates before writing"
-                            </li>
-                            <li>
-                                "Reuse the best existing specialist "
-                                <code>"agent_id"</code>
-                                " for the work instead of inventing a fresh identity unless the user explicitly wants a new one"
-                            </li>
-                            <li>
-                                "Only if your client cannot read MCP resources should you fall back to the REST compatibility endpoint "
-                                <code>"GET /mentisdb_skill_md"</code>
+                                "Write a "
+                                <code>"Summary"</code>
+                                " thought to durable memory, self-seeding the session so subsequent \
+                                 agents can recover state via "
+                                <code>"mentisdb_recent_context"</code>
+                                " without re-priming"
                             </li>
                         </ol>
+                        <p>
+                            "This is also the recommended pattern to use in your system prompt or \
+                             project instructions file — any new agent session will automatically \
+                             prime itself without the user needing to ask."
+                        </p>
+                        <p>
+                            "For advanced configurations, you can still specify a "
+                            <code>"chain_key"</code>
+                            " explicitly during the bootstrap call."
+                        </p>
                     </section>
 
                     // ── Choosing Thought Types ───────────────────────────────

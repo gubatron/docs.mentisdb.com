@@ -229,64 +229,41 @@ pub fn UserDocs() -> impl IntoView {
                     <section class="docs-section" id="priming">
                         <h2 id="priming">"Priming Your Agent"</h2>
                         <p>
-                            "Once MentisDB is running you need to hand your agent a short \
-                             bootstrap sequence so it knows how to initialise memory for the \
-                             current project. MentisDB prints this exact sequence in the \
-                             terminal at startup — or you can copy it from the block below \
-                             and paste it directly into your AI chat."
+                            "Priming an agent for MentisDB is one sentence. Just type:"
                         </p>
-
-                        <h3>"Three-step init sequence"</h3>
+                        <div class="code-block">
+                            <pre><code>"prime yourself for optimal mentisdb usage"</code></pre>
+                        </div>
+                        <p>
+                            "That is all. The agent handles the rest automatically:"
+                        </p>
                         <ol>
                             <li>
                                 <strong>"Bootstrap the chain"</strong>
-                                " — call "
-                                <code>"mentisdb_bootstrap(chain_key=\"<your-project>\")"</code>
-                                ". This creates or reopens the named chain and returns the list of \
-                                 available skills."
+                                " — calls "
+                                <code>"mentisdb_bootstrap"</code>
+                                " to create or reopen the project chain"
                             </li>
                             <li>
                                 <strong>"Load the skill rules"</strong>
-                                " — read the MCP resource "
+                                " — reads "
                                 <code>"mentisdb://skill/core"</code>
-                                ". This loads the embedded "
-                                <code>"MENTISDB_SKILL.md"</code>
-                                " which tells the agent exactly how to write thoughts, use search, \
-                                 and manage context."
+                                " so it knows exactly how to write thoughts, search, and manage context"
                             </li>
                             <li>
                                 <strong>"Write a Summary checkpoint"</strong>
-                                " — after loading, the agent writes a brief "
-                                <code>"Summary"</code>
-                                " thought describing what it just learned. This seeds the chain so \
-                                 future sessions recover context automatically via "
+                                " — records what it just learned so future sessions recover context \
+                                 automatically via "
                                 <code>"mentisdb_recent_context"</code>
-                                "."
+                                " without needing to re-prime"
                             </li>
                         </ol>
-
-                        <h3>"Copy-paste primer"</h3>
-                        <p>
-                            "Paste this into your AI chat (replacing "
-                            <code>"&lt;mcp-address&gt;"</code>
-                            " with the address shown by "
-                            <code>"mentisdbd"</code>
-                            " at startup):"
-                        </p>
-                        <div class="code-block">
-                            <pre><code>
-"MentisDB is running at <mcp-address>.
-Call mentisdb_bootstrap('<your-project>'), then
-resources/read mentisdb://skill/core to load rules,
-then write a Summary of what you just learned."
-                            </code></pre>
-                        </div>
                         <div class="docs-callout-tip">
                             <p>
                                 <strong>"Tip:"</strong>
-                                " Add this to your tool's system-prompt or project instructions \
-                                 file so every new session is automatically primed — you will \
-                                 never need to repeat it manually."
+                                " Add this phrase to your tool's system-prompt or project instructions \
+                                 file and every new agent session will prime itself automatically — \
+                                 you will never need to type it again."
                             </p>
                         </div>
 
