@@ -218,12 +218,26 @@ img {
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    gap:                   0;
 
     .docs-sidebar {
-      position:   static;
-      top:        auto;
-      max-height: none;
-      overflow-y: visible;
+      display: none; // nav links hidden on mobile; headings are self-explanatory
+    }
+  }
+}
+
+// ── Docs content mobile padding ────────────────────────────────
+@media (max-width: 768px) {
+  .docs-page {
+    padding: 24px 0;
+  }
+
+  .docs-content {
+    padding: 0 4px;
+
+    h2 {
+      padding-top:  24px;
+      margin-top:   24px;
     }
   }
 }

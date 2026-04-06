@@ -237,25 +237,45 @@ pub fn UserDocs() -> impl IntoView {
                         </p>
                         <ol>
                             <li>
-                                <strong>"Bootstrap the chain"</strong>
+                                <strong>"Detect and select chain"</strong>
                                 " — calls "
-                                <code>"mentisdb_bootstrap"</code>
-                                " to create or reopen the project chain"
+                                <code>"mentisdb_list_chains"</code>
+                                " to see what chains exist, then picks the one whose name best matches \
+                                 the current project, repository, or working folder. If no chains exist \
+                                 yet, it asks you to name a new one before proceeding."
                             </li>
                             <li>
-                                <strong>"Load the skill rules"</strong>
+                                <strong>"Bootstrap"</strong>
+                                " — calls "
+                                <code>"mentisdb_bootstrap"</code>
+                                " with the chosen chain key to create or reopen that chain, then \
+                                 calls "
+                                <code>"mentisdb_list_agents"</code>
+                                " and reuses the existing specialist that best matches the current \
+                                 task, followed by "
+                                <code>"mentisdb_recent_context"</code>
+                                " to reload prior state."
+                            </li>
+                            <li>
+                                <strong>"Load skill rules"</strong>
                                 " — reads "
                                 <code>"mentisdb://skill/core"</code>
                                 " so it knows exactly how to write thoughts, search, and manage context"
                             </li>
                             <li>
-                                <strong>"Write a Summary checkpoint"</strong>
-                                " — records what it just learned so future sessions recover context \
-                                 automatically via "
-                                <code>"mentisdb_recent_context"</code>
-                                " without needing to re-prime"
+                                <strong>"Self-seed"</strong>
+                                " — writes a Summary checkpoint so every future session recovers state \
+                                 automatically without needing to re-prime"
                             </li>
                         </ol>
+                        <div class="docs-callout-tip">
+                            <p>
+                                <strong>"First time?"</strong>
+                                " If no memory chains exist yet, the agent will briefly explain what a \
+                                 chain is and ask what to name it — usually your project or repository \
+                                 name works well."
+                            </p>
+                        </div>
                         <div class="docs-callout-tip">
                             <p>
                                 <strong>"Tip:"</strong>
