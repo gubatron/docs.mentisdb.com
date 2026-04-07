@@ -949,6 +949,49 @@ pub fn AgentDocs() -> impl IntoView {
                             "."
                         </p>
 
+                        <h3>"ContinuesFrom — sequential session chaining"</h3>
+                        <p>
+                            "Use "
+                            <code>"ContinuesFrom"</code>
+                            " to chain consecutive turns within a conversation session. \
+                             Each turn's "
+                            <code>"target_id"</code>
+                            " points to the previous turn's UUID. \
+                             This creates a traversable graph of session turns that \
+                             graph-aware ranked search can walk when retrieving context."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_append(\n\
+    thought_type: \"Observation\",\n\
+    content: \"The retry logic resolved the timeout — root cause was DNS.\",\n\
+    relations: [{ kind: \"ContinuesFrom\", target_id: \"<uuid-of-prior-turn>\" }]\n\
+    )"
+                            </code></pre>
+                        </div>
+
+                        <h3>"All relation kinds"</h3>
+                        <p>
+                            "Accepted values for "
+                            <code>"kind"</code>
+                            " in "
+                            <code>"relations"</code>
+                            ":"
+                        </p>
+                        <ul>
+                            <li><code>"References"</code>" — generic pointer"</li>
+                            <li><code>"Summarizes"</code>" — condenses the target"</li>
+                            <li><code>"Corrects"</code>" — fixes a factual error in the target"</li>
+                            <li><code>"Invalidates"</code>" — target no longer applies"</li>
+                            <li><code>"CausedBy"</code>" — this thought resulted from the target"</li>
+                            <li><code>"Supports"</code>" — provides evidence for the target"</li>
+                            <li><code>"Contradicts"</code>" — conflicts with the target"</li>
+                            <li><code>"DerivedFrom"</code>" — derived from the target"</li>
+                            <li><code>"ContinuesFrom"</code>" — sequential continuation (session chaining)"</li>
+                            <li><code>"RelatedTo"</code>" — weak associative link"</li>
+                            <li><code>"Supersedes"</code>" — replaces the target's framing"</li>
+                        </ul>
+
                         <h3>"Positional back-references"</h3>
                         <p>
                             "Positional refs ("

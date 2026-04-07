@@ -414,6 +414,56 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " ThoughtType for perspective or framing shifts."
                         </p>
 
+                        <h3>"All relation kinds"</h3>
+                        <p>
+                            <code>"ThoughtRelationKind"</code>
+                            " variants accepted by both the Rust API and "
+                            <code>"POST /v1/thoughts"</code>
+                            ":"
+                        </p>
+                        <ul>
+                            <li><code>"References"</code>" — generic pointer to another thought"</li>
+                            <li><code>"Summarizes"</code>" — this thought condenses the target"</li>
+                            <li><code>"Corrects"</code>" — fixes a factual error in the target"</li>
+                            <li><code>"Invalidates"</code>" — target is no longer applicable"</li>
+                            <li><code>"CausedBy"</code>" — this thought resulted from the target"</li>
+                            <li><code>"Supports"</code>" — this thought provides evidence for the target"</li>
+                            <li><code>"Contradicts"</code>" — this thought conflicts with the target"</li>
+                            <li><code>"DerivedFrom"</code>" — this thought is derived from the target"</li>
+                            <li><code>"ContinuesFrom"</code>" — sequential continuation; used to chain consecutive session turns"</li>
+                            <li><code>"RelatedTo"</code>" — weak associative link"</li>
+                            <li><code>"Supersedes"</code>" — replaces the target's framing or approach"</li>
+                        </ul>
+
+                        <h3>"REST — relations in POST /v1/thoughts"</h3>
+                        <p>
+                            "Pass "
+                            <code>"relations"</code>
+                            " as a JSON array in the request body. \
+                             Each element has a "
+                            <code>"kind"</code>
+                            " string, a "
+                            <code>"target_id"</code>
+                            " (UUID), and an optional "
+                            <code>"chain_key"</code>
+                            " for cross-chain edges:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>
+    "POST /v1/thoughts\n\
+    {\n\
+      \"agent_id\":     \"planner\",\n\
+      \"thought_type\": \"Observation\",\n\
+      \"content\":      \"Retry logic resolved the timeout — root cause was DNS.\",\n\
+      \"refs\":         [41],\n\
+      \"relations\": [\n\
+        { \"kind\": \"ContinuesFrom\", \"target_id\": \"<uuid-of-prior-turn>\" },\n\
+        { \"kind\": \"CausedBy\",      \"target_id\": \"<uuid>\", \"chain_key\": \"infra-ops\" }\n\
+      ]\n\
+    }"
+                            </code></pre>
+                        </div>
+
                         // ── Storage Adapters ─────────────────────────────────
                         <h2 id="storage">"Storage Adapters"</h2>
                         <p>
