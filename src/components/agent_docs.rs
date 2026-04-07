@@ -90,23 +90,48 @@ pub fn AgentDocs() -> impl IntoView {
                         <ol>
                             <li>
                                 "Call "
-                                <code>"mentisdb_bootstrap"</code>
-                                " to initialize the project chain"
+                                <code>"mentisdb_list_chains"</code>
+                                " to discover existing chains. Match the chain whose name most \
+                                 closely corresponds to the current project, repository, or \
+                                 working directory. If no chains exist yet, ask the user for a \
+                                 name (the repo or project name works well)."
                             </li>
                             <li>
-                                "Load the core operating instructions via "
+                                "Call "
+                                <code>"mentisdb_bootstrap(chain_key=\"<chosen-key>\")"</code>
+                                " to open the chain and receive the available skills list. \
+                                 This is safe on existing chains — it will not overwrite prior \
+                                 memory. Only pass a meaningful "
+                                <code>"content"</code>
+                                " argument if you are creating a brand-new chain."
+                            </li>
+                            <li>
+                                "Immediately load the core operating instructions via "
                                 <code>"resources/read(mentisdb://skill/core)"</code>
                                 " (or "
                                 <code>"mentisdb_skill_md"</code>
-                                " as fallback)"
+                                " as fallback). Do this "
+                                <strong>"before"</strong>
+                                " reading any memory — the skill teaches you how to interpret \
+                                 and write what you are about to load."
+                            </li>
+                            <li>
+                                "Call "
+                                <code>"mentisdb_list_agents"</code>
+                                " and pick the existing specialist identity whose role best \
+                                 matches the current task. Reuse it — do not mint a new \
+                                 identity unless the chain truly lacks the role."
+                            </li>
+                            <li>
+                                "Call "
+                                <code>"mentisdb_recent_context"</code>
+                                " as that agent to recover where things left off."
                             </li>
                             <li>
                                 "Write a "
                                 <code>"Summary"</code>
-                                " thought to durable memory, self-seeding the session so subsequent \
-                                 agents can recover state via "
-                                <code>"mentisdb_recent_context"</code>
-                                " without re-priming"
+                                " checkpoint to durable memory so subsequent agents can recover \
+                                 state without re-priming."
                             </li>
                         </ol>
                         <p>
