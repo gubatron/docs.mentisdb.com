@@ -21,6 +21,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#skills-registry">"Skills Registry"</a>
                         <a class="docs-nav-link" href="#thought-relations">"Thought Relations"</a>
                         <a class="docs-nav-link" href="#import-tool">"Import MEMORY.md Tool"</a>
+                        <a class="docs-nav-link" href="#mcp-tools">"MCP Tool Reference"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                     </nav>
                 </aside>
@@ -399,7 +400,7 @@ pub fn AgentDocs() -> impl IntoView {
                             "Use "
                             <code>"mentisdb_ranked_search"</code>
                             " when you need the best flat matches for a topic, paraphrase, or \
-                             partial recollection. In 0.7.2 this is seamless hybrid retrieval: \
+                             partial recollection. In 0.8.0 this is seamless hybrid retrieval: \
                              lexical + graph signals plus vector-sidecar similarity when a managed \
                              sidecar is enabled for the chain. It returns ranking diagnostics such as "
                             <code>"backend"</code>
@@ -649,11 +650,27 @@ pub fn AgentDocs() -> impl IntoView {
                             </li>
                             <li>
                                 <code>"mentisdb_read_skill(skill_id: \"my-skill\")"</code>
-                                " — read latest version content"
+                                " — read latest version. Returns "
+                                <code>"{ content, warnings, status }"</code>
+                                " where "
+                                <code>"content"</code>
+                                " is the rendered skill text, "
+                                <code>"warnings"</code>
+                                " is an array of safety notices from the frontmatter, and "
+                                <code>"status"</code>
+                                " is the lifecycle status ("
+                                <code>"active"</code>
+                                ", "
+                                <code>"deprecated"</code>
+                                ", or "
+                                <code>"revoked"</code>
+                                "). Always check "
+                                <code>"warnings"</code>
+                                " before executing skill content."
                             </li>
                             <li>
                                 <code>"mentisdb_read_skill(skill_id: \"my-skill\", version_id: \"<uuid>\")"</code>
-                                " — read a specific historical version"
+                                " — read a specific historical version (same return shape)"
                             </li>
                             <li>
                                 <code>"mentisdb_skill_versions(skill_id: \"my-skill\")"</code>
@@ -1058,6 +1075,401 @@ pub fn AgentDocs() -> impl IntoView {
                             "The same operation is also available via the dashboard — open                              a chain detail page and click "
                             <strong>"📥 Import MEMORY.md"</strong>
                             ". Human operators can use this without any MCP or API access."
+                        </p>
+                    </section>
+
+                    // ── MCP Tool Reference ───────────────────────────────────
+                    <section class="docs-section" id="mcp-tools">
+                        <h2 id="mcp-tools">"MCP Tool Reference"</h2>
+                        <p>
+                            "The following tools have dedicated usage patterns beyond the inline \
+                             mentions elsewhere in this guide. Each entry includes the tool name, \
+                             description, parameters, and return type."
+                        </p>
+
+                        // ── mentisdb_get_thought ────────────────────────────────
+                        <h3>"mentisdb_get_thought"</h3>
+                        <p>
+                            "Return one committed thought by stable UUID, hash, or append-order \
+                             index. Use this when you know the exact identifier of a thought you \
+                             need to retrieve — for example, after seeing a "
+                            <code>"thought_id"</code>
+                            " in a search result or a "
+                            <code>"refs"</code>
+                            " array."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_get_thought(\n\
+    chain_key: \"my-project\",    // optional\n\
+    thought_id: \"<uuid>\",        // one of thought_id, thought_hash, or thought_index\n\
+    thought_hash: \"<hex>\",       // stable chain hash\n\
+    thought_index: 7              // append-order index\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"thought_id"</code>" (string, optional) — stable UUID of the thought"</li>
+                            <li><code>"thought_hash"</code>" (string, optional) — stable chain hash"</li>
+                            <li><code>"thought_index"</code>" (integer, optional) — append-order index"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " a single thought object with all fields (id, hash, index, type, role, \
+                             content, agent, tags, concepts, refs, relations, timestamps, importance, confidence)."
+                        </p>
+
+                        // ── mentisdb_get_genesis_thought ────────────────────────
+                        <h3>"mentisdb_get_genesis_thought"</h3>
+                        <p>
+                            "Return the first committed thought in append order, if the chain is \
+                             non-empty. Useful for recovering the bootstrap or founding memory of \
+                             a chain."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_get_genesis_thought(\n\
+    chain_key: \"my-project\"     // optional\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " the first thought object in the chain, or an error if the chain is empty."
+                        </p>
+
+                        // ── mentisdb_traverse_thoughts ──────────────────────────
+                        <h3>"mentisdb_traverse_thoughts"</h3>
+                        <p>
+                            "Traverse thoughts in append order from an anchor, moving forward or \
+                             backward in filtered chunks. This is the most flexible ordered-access \
+                             tool — use it for oldest-to-newest replay, recent-first review, or \
+                             paginated browsing with rich filters."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_traverse_thoughts(\n\
+    chain_key: \"my-project\",              // optional\n\
+    anchor_boundary: \"genesis\",            // \"genesis\" or \"head\"\n\
+    anchor_id: \"<uuid>\",                   // optional UUID anchor\n\
+    anchor_hash: \"<hex>\",                  // optional hash anchor\n\
+    anchor_index: 0,                        // optional index anchor\n\
+    direction: \"forward\",                  // \"forward\" or \"backward\"\n\
+    include_anchor: true,                   // include the anchor thought\n\
+    chunk_size: 50,                         // max thoughts per page\n\
+    text: \"caching\",                       // optional text filter\n\
+    thought_types: [\"Decision\"],            // optional type filter\n\
+    roles: [\"Checkpoint\"],                 // optional role filter\n\
+    tags_any: [\"myproject\"],               // optional tag filter\n\
+    concepts_any: [\"auth\"],                // optional concept filter\n\
+    agent_ids: [\"orion\"],                  // optional agent filter\n\
+    agent_names: [\"Orion\"],                // optional agent name filter\n\
+    agent_owners: [\"team-a\"],              // optional owner filter\n\
+    min_importance: 0.5,                    // optional importance threshold\n\
+    min_confidence: 0.7,                    // optional confidence threshold\n\
+    since: \"2025-01-01T00:00:00Z\",         // optional RFC 3339 lower bound\n\
+    until: \"2025-12-31T23:59:59Z\",         // optional RFC 3339 upper bound\n\
+    time_window: { start: 7, delta: 1, unit: \"days\" }  // optional numeric window\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"anchor_id"</code>" (string, optional) — UUID anchor"</li>
+                            <li><code>"anchor_hash"</code>" (string, optional) — hash anchor"</li>
+                            <li><code>"anchor_index"</code>" (integer, optional) — append-order index anchor"</li>
+                            <li><code>"anchor_boundary"</code>" (string, optional) — logical anchor: "<code>"genesis"</code>" or "<code>"head"</code>"</li>
+                            <li><code>"direction"</code>" (string, optional) - "<code>"forward"</code>" or "<code>"backward"</code>"</li>
+                            <li><code>"include_anchor"</code>" (boolean, optional) — include the anchor if it matches the filter"</li>
+                            <li><code>"chunk_size"</code>" (integer, optional) — max matching thoughts per call (default 50)"</li>
+                            <li><code>"text"</code>" (string, optional) — text filter"</li>
+                            <li><code>"thought_types"</code>" (string[], optional) — ThoughtType names"</li>
+                            <li><code>"roles"</code>" (string[], optional) — ThoughtRole names"</li>
+                            <li><code>"tags_any"</code>" (string[], optional) — tags to match"</li>
+                            <li><code>"concepts_any"</code>" (string[], optional) — concepts to match"</li>
+                            <li><code>"agent_ids"</code>" (string[], optional) — producing agent ids"</li>
+                            <li><code>"agent_names"</code>" (string[], optional) — producing agent names or aliases"</li>
+                            <li><code>"agent_owners"</code>" (string[], optional) — producing agent owners"</li>
+                            <li><code>"min_importance"</code>" (number, optional) — minimum importance threshold"</li>
+                            <li><code>"min_confidence"</code>" (number, optional) — minimum confidence threshold"</li>
+                            <li><code>"since"</code>" (string, optional) — RFC 3339 lower timestamp bound"</li>
+                            <li><code>"until"</code>" (string, optional) — RFC 3339 upper timestamp bound"</li>
+                            <li><code>"time_window"</code>" (object, optional) — numeric time window with "<code>"start"</code>", "<code>"delta"</code>", "<code>"unit"</code>" fields"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " a paginated list of thought objects matching the filter, ordered by \
+                             traversal direction from the anchor."
+                        </p>
+
+                        // ── mentisdb_get_agent ──────────────────────────────────
+                        <h3>"mentisdb_get_agent"</h3>
+                        <p>
+                            "Return the full registry record for one agent in a chain, including \
+                             description, aliases, public keys, status, and per-chain activity \
+                             metadata. Use this when you need to inspect an agent's identity \
+                             details — for example, to verify which signing keys are active before \
+                             rotating."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_get_agent(\n\
+    chain_key: \"my-project\",    // optional\n\
+    agent_id: \"orion\"           // required\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"agent_id"</code>" (string, required) — stable agent id to retrieve"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " an agent record with "
+                            <code>"agent_id"</code>
+                            ", "
+                            <code>"display_name"</code>
+                            ", "
+                            <code>"description"</code>
+                            ", "
+                            <code>"owner"</code>
+                            ", "
+                            <code>"aliases"</code>
+                            ", "
+                            <code>"public_keys"</code>
+                            ", "
+                            <code>"status"</code>
+                            ", and "
+                            <code>"activity"</code>
+                            " metadata."
+                        </p>
+
+                        // ── mentisdb_list_agent_registry ────────────────────────
+                        <h3>"mentisdb_list_agent_registry"</h3>
+                        <p>
+                            "Return the full per-chain agent registry, including descriptions, \
+                             aliases, public keys, status, and per-chain activity metadata for \
+                             every registered agent. Unlike "
+                            <code>"mentisdb_list_agents"</code>
+                            " which returns a lightweight identity summary, this tool returns \
+                             the complete registry record for each agent."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_list_agent_registry(\n\
+    chain_key: \"my-project\"     // optional\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " an array of full agent records (same shape as "
+                            <code>"mentisdb_get_agent"</code>
+                            ") for every registered agent on the chain."
+                        </p>
+
+                        // ── mentisdb_set_agent_description ──────────────────────
+                        <h3>"mentisdb_set_agent_description"</h3>
+                        <p>
+                            "Set or clear the free-form description for one registered agent. \
+                             Use this to document what an agent does so other agents (and the \
+                             dashboard) can display meaningful context."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_set_agent_description(\n\
+    chain_key: \"my-project\",       // optional\n\
+    agent_id: \"orion\",             // required\n\
+    description: \"Code review specialist\"  // omit or empty string to clear\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"agent_id"</code>" (string, required) — stable agent id to update"</li>
+                            <li><code>"description"</code>" (string, optional) — description text; omit or empty to clear"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " the updated agent record."
+                        </p>
+
+                        // ── mentisdb_add_agent_alias ────────────────────────────
+                        <h3>"mentisdb_add_agent_alias"</h3>
+                        <p>
+                            "Add one historical or alternate alias to a registered agent. \
+                             Aliases help resolve agent name changes — for example, when an \
+                             agent was renamed but older thoughts still reference the prior name."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_add_agent_alias(\n\
+    chain_key: \"my-project\",    // optional\n\
+    agent_id: \"orion\",          // required\n\
+    alias: \"orion-v1\"           // required\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"agent_id"</code>" (string, required) — stable agent id to update"</li>
+                            <li><code>"alias"</code>" (string, required) — alias to add"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " the updated agent record with the new alias included."
+                        </p>
+
+                        // ── mentisdb_disable_agent ──────────────────────────────
+                        <h3>"mentisdb_disable_agent"</h3>
+                        <p>
+                            "Disable one agent by marking its registry status as "
+                            <code>"revoked"</code>
+                            ". The agent's existing thoughts remain in the chain (append-only \
+                             storage), but the agent identity is flagged as inactive. Use this \
+                             when decommissioning an agent from a fleet."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_disable_agent(\n\
+    chain_key: \"my-project\",    // optional\n\
+    agent_id: \"legacy-bot\"      // required\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                            <li><code>"agent_id"</code>" (string, required) — stable agent id to disable"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " the updated agent record with status set to "
+                            <code>"revoked"</code>
+                            "."
+                        </p>
+
+                        // ── mentisdb_skill_manifest ─────────────────────────────
+                        <h3>"mentisdb_skill_manifest"</h3>
+                        <p>
+                            "Return the versioned skill-registry manifest describing searchable \
+                             fields and supported formats. Use this to discover which filter \
+                             dimensions and format options are available before constructing \
+                             skill search queries."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_skill_manifest()"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                            " none."
+                        </p>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " a manifest object listing searchable field names, supported \
+                             export formats ("
+                            <code>"markdown"</code>
+                            ", "
+                            <code>"json"</code>
+                            "), and the current schema version."
+                        </p>
+
+                        // ── mentisdb_head ───────────────────────────────────────
+                        <h3>"mentisdb_head"</h3>
+                        <p>
+                            "Return head metadata for a MentisDB chain including chain length, \
+                             the latest thought at the tip, and the head hash. Use this for a \
+                             lightweight chain status check without loading any thoughts."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_head(\n\
+    chain_key: \"my-project\"     // optional\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " "
+                            <code>"{ thought_count, head_hash, tip }"</code>
+                            " where "
+                            <code>"tip"</code>
+                            " is the latest thought object (or null if the chain is empty)."
+                        </p>
+
+                        // ── mentisdb_merge_chains ───────────────────────────────
+                        <h3>"mentisdb_merge_chains"</h3>
+                        <p>
+                            "Merge all thoughts from a source chain into a target chain, then \
+                             permanently delete the source chain. Agent identities are remapped \
+                             autonomously: each source agent is matched to the closest existing \
+                             target agent by character-set similarity (Jaccard). No new agents \
+                             are created on the target chain. Cross-chain thought refs are \
+                             dropped (they are chain-local indices)."
+                        </p>
+                        <div class="docs-callout docs-callout-warning">
+                            <strong>"Destructive operation:"</strong>
+                            " the source chain is permanently deleted after a successful merge. \
+                             Back up or export the source chain first if you need to preserve it."
+                        </div>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_merge_chains(\n\
+    source_chain_key: \"old-project\",    // required — will be deleted\n\
+    target_chain_key: \"unified-project\"  // required — must already exist\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            <strong>"Parameters:"</strong>
+                        </p>
+                        <ul>
+                            <li><code>"source_chain_key"</code>" (string, required) — chain key to merge from (deleted after success)"</li>
+                            <li><code>"target_chain_key"</code>" (string, required) — chain key to merge into (must already exist)"</li>
+                        </ul>
+                        <p>
+                            <strong>"Returns:"</strong>
+                            " "
+                            <code>"{ thoughts_copied, agents_remapped, source_deleted }"</code>
+                            "."
                         </p>
                     </section>
 

@@ -21,6 +21,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#taxonomy"          class="docs-nav-link">"Thought Taxonomy"</a>
                             <a href="#thought-relations" class="docs-nav-link">"Thought Relations"</a>
                             <a href="#storage"           class="docs-nav-link">"Storage Adapters"</a>
+                            <a href="#0.8.0"             class="docs-nav-link">"0.8.0 Improvements"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -37,7 +38,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                              Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.7""#</code>
+                            <code>r#"mentisdb = "0.8""#</code>
                         </div>
                         <p>
                             "The crate provides the full memory engine, skill registry, \
@@ -191,6 +192,121 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"/v1/head"</code></td>
                                     <td>"Return current chain head metadata and the latest thought"</td>
                                 </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/health"</code></td>
+                                    <td>"Liveness health check"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/bootstrap"</code></td>
+                                    <td>"Bootstrap a chain with an initial memory"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/retrospectives"</code></td>
+                                    <td>"Append a guided retrospective thought"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/thought"</code></td>
+                                    <td>"Retrieve a single thought by ID, hash, or index"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/thoughts/genesis"</code></td>
+                                    <td>"Retrieve the first thought in a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/thoughts/traverse"</code></td>
+                                    <td>"Traverse thoughts in append order with filtering and pagination"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/import-markdown"</code></td>
+                                    <td>"Import MEMORY.md-formatted markdown into a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/v1/skills"</code></td>
+                                    <td>"List uploaded skill summaries"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/v1/skills/manifest"</code></td>
+                                    <td>"Return the skill registry manifest with searchable fields"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/skills/search"</code></td>
+                                    <td>"Search the versioned skill registry by indexed fields"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/skills/versions"</code></td>
+                                    <td>"List immutable versions for a stored skill"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/skills/deprecate"</code></td>
+                                    <td>"Mark a stored skill as deprecated"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/skills/revoke"</code></td>
+                                    <td>"Mark a stored skill as revoked"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agent"</code></td>
+                                    <td>"Get a single agent record by ID"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agent-registry"</code></td>
+                                    <td>"List the full agent registry for a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/upsert"</code></td>
+                                    <td>"Create or update an agent record"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/description"</code></td>
+                                    <td>"Set or clear an agent's description"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/aliases"</code></td>
+                                    <td>"Add an alias to an agent"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/keys"</code></td>
+                                    <td>"Add a verification key to an agent"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/keys/revoke"</code></td>
+                                    <td>"Revoke a verification key from an agent"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/agents/disable"</code></td>
+                                    <td>"Disable (revoke) an agent"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/vectors/rebuild"</code></td>
+                                    <td>"Rebuild vector sidecar indexes for a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/chains/merge"</code></td>
+                                    <td>"Merge all thoughts from a source chain into a target, then delete the source"</td>
+                                </tr>
                             </tbody>
                         </table>
                         <p>
@@ -199,7 +315,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " and let the agent bootstrap itself from the initialize instructions and resource catalog."
                         </p>
                         <p>
-                            "For direct crate users, 0.7.2 keeps vector sidecars additive and \
+                            "For direct crate users, 0.8.0 keeps vector sidecars additive and \
                              rebuildable, but ranked search now blends lexical, graph, and \
                              managed-sidecar vector signals automatically when sidecars are \
                              enabled. The append-only chain remains canonical; sidecars are \
@@ -214,10 +330,95 @@ pub fn DeveloperDocs() -> impl IntoView {
                              upgrades to hybrid scoring when that sidecar is available."
                         </p>
 
+                        // ── 0.8.0 Improvements ──────────────────────────────
+                        <h2 id="0.8.0">"0.8.0 Search &amp; Storage Improvements"</h2>
+                        <p>
+                            "MentisDB 0.8.0 introduces five major improvements to the search \
+                             and storage pipeline: Porter stemming, tiered vector-lexical \
+                             fusion, importance weighting, bincode hashing, and managed \
+                             sidecar entries with auto_sync."
+                        </p>
+
+                        <h3>"Porter Stemming (Normalizer v2)"</h3>
+                        <p>
+                            "The lexical tokenizer now applies English Porter stemming. \
+                             Words like "
+                            <code>"preferences"</code>
+                            " → "
+                            <code>"prefer"</code>
+                            " and "
+                            <code>"running"</code>
+                            " → "
+                            <code>"run"</code>
+                            " now match in lexical search. Existing chains auto-reindex \
+                             on first open — no manual migration step required."
+                        </p>
+
+                        <h3>"Tiered Vector-Lexical Fusion"</h3>
+                        <p>
+                            "Ranked search scoring replaces the flat addition model with \
+                             a tiered boost that respects the relationship between lexical \
+                             and vector signals:"
+                        </p>
+                        <ul>
+                            <li>
+                                "Lexical = 0 and vector &gt; 0: "
+                                <code>"vector × 60"</code>
+                                " — full boost for semantic-only hits"
+                            </li>
+                            <li>
+                                "0 &lt; lexical &lt; 1.0 and vector &gt; 0: "
+                                <code>"vector × (1 + 20 × fraction)"</code>
+                                " — partial boost proportional to lexical overlap"
+                            </li>
+                            <li>
+                                "Lexical ≥ 1.0: vector as-is — no boost, lexical dominates"
+                            </li>
+                        </ul>
+                        <p>
+                            "This ensures that pure semantic matches surface prominently, \
+                             while thoughts already matched lexically are not artificially \
+                             inflated by an additional vector boost."
+                        </p>
+
+                        <h3>"Importance Weight 3.0×"</h3>
+                        <p>
+                            "User-originated thoughts carry higher importance. At the default \
+                             3.0× weight multiplier, a user thought (importance 0.8) contributes \
+                             +2.4 to the final score versus an assistant thought (importance 0.2) \
+                             at +0.6. This makes user-stated preferences and decisions rank \
+                             above routine assistant summaries in retrieval results."
+                        </p>
+
+                        <h3>"Bincode Hashing"</h3>
+                        <p>
+                            <code>"compute_thought_hash()"</code>
+                            " now uses bincode instead of "
+                            <code>"serde_json"</code>
+                            " for thought serialization, eliminating full JSON serialization \
+                             per append. This reduces hash computation overhead and produces \
+                             smaller, deterministic binary encodings. Existing chains auto-reindex \
+                             on first open."
+                        </p>
+
+                        <h3>"ManagedSidecarEntry with auto_sync"</h3>
+                        <p>
+                            "Vector sidecar management uses "
+                            <code>"ManagedSidecarEntry"</code>
+                            " with an "
+                            <code>"auto_sync"</code>
+                            " flag that controls whether the sidecar rebuilds on startup. \
+                             The new "
+                            <code>"register_vector_sidecar_for_search()"</code>
+                            " method registers a sidecar for search-only without triggering \
+                             a rebuild, allowing faster daemon startup while keeping the \
+                             sidecar available for ranked search fusion."
+                        </p>
+
                         // ── Schema Version ───────────────────────────────────
                         <h2 id="schema">"Schema Version"</h2>
                         <p>
-                            "MentisDB 0.7.2 uses schema version 2 ("
+                            "MentisDB 0.8.0 uses schema version 2 ("
                             <code>"MENTISDB_SCHEMA_V2 = 2"</code>
                             "). All new chains are created at V2 automatically. \
                              Legacy V0 chains (created before 0.5.2) are migrated \
