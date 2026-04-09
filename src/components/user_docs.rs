@@ -578,7 +578,7 @@ sudo update-ca-certificates"#}</code></pre>
                                 <h4>"Thought Explorer"</h4>
                                 <p>
                                     "Paginated table of all thoughts in a chain. Filter by any of the \
-                                     29 ThoughtTypes using the grouped filter panel — each type is shown \
+                                     30 ThoughtTypes using the grouped filter panel — each type is shown \
                                      with a coloured badge. The explorer also supports chain-scoped text \
                                      search plus a live agent dropdown; when text search is active it \
                                      returns hybrid ranked results and grouped context bundles instead of \
@@ -632,6 +632,284 @@ sudo update-ca-certificates"#}</code></pre>
                                     " (side-by-side version comparison). Revoke or deprecate a skill \
                                      directly from the UI with a confirmation step."
                                 </p>
+
+                                <h3>"Dashboard API"</h3>
+                                <p>
+                                    "The dashboard UI communicates with the daemon through a set of \
+                                     internal browser APIs under "
+                                    <code>"/dashboard/api/"</code>
+                                    ". These endpoints are "
+                                    <strong>"not"</strong>
+                                    " intended for external scripting — they are an implementation \
+                                     detail of the single-page dashboard. All endpoints require PIN \
+                                     authentication when "
+                                    <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                    " is set."
+                                </p>
+
+                                <h4>"Chains"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains"</code></td>
+                                            <td>"List all chains with live thought and agent counts"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains"</code></td>
+                                            <td>"Bootstrap a new chain; appends a Summary checkpoint if empty"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}"</code></td>
+                                            <td>"Chain detail including vector sidecar statuses"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"DELETE"</code></td>
+                                            <td><code>"/chains/{chain_key}"</code></td>
+                                            <td>"Permanently delete a chain and deregister it"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/merge"</code></td>
+                                            <td>"Merge all thoughts from source into target chain, then delete source"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/{chain_key}/import-markdown"</code></td>
+                                            <td>"Import a MEMORY.md-formatted document as new thoughts"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Vector Sidecars"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/{chain_key}/vectors/{provider_key}/enable"</code></td>
+                                            <td>"Enable append-time sync for a managed vector sidecar"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/{chain_key}/vectors/{provider_key}/disable"</code></td>
+                                            <td>"Disable append-time sync for a managed vector sidecar"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/{chain_key}/vectors/{provider_key}/sync"</code></td>
+                                            <td>"Run an immediate sync pass for a managed vector sidecar"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/chains/{chain_key}/vectors/{provider_key}/rebuild"</code></td>
+                                            <td>"Rebuild a vector sidecar from scratch (requires confirm_delete)"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Thoughts & Search"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}/thoughts"</code></td>
+                                            <td>"Paginated thought listing, filterable by ThoughtType"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}/search"</code></td>
+                                            <td>"Ranked hybrid search with context bundles when text is provided"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}/search/bundles"</code></td>
+                                            <td>"Seed-anchored context bundles for a search query"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}/search/agents"</code></td>
+                                            <td>"Live thought authors merged with registry display names"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/thoughts/{chain_key}/{thought_id}"</code></td>
+                                            <td>"Retrieve a single thought by UUID"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/chains/{chain_key}/agents/{agent_id}/thoughts"</code></td>
+                                            <td>"Paginated thoughts authored by a specific agent"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Agents"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/agents"</code></td>
+                                            <td>"All registered agents across all chains, grouped by chain"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/agents"</code></td>
+                                            <td>"Create or update an agent registry entry"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/agents/{chain_key}"</code></td>
+                                            <td>"All agents registered on a specific chain"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}"</code></td>
+                                            <td>"Single agent detail with live thought count"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"PATCH"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}"</code></td>
+                                            <td>"Update display name, description, or owner of an agent"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/revoke"</code></td>
+                                            <td>"Mark an agent as revoked"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/activate"</code></td>
+                                            <td>"Mark an agent as active"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/keys"</code></td>
+                                            <td>"Register a new Ed25519 public verification key on an agent"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"DELETE"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/keys/{key_id}"</code></td>
+                                            <td>"Revoke a public key from an agent"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/memory-markdown"</code></td>
+                                            <td>"Export an agent's thoughts as a MEMORY.md Markdown document"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/agents/{chain_key}/{agent_id}/copy-to/{target_chain_key}"</code></td>
+                                            <td>"Copy all of an agent's thoughts to another chain"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Skills"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/skills"</code></td>
+                                            <td>"List all registered skills with version count and status"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/skills"</code></td>
+                                            <td>"Upload a new skill version (Markdown or JSON)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/skills/{skill_id}"</code></td>
+                                            <td>"Get skill summary and latest content"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/skills/{skill_id}/versions"</code></td>
+                                            <td>"Full version history for a skill"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/skills/{skill_id}/diff"</code></td>
+                                            <td>"Unified diff between two skill versions"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/skills/{skill_id}/revoke"</code></td>
+                                            <td>"Mark a skill as revoked (content preserved for audit)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"POST"</code></td>
+                                            <td><code>"/skills/{skill_id}/deprecate"</code></td>
+                                            <td>"Mark a skill as deprecated"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Version"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Method"</th>
+                                            <th>"Path"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"GET"</code></td>
+                                            <td><code>"/version"</code></td>
+                                            <td>"Returns the crate version baked in at compile time"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="docs-callout docs-callout-warning">
+                                    <strong>"Note: "</strong>
+                                    "All paths are relative to "
+                                    <code>"/dashboard/api"</code>
+                                    ". When a PIN is set, every endpoint requires either an "
+                                    <code>"Authorization: Bearer &lt;pin&gt;"</code>
+                                    " header or a valid "
+                                    <code>"mentisdb_pin"</code>
+                                    " cookie. Without a PIN the dashboard is open on localhost."
+                                </div>
                             </section>
 
 

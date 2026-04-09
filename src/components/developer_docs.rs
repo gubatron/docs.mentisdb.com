@@ -478,7 +478,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " carries operational meaning."
                         </p>
                         <p>
-                            <strong>"ThoughtType (29): "</strong>
+                            <strong>"ThoughtType (30): "</strong>
                             <code>"PreferenceUpdate"</code>
                             ", "
                             <code>"UserTrait"</code>
@@ -504,6 +504,8 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <code>"AssumptionInvalidated"</code>
                             ", "
                             <code>"Constraint"</code>
+                            ", "
+                            <code>"Goal"</code>
                             ", "
                             <code>"Plan"</code>
                             ", "

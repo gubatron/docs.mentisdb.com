@@ -240,6 +240,10 @@ pub fn AgentDocs() -> impl IntoView {
                                 <p>"A requirement or hard limit that must not drift. Use for non-negotiable rules — performance budgets, API contracts, brand rules."</p>
                             </div>
                             <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"Goal"</code></span>
+                                <p>"High-level objective or desired outcome (broader than Plan/Subgoal). Captures what the agent or team is working toward, not how."</p>
+                            </div>
+                            <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Plan"</code></span>
                                 <p>"A plan for future work was created or updated. Broader than a Subgoal — captures the overall approach or roadmap."</p>
                             </div>
