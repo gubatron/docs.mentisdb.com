@@ -4,9 +4,12 @@ use leptos::prelude::*;
 ///
 /// Renders the MentisDB wordmark, a visual separator, the "Docs" label,
 /// section links for each audience, a GitHub link, and a back-link to
-/// the main marketing site.
+/// the main marketing site. Also renders a dark/light theme toggle.
 #[component]
 pub fn DocsNavBar() -> impl IntoView {
+    let is_dark =
+        use_context::<RwSignal<bool>>().expect("theme signal not provided via context");
+
     view! {
         <nav class="navbar">
             <div class="container">
@@ -34,6 +37,13 @@ pub fn DocsNavBar() -> impl IntoView {
                     <a href="https://mentisdb.com" class="navbar-cta">
                         "← mentisdb.com"
                     </a>
+                    <button
+                        class="theme-toggle"
+                        aria-label="Toggle light/dark theme"
+                        on:click=move |_| is_dark.update(|d| *d = !*d)
+                    >
+                        {move || if is_dark.get() { "☀️" } else { "🌙" }}
+                    </button>
                 </div>
             </div>
         </nav>

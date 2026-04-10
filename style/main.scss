@@ -24,6 +24,23 @@
   --radius-lg:      16px;
 }
 
+// ── Light theme overrides ─────────────────────────────────────
+[data-theme="light"] {
+  --bg-primary:    #f5f7fc;
+  --bg-surface:    #ffffff;
+  --bg-elevated:   #edf0f8;
+  --bg-code:       #edf0f8;
+  --border:        #dde1ee;
+  --border-bright: #c4cae0;
+  --accent:        #4563e8;
+  --accent-bright: #3452d6;
+  --accent-glow:   rgba(69, 99, 232, 0.1);
+  --secondary:     #c07820;
+  --text-primary:  #1a1d2e;
+  --text-muted:    #4a5268;
+  --text-dim:      #9ba3be;
+}
+
 // ── Global reset + base ───────────────────────────────────────
 *,
 *::before,
@@ -203,6 +220,25 @@ img {
   &:hover {
     background: var(--accent);
     color:      #fff;
+  }
+}
+
+.theme-toggle {
+  background:    transparent;
+  border:        1.5px solid var(--border-bright);
+  border-radius: var(--radius);
+  color:         var(--text-muted);
+  cursor:        pointer;
+  font-size:     1rem;
+  line-height:   1;
+  padding:       6px 10px;
+  transition:    border-color 0.15s, background 0.15s, color 0.15s;
+  margin-left:   4px;
+
+  &:hover {
+    border-color: var(--accent);
+    background:   var(--bg-surface);
+    color:        var(--text-primary);
   }
 }
 

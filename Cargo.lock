@@ -383,6 +383,7 @@ dependencies = [
  "leptos_router",
  "tokio",
  "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
