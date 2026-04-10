@@ -23,6 +23,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#storage"           class="docs-nav-link">"Storage Adapters"</a>
                             <a href="#0.8.0"             class="docs-nav-link">"0.8.0 Improvements"</a>
                             <a href="#0.8.1"             class="docs-nav-link">"0.8.1 Improvements"</a>
+                            <a href="#0.8.2"             class="docs-nav-link">"0.8.2 Features"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -131,12 +132,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/thoughts"</code></td>
-                                    <td>"Append a new thought to a chain"</td>
+                                    <td>"Append a new thought to a chain. Supports scope parameter for memory scope tagging"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/search"</code></td>
-                                    <td>"Search/query thoughts"</td>
+                                    <td>"Search/query thoughts. Supports as_of for point-in-time queries and scope for scope filtering"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -146,12 +147,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available)"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of and scope parameters"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/context-bundles"</code></td>
-                                    <td>"Seed-anchored grouped support context for agent reasoning and dashboard inspection"</td>
+                                    <td>"Seed-anchored grouped support context for agent reasoning and dashboard inspection. Supports as_of and scope parameters"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"GET"</code></td>
@@ -463,13 +464,156 @@ pub fn DeveloperDocs() -> impl IntoView {
                              when the dashboard tried to render affected thoughts."
                         </p>
 
+                        // ── 0.8.2 Features ──────────────────────────────────
+                        <h2 id="0.8.2">"0.8.2 Features"</h2>
+                        <p>
+                            "MentisDB 0.8.2 introduces four major features: temporal edge \
+                             validity, memory deduplication, multi-level memory scopes, and \
+                             CLI subcommands."
+                        </p>
+
+                        <h3>"Temporal Edge Validity"</h3>
+                        <p>
+                            <code>"ThoughtRelation"</code>
+                            " now carries optional "
+                            <code>"valid_at: Option&lt;DateTime&lt;Utc&gt;&gt;"</code>
+                            " and "
+                            <code>"invalid_at: Option&lt;DateTime&lt;Utc&gt;&gt;"</code>
+                            " fields. A relation is considered active when the current time falls \
+                             between these bounds. If neither is set the relation is always active \
+                             (backward compatible with V2 chains). Schema V3 migration adds these \
+                             fields transparently on first open."
+                        </p>
+                        <p>
+                            "The "
+                            <code>"as_of"</code>
+                            " query parameter (RFC 3339 timestamp) is supported on ranked search, \
+                             context bundles, and traversal endpoints. When provided, only thoughts \
+                             appended at or before the timestamp are included in results. This \
+                             enables point-in-time auditing and decision reproduction."
+                        </p>
+                        <p>
+                            "When a relation's "
+                            <code>"invalid_at"</code>
+                            " has passed, the target thought is added to "
+                            <code>"invalidated_thought_ids"</code>
+                            " in the search response, allowing clients to filter or highlight \
+                             stale edges."
+                        </p>
+
+                        <h3>"Memory Dedup"</h3>
+                        <p>
+                            "Automatic deduplication on append, controlled by two environment variables:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"MENTISDB_DEDUP_THRESHOLD"</code>
+                                " — Jaccard similarity threshold (0.0–1.0). When set, each append \
+                                 compares the new thought's content against the last N thoughts. \
+                                 If similarity exceeds the threshold, the new thought receives an \
+                                 auto-"
+                                <code>"Supersedes"</code>
+                                " relation pointing at the most similar existing thought instead of \
+                                 being appended as a duplicate. Disabled when unset."
+                            </li>
+                            <li>
+                                <code>"MENTISDB_DEDUP_SCAN_WINDOW"</code>
+                                " — how many recent thoughts to scan (default: 64). Only used when \
+                                 MENTISDB_DEDUP_THRESHOLD is set."
+                            </li>
+                        </ul>
+                        <p>
+                            "The builder API exposes "
+                            <code>".with_dedup_threshold(f64)"</code>
+                            " and "
+                            <code>".with_dedup_scan_window(usize)"</code>
+                            " for programmatic control. When dedup fires, the append still succeeds \
+                             but the resulting thought carries a "
+                            <code>"Supersedes"</code>
+                            " relation and the content is not duplicated in search results."
+                        </p>
+
+                        <h3>"Multi-Level Memory Scopes"</h3>
+                        <p>
+                            "The "
+                            <code>"MemoryScope"</code>
+                            " enum introduces three scope levels for thoughts within a single chain:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"MemoryScope::User"</code>
+                                " — globally visible across sessions (default, backward compatible)"
+                            </li>
+                            <li>
+                                <code>"MemoryScope::Session"</code>
+                                " — ephemeral working memory scoped to a single conversation"
+                            </li>
+                            <li>
+                                <code>"MemoryScope::Agent"</code>
+                                " — private to the authoring agent, not visible to other fleet members"
+                            </li>
+                        </ul>
+                        <p>
+                            "Scopes are stored as tags ("
+                            <code>"scope:user"</code>
+                            ", "
+                            <code>"scope:session"</code>
+                            ", "
+                            <code>"scope:agent"</code>
+                            ") on each thought. Set scope via "
+                            <code>".with_scope(MemoryScope::Session)"</code>
+                            " on the builder, or pass "
+                            <code>"scope"</code>
+                            " in MCP/REST append calls. Filter in search with the "
+                            <code>"scope"</code>
+                            " parameter."
+                        </p>
+
+                        <h3>"CLI Subcommands"</h3>
+                        <p>
+                            "The "
+                            <code>"mentisdbd"</code>
+                            " binary now supports inline subcommands for quick operations without \
+                             an MCP client:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"mentisdbd add \"content\""</code>
+                                " — append a thought directly from the command line (uses "
+                                <code>"ureq"</code>
+                                " to POST to the local daemon)"
+                            </li>
+                            <li>
+                                <code>"mentisdbd search \"query\" --limit 5"</code>
+                                " — ranked search from the terminal"
+                            </li>
+                            <li>
+                                <code>"mentisdbd agents"</code>
+                                " — list registered agents across all chains"
+                            </li>
+                        </ul>
+                        <p>
+                            "These subcommands communicate with the running daemon over HTTP \
+                             (via "
+                            <code>"ureq"</code>
+                            "), so the daemon must already be started. They are convenience \
+                             shortcuts — all functionality remains available via MCP, REST, \
+                             and the dashboard."
+                        </p>
+
                         // ── Schema Version ───────────────────────────────────
                         <h2 id="schema">"Schema Version"</h2>
                         <p>
-                            "MentisDB 0.8.0 uses schema version 2 ("
-                            <code>"MENTISDB_SCHEMA_V2 = 2"</code>
-                            "). All new chains are created at V2 automatically. \
-                             Legacy V0 chains (created before 0.5.2) are migrated \
+                            "MentisDB 0.8.2 uses schema version 3 ("
+                            <code>"MENTISDB_SCHEMA_V3 = 3"</code>
+                            "). V3 adds "
+                            <code>"valid_at"</code>
+                            " and "
+                            <code>"invalid_at"</code>
+                            " fields to "
+                            <code>"ThoughtRelation"</code>
+                            " for temporal edge validity. All new chains are created at V3 \
+                             automatically. Legacy V2 chains (created before 0.8.2) are migrated \
                              transparently on first open — no manual migration step \
                              and no data loss."
                         </p>
@@ -613,6 +757,42 @@ pub fn DeveloperDocs() -> impl IntoView {
                              source for the Rust enum definitions and builder APIs."
                         </p>
 
+                        <h3>"MemoryScope"</h3>
+                        <p>
+                            "0.8.2 introduces "
+                            <code>"MemoryScope"</code>
+                            " — a visibility partition within a single chain. Scopes are stored \
+                             as tags on each thought:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"MemoryScope::User"</code>
+                                " — globally visible (default). Tag: "
+                                <code>"scope:user"</code>
+                            </li>
+                            <li>
+                                <code>"MemoryScope::Session"</code>
+                                " — ephemeral, scoped to one conversation. Tag: "
+                                <code>"scope:session"</code>
+                            </li>
+                            <li>
+                                <code>"MemoryScope::Agent"</code>
+                                " — private to the authoring agent. Tag: "
+                                <code>"scope:agent"</code>
+                            </li>
+                        </ul>
+                        <p>
+                            "Set scope on the builder with "
+                            <code>".with_scope(MemoryScope::Session)"</code>
+                            " or pass "
+                            <code>"scope"</code>
+                            " in MCP/REST append calls. Filter in search with the "
+                            <code>"scope"</code>
+                            " parameter. Existing thoughts without a scope tag are treated as "
+                            <code>"User"</code>
+                            "-scoped — no migration required."
+                        </p>
+
                         // ── Thought Relations ────────────────────────────────
                         <h2 id="thought-relations">"Thought Relations & Cross-chain References"</h2>
                         <p>
@@ -631,6 +811,18 @@ pub fn DeveloperDocs() -> impl IntoView {
         kind: ThoughtRelationKind::Supersedes,\n\
         target_id: old_thought_uuid,\n\
         chain_key: None,\n\
+        valid_at: None,\n\
+        invalid_at: None,\n\
+    });\n\
+    \n\
+    // Relation with temporal bounds:\n\
+    let input = ThoughtInput::new(ThoughtType::Decision, \"Adopted the caching strategy.\")\n\
+    .with_relation(ThoughtRelation {\n\
+        kind: ThoughtRelationKind::Supersedes,\n\
+        target_id: old_thought_uuid,\n\
+        chain_key: None,\n\
+        valid_at: Some(\"2025-12-01T00:00:00Z\".parse().unwrap()),\n\
+        invalid_at: None,\n\
     });\n\
     \n\
     // Cross-chain relation — use the convenience builder:\n\
