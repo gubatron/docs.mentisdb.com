@@ -25,6 +25,8 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
+                                <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
+                                <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
                             </nav>
                         </aside>
 
@@ -60,6 +62,12 @@ pub fn UserDocs() -> impl IntoView {
                                     "The daemon serves both MCP (for AI tools) and REST endpoints \
                                      plus an HTTPS dashboard for human operators."
                                 </p>
+                                <p>"CLI subcommands for quick operations without an MCP client:"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdbd add "The sky is blue"
+mentisdbd search "cache invalidation" --limit 5
+mentisdbd agents"#}</code></pre>
+                                </div>
                             </section>
 
                             // ── Configuration ────────────────────────────────────────
@@ -251,6 +259,29 @@ pub fn UserDocs() -> impl IntoView {
                                             <td><code>"MENTISDB_UPDATE_REPO"</code></td>
                                             <td><code>"CloudLLM-ai/mentisdb"</code></td>
                                             <td>"Optional owner/repo override for the GitHub release source used by the updater."</td>
+                                        </tr>
+                                        <tr class="config-group-header">
+                                            <td colspan="3"><strong>"Deduplication"</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DEDUP_THRESHOLD"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>
+                                                "Jaccard threshold for auto-dedup on append (0.0–1.0). \
+                                                 When set, MentisDB compares new thoughts against recent \
+                                                 memories and auto-Supersedes duplicates above this \
+                                                 threshold. Disabled when unset."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DEDUP_SCAN_WINDOW"</code></td>
+                                            <td><code>"64"</code></td>
+                                            <td>
+                                                "Number of recent thoughts to scan for dedup comparison. \
+                                                 Only used when "
+                                                <code>"MENTISDB_DEDUP_THRESHOLD"</code>
+                                                " is set."
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -736,17 +767,17 @@ sudo update-ca-certificates"#}</code></pre>
                                         <tr>
                                             <td><code>"GET"</code></td>
                                             <td><code>"/chains/{chain_key}/thoughts"</code></td>
-                                            <td>"Paginated thought listing, filterable by ThoughtType"</td>
+                                            <td>"Paginated thought listing, filterable by ThoughtType and scope"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"GET"</code></td>
                                             <td><code>"/chains/{chain_key}/search"</code></td>
-                                            <td>"Ranked hybrid search with context bundles when text is provided"</td>
+                                            <td>"Ranked hybrid search with context bundles when text is provided. Supports as_of for point-in-time queries and scope for scope-filtered results"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"GET"</code></td>
                                             <td><code>"/chains/{chain_key}/search/bundles"</code></td>
-                                            <td>"Seed-anchored context bundles for a search query"</td>
+                                            <td>"Seed-anchored context bundles for a search query. Supports as_of and scope parameters"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"GET"</code></td>
@@ -1679,6 +1710,121 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                      cryptographically auditable record of your fleet's institutional \
                                      knowledge."
                                 </p>
+                            </section>
+
+                            // ── Memory Scopes ──────────────────────────────────────
+                            <section class="docs-section" id="memory-scopes">
+                                <h2 id="memory-scopes">"Memory Scopes"</h2>
+                                <p>
+                                    "MentisDB 0.8.2 introduces memory scopes — a lightweight way to \
+                                     partition thoughts within a single chain. Scopes are stored as \
+                                     tags on each thought and let you isolate memories by visibility \
+                                     level without creating separate chains."
+                                </p>
+
+                                <h3>"Scope levels"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Scope"</th>
+                                            <th>"Tag"</th>
+                                            <th>"Purpose"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"User"</code></td>
+                                            <td><code>"scope:user"</code></td>
+                                            <td>"Visible to the owning user across all sessions. Default scope for most memories."</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"Session"</code></td>
+                                            <td><code>"scope:session"</code></td>
+                                            <td>"Scoped to a single conversation session. Ephemeral working memory — scratch thoughts, in-progress hypotheses."</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"Agent"</code></td>
+                                            <td><code>"scope:agent"</code></td>
+                                            <td>"Private to a specific agent. Not shared with other agents in the fleet. Useful for internal heuristics or private state."</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Using scopes"</h3>
+                                <p>
+                                    "When appending a thought, set the "
+                                    <code>"scope"</code>
+                                    " parameter to one of "
+                                    <code>"User"</code>
+                                    ", "
+                                    <code>"Session"</code>
+                                    ", or "
+                                    <code>"Agent"</code>
+                                    ". MentisDB stores the scope as a tag (e.g. "
+                                    <code>"scope:user"</code>
+                                    ") on the thought. In search, use the "
+                                    <code>"scope"</code>
+                                    " parameter to filter results to a specific scope level."
+                                </p>
+                                <div class="docs-callout docs-callout-tip">
+                                    <strong>"Backward compatible: "</strong>
+                                    "Existing thoughts without a scope tag are treated as User-scoped. \
+                                     You do not need to migrate or retag existing chains."
+                                </div>
+                            </section>
+
+                            // ── Temporal Queries ────────────────────────────────────
+                            <section class="docs-section" id="temporal-queries">
+                                <h2 id="temporal-queries">"Temporal Queries"</h2>
+                                <p>
+                                    "MentisDB 0.8.2 adds temporal query support, allowing you to \
+                                     query the chain as it existed at a specific point in time \
+                                     and to set time-bounded validity on relations."
+                                </p>
+
+                                <h3>"Point-in-time queries with as_of"</h3>
+                                <p>
+                                    "Pass "
+                                    <code>"as_of"</code>
+                                    " (an RFC 3339 timestamp) to search and traversal tools to \
+                                     see only thoughts that existed at that time. Thoughts appended \
+                                     after the timestamp are excluded from results. This is useful \
+                                     for auditing what an agent knew at a specific moment, or for \
+                                     reproducing decisions made under a previous state of knowledge."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb_ranked_search(
+  text: "caching strategy",
+  as_of: "2025-12-01T00:00:00Z"
+)"#}</code></pre>
+                                </div>
+
+                                <h3>"Temporal bounds on relations"</h3>
+                                <p>
+                                    "Thought relations now support "
+                                    <code>"valid_at"</code>
+                                    " and "
+                                    <code>"invalid_at"</code>
+                                    " fields — RFC 3339 timestamps that define when a relation \
+                                     becomes active and when it expires. A relation is considered \
+                                     active if the current time falls between "
+                                    <code>"valid_at"</code>
+                                    " and "
+                                    <code>"invalid_at"</code>
+                                    ". If neither field is set, the relation is always active (backward \
+                                     compatible with existing chains)."
+                                </p>
+                                <div class="docs-callout docs-callout-tip">
+                                    "Use "
+                                    <code>"invalid_at"</code>
+                                    " to model time-limited relationships — for example, a \
+                                     "
+                                    <code>"Supersedes"</code>
+                                    " edge that only takes effect after a transition date, or a \
+                                     "
+                                    <code>"Supports"</code>
+                                    " link that expires when a deprecation window closes."
+                                </div>
                             </section>
 
                         </article>
