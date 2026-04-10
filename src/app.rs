@@ -1,6 +1,6 @@
 use crate::components::{
-    agent_docs::AgentDocs, developer_docs::DeveloperDocs, footer::DocsFooter, home::DocsHome,
-    navbar::DocsNavBar, user_docs::UserDocs,
+    agent_docs::AgentDocs, blog_posts::Blog083Hotfix, developer_docs::DeveloperDocs,
+    footer::DocsFooter, home::DocsHome, navbar::DocsNavBar, user_docs::UserDocs,
 };
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, Meta, MetaTags, Stylesheet, Title};
@@ -73,8 +73,7 @@ pub fn App() -> impl IntoView {
                     let _ = html.set_attribute("data-theme", theme);
                 }
             }
-            if let Some(storage) = web_sys::window()
-                .and_then(|w| w.local_storage().ok().flatten())
+            if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten())
             {
                 let _ = storage.set_item("theme", theme);
             }
@@ -93,6 +92,7 @@ pub fn App() -> impl IntoView {
                     <Route path=StaticSegment("user") view=UserDocs/>
                     <Route path=StaticSegment("agent") view=AgentDocs/>
                     <Route path=StaticSegment("developer") view=DeveloperDocs/>
+                    <Route path=StaticSegment("blog/0.8.3-hotfix") view=Blog083Hotfix/>
                 </Routes>
             </main>
             <DocsFooter/>
