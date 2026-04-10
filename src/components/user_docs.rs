@@ -27,6 +27,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
+                                <a class="docs-nav-link" href="#cli-subcommands">"CLI Subcommands"</a>
                             </nav>
                         </aside>
 
@@ -1825,6 +1826,96 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     <code>"Supports"</code>
                                     " link that expires when a deprecation window closes."
                                 </div>
+                            </section>
+
+                            // ── CLI Subcommands ──────────────────────────────────────
+                            <section class="docs-section" id="cli-subcommands">
+                                <h2 id="cli-subcommands">"CLI Subcommands"</h2>
+                                <p>
+                                    "The "
+                                    <code>"mentisdbd"</code>
+                                    " binary includes subcommands for interacting with a running daemon
+                                     from the terminal. These are useful for quick manual entries, scripting,
+                                     and debugging — no MCP client or dashboard needed."
+                                </p>
+                                <p>"All three subcommands require a running daemon. They connect to the REST port (default "
+                                    <code>"http://127.0.0.1:9472"</code>
+                                    ")."
+                                </p>
+
+                                <h3>"add — Add a thought"</h3>
+                                <p>
+                                    "Adds a new thought to a chain. Use it for quick notes, scripted entries,
+                                     or piping data into MentisDB."
+                                </p>
+                                <div class="code-block">
+                                    <code>"mentisdbd add \"The sky is blue\""</code>
+                                </div>
+                                <div class="code-block">
+                                    <code>"mentisdbd add \"Session fact\" --scope session --tag important"</code>
+                                </div>
+                                <div class="code-block">
+                                    <code>"mentisdbd add \"Insight\" --type insight --agent my-agent"</code>
+                                </div>
+                                <table>
+                                    <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>"--type"</code></td><td>"Thought type (default: fact-learned)"</td></tr>
+                                        <tr><td><code>"--scope"</code></td><td>"Memory scope: user, session, or agent"</td></tr>
+                                        <tr><td><code>"--tag"</code></td><td>"Add a tag (repeatable)"</td></tr>
+                                        <tr><td><code>"--agent"</code></td><td>"Agent ID for the thought"</td></tr>
+                                        <tr><td><code>"--chain"</code></td><td>"Chain key (uses daemon default if omitted)"</td></tr>
+                                        <tr><td><code>"--url"</code></td><td>"Daemon REST URL (default: http://127.0.0.1:9472)"</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"search — Search memories"</h3>
+                                <p>
+                                    "Searches thoughts using the same ranked retrieval engine as the REST API
+                                     and MCP tools. Returns JSON with score breakdowns."
+                                </p>
+                                <div class="code-block">
+                                    <code>"mentisdbd search \"cache invalidation\""</code>
+                                </div>
+                                <div class="code-block">
+                                    <code>"mentisdbd search \"performance\" --limit 5 --scope session"</code>
+                                </div>
+                                <p>
+                                    "Pipe results through "
+                                    <code>"jq"</code>
+                                    " for scripting:"
+                                </p>
+                                <div class="code-block">
+                                    <code>"mentisdbd search \"deploy\" --limit 20 | jq '.hits[].thought.content'"</code>
+                                </div>
+                                <table>
+                                    <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>"--limit"</code></td><td>"Maximum results (default: 10)"</td></tr>
+                                        <tr><td><code>"--scope"</code></td><td>"Filter by memory scope: user, session, or agent"</td></tr>
+                                        <tr><td><code>"--chain"</code></td><td>"Chain key (uses daemon default if omitted)"</td></tr>
+                                        <tr><td><code>"--url"</code></td><td>"Daemon REST URL (default: http://127.0.0.1:9472)"</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"agents — List registered agents"</h3>
+                                <p>
+                                    "Shows agent IDs, display names, status, and thought counts. Useful
+                                     for auditing which agents have written to your MentisDB instance."
+                                </p>
+                                <div class="code-block">
+                                    <code>"mentisdbd agents"</code>
+                                </div>
+                                <div class="code-block">
+                                    <code>"mentisdbd agents --chain my-project"</code>
+                                </div>
+                                <table>
+                                    <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>"--chain"</code></td><td>"Chain key (uses daemon default if omitted)"</td></tr>
+                                        <tr><td><code>"--url"</code></td><td>"Daemon REST URL (default: http://127.0.0.1:9472)"</td></tr>
+                                    </tbody>
+                                </table>
                             </section>
 
                         </article>
