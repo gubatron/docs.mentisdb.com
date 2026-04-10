@@ -15,7 +15,14 @@ pub fn DocsNavBar() -> impl IntoView {
             <div class="container">
                 <div class="navbar-left">
                     <a href="/" class="navbar-logo">
-                        <img src="/logo.svg" class="logo-mark" width="40" height="26" alt="MentisDB logo" aria-hidden="true"/>
+                        <img
+                            src=move || if is_dark.get() { "/logo.svg" } else { "/logo-dark.svg" }
+                            class="logo-mark"
+                            width="40"
+                            height="26"
+                            alt="MentisDB logo"
+                            aria-hidden="true"
+                        />
                         "Mentis"
                         <span class="accent">"DB"</span>
                     </a>
