@@ -22,6 +22,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#thought-relations" class="docs-nav-link">"Thought Relations"</a>
                             <a href="#storage"           class="docs-nav-link">"Storage Adapters"</a>
                             <a href="#0.8.0"             class="docs-nav-link">"0.8.0 Improvements"</a>
+                            <a href="#0.8.1"             class="docs-nav-link">"0.8.1 Improvements"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -413,6 +414,53 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " method registers a sidecar for search-only without triggering \
                              a rebuild, allowing faster daemon startup while keeping the \
                              sidecar available for ranked search fusion."
+                        </p>
+
+                        // ── 0.8.1 Improvements ──────────────────────────────
+                        <h2 id="0.8.1">"0.8.1 Search Improvements"</h2>
+                        <p>
+                            "MentisDB 0.8.1 refines the scoring pipeline with session cohesion, \
+                             smooth exponential fusion, and a tighter BM25 document-frequency cutoff. \
+                             LongMemEval R@5 climbs from 65.0% to 67.6%; LoCoMo 2-persona R@10 \
+                             reaches 88.7%."
+                        </p>
+
+                        <h3>"Session Cohesion Scoring"</h3>
+                        <p>
+                            "Thoughts within ±8 positions of a high-scoring lexical seed (score ≥ 3.0) \
+                             receive a proximity boost up to 0.8, decaying linearly with distance. This \
+                             surfaces evidence turns adjacent to the matching turn but sharing no lexical \
+                             terms. The "
+                            <code>"session_cohesion"</code>
+                            " field is now included in ranked search score responses."
+                        </p>
+
+                        <h3>"Smooth Exponential Vector-Lexical Fusion"</h3>
+                        <p>
+                            "Replaces the 0.8.0 step-function tiers with a continuous decay: \
+                             "
+                            <code>"vector × (1 + 35 × exp(-lexical / 3.0))"</code>
+                            ". Pure-semantic matches get ~36× amplification; by lexical = 3.0 the \
+                             boost has decayed to ~12×; at lexical = 6.0 it is purely additive. \
+                             This eliminates discontinuities between tiers."
+                        </p>
+
+                        <h3>"BM25 DF Cutoff 30%"</h3>
+                        <p>
+                            "Terms appearing in >30% of documents (corpus ≥ 20 docs) are skipped \
+                             during scoring. This filters non-discriminative entity names without \
+                             blanket stopword removal."
+                        </p>
+
+                        <h3>"NaN/Infinity Guard"</h3>
+                        <p>
+                            <code>"with_confidence()"</code>
+                            " and "
+                            <code>"with_importance()"</code>
+                            " now reject non-finite floats. "
+                            <code>"f32::NAN.clamp(0.0, 1.0)"</code>
+                            " returns NaN in Rust, which previously crashed serde_json serialization \
+                             when the dashboard tried to render affected thoughts."
                         </p>
 
                         // ── Schema Version ───────────────────────────────────
