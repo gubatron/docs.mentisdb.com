@@ -22,6 +22,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#thought-relations">"Thought Relations"</a>
                         <a class="docs-nav-link" href="#import-tool">"Import MEMORY.md Tool"</a>
                         <a class="docs-nav-link" href="#mcp-tools">"MCP Tool Reference"</a>
+                        <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                     </nav>
                 </aside>
@@ -74,6 +75,19 @@ pub fn AgentDocs() -> impl IntoView {
                             " raw transcripts, every action you took, duplicate git history, \
                              secrets or tokens."
                         </p>
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Auto-dedup: "</strong>
+                            "When "
+                            <code>"MENTISDB_DEDUP_THRESHOLD"</code>
+                            " is set on the server, MentisDB automatically compares each new \
+                             thought against recent memories using Jaccard similarity. If a new \
+                             thought exceeds the threshold, it is auto-Superseded instead of \
+                             appended as a duplicate. You still see the thought in your results, \
+                             but it is linked to the prior memory via a "
+                            <code>"Supersedes"</code>
+                            " relation. Write concisely and specifically to avoid accidental \
+                             dedup of distinct memories."
+                        </div>
                     </section>
 
                     // ── Session Bootstrap ───────────────────────────────────
@@ -417,6 +431,36 @@ pub fn AgentDocs() -> impl IntoView {
                             ", "
                             <code>"graph_distance"</code>
                             ", and score breakdowns so you can inspect why a memory surfaced."
+                        </p>
+
+                        <h3>"Point-in-time queries with as_of"</h3>
+                        <p>
+                            "Pass "
+                            <code>"as_of"</code>
+                            " (an RFC 3339 timestamp) to "
+                            <code>"mentisdb_ranked_search"</code>
+                            " or "
+                            <code>"mentisdb_traverse_thoughts"</code>
+                            " to see only thoughts that existed at that point in time. Thoughts \
+                             appended after the timestamp are excluded. Use this when you need to \
+                             understand what was known at a specific moment — for example, why a \
+                             decision was made before a later correction was appended."
+                        </p>
+
+                        <h3>"Scope-filtered search"</h3>
+                        <p>
+                            "Pass "
+                            <code>"scope"</code>
+                            " to search and traversal tools to filter results to a specific memory \
+                             scope. "
+                            <code>"scope: \"User\""</code>
+                            " returns globally visible thoughts; "
+                            <code>"scope: \"Session\""</code>
+                            " limits to the current session's working memory; "
+                            <code>"scope: \"Agent\""</code>
+                            " returns only your own private memories. See the "
+                            <a href="#memory-scopes">"Memory Scopes"</a>
+                            " section for details."
                         </p>
 
                         <h3>"Use context bundles when supporting context matters as much as the seed"</h3>
@@ -909,6 +953,21 @@ pub fn AgentDocs() -> impl IntoView {
                             " for cross-chain references."
                         </p>
 
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Temporal validity: "</strong>
+                            "Relations now support "
+                            <code>"valid_at"</code>
+                            " and "
+                            <code>"invalid_at"</code>
+                            " fields — RFC 3339 timestamps that define when a relation becomes \
+                             active and when it expires. A relation without these fields is always \
+                             active (backward compatible). Use "
+                            <code>"invalid_at"</code>
+                            " to model time-limited links such as a "
+                            <code>"Supersedes"</code>
+                            " edge that takes effect after a transition date."
+                        </div>
+
                         <h3>"Supersedes — the canonical replacement edge"</h3>
                         <p>
                             "Use "
@@ -1082,13 +1141,91 @@ pub fn AgentDocs() -> impl IntoView {
                         </p>
                     </section>
 
+                    // ── Memory Scopes ───────────────────────────────────────
+                    <section class="docs-section" id="memory-scopes">
+                        <h2 id="memory-scopes">"Memory Scopes"</h2>
+                        <p>
+                            "MentisDB 0.8.2 introduces memory scopes — a way to partition \
+                             thoughts within a chain by visibility level, without creating \
+                             separate chains. Scopes are stored as tags and filterable in search."
+                        </p>
+
+                        <h3>"Scope levels"</h3>
+                        <ul>
+                            <li>
+                                <code>"User"</code>
+                                " — visible across all sessions. Default scope. Tag: "
+                                <code>"scope:user"</code>
+                            </li>
+                            <li>
+                                <code>"Session"</code>
+                                " — scoped to a single conversation session. Ephemeral working \
+                                 memory. Tag: "
+                                <code>"scope:session"</code>
+                            </li>
+                            <li>
+                                <code>"Agent"</code>
+                                " — private to a specific agent. Not shared with other fleet \
+                                 members. Tag: "
+                                <code>"scope:agent"</code>
+                            </li>
+                        </ul>
+
+                        <h3>"Setting scope on append"</h3>
+                        <p>
+                            "Pass the "
+                            <code>"scope"</code>
+                            " parameter to "
+                            <code>"mentisdb_append"</code>
+                            ". MentisDB stores the scope as a tag on the thought."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_append(\n\
+    thought_type: \"WorkingMemory\",\n\
+    content: \"Scratch: trying cache-aside pattern\",\n\
+    scope: \"Session\"           // optional; default is User\n\
+    )"
+                            </code></pre>
+                        </div>
+
+                        <h3>"Filtering by scope in search"</h3>
+                        <p>
+                            "Pass "
+                            <code>"scope"</code>
+                            " to any search or traversal tool to filter results:"
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_ranked_search(\n\
+    text: \"caching strategy\",\n\
+    scope: \"User\"             // only globally visible memories\n\
+    )"
+                            </code></pre>
+                        </div>
+
+                        <div class="docs-callout docs-callout-tip">
+                            "Existing thoughts without a scope tag are treated as User-scoped. \
+                             No migration needed."
+                        </div>
+                    </section>
+
                     // ── MCP Tool Reference ───────────────────────────────────
                     <section class="docs-section" id="mcp-tools">
                         <h2 id="mcp-tools">"MCP Tool Reference"</h2>
                         <p>
                             "The following tools have dedicated usage patterns beyond the inline \
                              mentions elsewhere in this guide. Each entry includes the tool name, \
-                             description, parameters, and return type."
+                             description, parameters, and return type. For "
+                            <code>"mentisdb_append"</code>
+                            ", note the new "
+                            <code>"scope"</code>
+                            " parameter (0.8.2) which sets the memory scope as a tag. For search \
+                             tools, note the new "
+                            <code>"as_of"</code>
+                            " parameter for point-in-time queries and "
+                            <code>"scope"</code>
+                            " parameter for scope-filtered results."
                         </p>
 
                         // ── mentisdb_get_thought ────────────────────────────────
