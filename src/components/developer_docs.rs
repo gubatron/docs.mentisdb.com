@@ -24,6 +24,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#0.8.0"             class="docs-nav-link">"0.8.0 Improvements"</a>
                             <a href="#0.8.1"             class="docs-nav-link">"0.8.1 Improvements"</a>
                             <a href="#0.8.2"             class="docs-nav-link">"0.8.2 Features"</a>
+                            <a href="#0.8.6"             class="docs-nav-link">"0.8.6 Features"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -147,7 +148,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of and scope parameters"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -158,6 +159,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"GET"</code></td>
                                     <td><code>"/v1/chains"</code></td>
                                     <td>"List available chain keys"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/chains/branch"</code></td>
+                                    <td>"Create a branch chain diverging from a thought on an existing chain"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -928,6 +934,67 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <code>"StorageAdapter"</code>
                             " trait to plug in your own backend (S3, SQLite, etc.). \
                              See docs.rs for the trait definition."
+                        </p>
+
+                        // ── 0.8.6 Features ──────────────────────────────────
+                        <h2 id="0.8.6">"0.8.6 Features"</h2>
+                        <p>
+                            "MentisDB 0.8.6 adds three retrieval features and a chain branching primitive:"
+                        </p>
+
+                        <h3>"RRF Reranking"</h3>
+                        <p>
+                            "Reciprocal Rank Fusion (RRF) is an opt-in reranking pass on ranked search. \
+                             When "
+                            <code>"enable_reranking"</code>
+                            " is set, the engine produces separate lexical-only, vector-only, and \
+                             graph-only rankings over the top "
+                            <code>"rerank_k"</code>
+                            " candidates (default 50), merges them via "
+                            <code>"1/(k + rank)"</code>
+                            " with k=60, and replaces the additive total with the RRF total. \
+                             Non-rankable signals (importance, confidence, recency, session cohesion) \
+                             are added back as small adjustments. Use RRF when lexical and vector \
+                             signals disagree on top candidates."
+                        </p>
+
+                        <h3>"Irregular Verb Lemma Expansion"</h3>
+                        <p>
+                            "The query tokenizer now expands irregular English verbs to their base form \
+                             (e.g. \"went\" → \"go\", \"gave\" → \"give\", \"ran\" → \"run\"). About \
+                             170 mappings are included. Indexed content is not modified — expansion is \
+                             query-time only."
+                        </p>
+
+                        <h3>"Memory Chain Branching"</h3>
+                        <p>
+                            "New "
+                            <code>"ThoughtRelationKind::BranchesFrom"</code>
+                            " enables cross-chain divergence. "
+                            <code>"MentisDb::branch_from()"</code>
+                            " creates a new chain with a genesis thought pointing back to the \
+                             branch-point on the source chain. When searching a branch chain, \
+                             the server transparently searches ancestor chains and merges results, \
+                             annotated with "
+                            <code>"chain_key"</code>
+                            ". REST: "
+                            <code>"POST /v1/chains/branch"</code>
+                            ". MCP: "
+                            <code>"mentisdb_branch_from"</code>
+                            "."
+                        </p>
+
+                        <h3>"Per-Field BM25 DF Cutoffs"</h3>
+                        <p>
+                            "The "
+                            <code>"Bm25DfCutoffs"</code>
+                            " struct on "
+                            <code>"LexicalQuery"</code>
+                            " allows configuring separate document-frequency cutoff ratios per field \
+                             (content, tags, concepts, agent_id, agent_registry). Terms whose global \
+                             DF exceeds the cutoff for a given field are skipped for that field only. \
+                             Default cutoffs: content=0.30, tags=0.30, concepts=0.30, agent_id=0.70, \
+                             agent_registry=0.60."
                         </p>
 
                         // ── Benchmarking ────────────────────────────────────

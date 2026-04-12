@@ -1218,14 +1218,22 @@ pub fn AgentDocs() -> impl IntoView {
                              mentions elsewhere in this guide. Each entry includes the tool name, \
                              description, parameters, and return type. For "
                             <code>"mentisdb_append"</code>
-                            ", note the new "
+                             ", note the "
                             <code>"scope"</code>
                             " parameter (0.8.2) which sets the memory scope as a tag. For search \
-                             tools, note the new "
+                             tools, note the "
                             <code>"as_of"</code>
-                            " parameter for point-in-time queries and "
+                            " parameter for point-in-time queries, "
                             <code>"scope"</code>
-                            " parameter for scope-filtered results."
+                            " for scope-filtered results, and "
+                            <code>"enable_reranking"</code>
+                            " / "
+                            <code>"rerank_k"</code>
+                            " for RRF reranking (0.8.6). \
+                             Use "
+                            <code>"mentisdb_branch_from"</code>
+                            " to create an isolated branch chain for experiments — searches on \
+                             the branch transparently include ancestor chain results."
                         </p>
 
                         // ── mentisdb_get_thought ────────────────────────────────
