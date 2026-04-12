@@ -144,6 +144,7 @@ img {
   text-decoration: none;
 
   .accent { color: var(--accent); }
+  .wordmark { display: inline; }
 
   &:hover { opacity: 0.85; color: var(--text-primary); }
 }

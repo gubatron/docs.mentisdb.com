@@ -22,7 +22,7 @@ pub fn DocsNavBar() -> impl IntoView {
                             alt="MentisDB logo"
                             aria-hidden="true"
                         />
-                        "Mentis"<span class="accent">"DB"</span>
+                        <span class="wordmark">"Mentis"<span class="accent">"DB"</span></span>
                     </a>
                     <span class="navbar-sep">"|"</span>
                     <span class="navbar-section">"Docs"</span>
