@@ -7,8 +7,7 @@ use leptos::prelude::*;
 /// the main marketing site. Also renders a dark/light theme toggle.
 #[component]
 pub fn DocsNavBar() -> impl IntoView {
-    let is_dark =
-        use_context::<RwSignal<bool>>().expect("theme signal not provided via context");
+    let is_dark = use_context::<RwSignal<bool>>().expect("theme signal not provided via context");
 
     view! {
         <nav class="navbar">
@@ -23,8 +22,7 @@ pub fn DocsNavBar() -> impl IntoView {
                             alt="MentisDB logo"
                             aria-hidden="true"
                         />
-                        "Mentis"
-                        <span class="accent">"DB"</span>
+                        "Mentis"<span class="accent">"DB"</span>
                     </a>
                     <span class="navbar-sep">"|"</span>
                     <span class="navbar-section">"Docs"</span>
