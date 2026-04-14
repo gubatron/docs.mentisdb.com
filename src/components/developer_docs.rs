@@ -14,8 +14,8 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <nav class="docs-nav">
                             <a href="#overview"          class="docs-nav-link">"Overview"</a>
                             <a href="#crate-docs"        class="docs-nav-link">"Crate Docs"</a>
-                            <a href="#mcp-server"        class="docs-nav-link">"MCP Server"</a>
                             <a href="#rest-api"          class="docs-nav-link">"REST API"</a>
+                            <a href="#mcp-server"        class="docs-nav-link">"MCP Server"</a>
                             <a href="#schema"            class="docs-nav-link">"Schema Version"</a>
                             <a href="#import-api"        class="docs-nav-link">"Bulk Import API"</a>
                             <a href="#taxonomy"          class="docs-nav-link">"Thought Taxonomy"</a>
@@ -92,11 +92,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                             "MentisDB ships a built-in MCP (Model Context Protocol) HTTP \
                              server. Enable it with the "
                             <code>"server"</code>
-                            " feature. The server exposes all MentisDB operations as MCP \
-                             tools, making it compatible with any MCP-capable AI tool. The canonical \
-                             onboarding path is not a separate URL: it happens during MCP "
+                            " feature. All MentisDB operations are exposed as MCP tools \
+                             over JSON-RPC 2.0 via HTTP, making it compatible with any \
+                             MCP-capable AI tool. The canonical onboarding path is not a \
+                             separate URL: it happens during the MCP "
                             <code>"initialize"</code>
-                            " via startup instructions plus the embedded resource "
+                            " call via startup instructions plus the embedded resource "
                             <code>"mentisdb://skill/core"</code>
                             " exposed through "
                             <code>"resources/list"</code>
@@ -105,13 +106,276 @@ pub fn DeveloperDocs() -> impl IntoView {
                             "."
                         </p>
                         <p>
-                            "Default streamable HTTP endpoint: "
+                            "Default HTTP endpoint: "
                             <code>"http://127.0.0.1:9471"</code>
+                            " — HTTPS endpoint: "
+                            <code>"https://127.0.0.1:9473"</code>
+                            "."
                         </p>
+
+                        <h3>"All 37 MCP Tools"</h3>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>"Tool"</th>
+                                    <th>"Description"</th>
+                                    <th>"Key Parameters"</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>"mentisdb_bootstrap"</code></td>
+                                    <td>"Create a chain if needed and write one bootstrap checkpoint when it is empty"</td>
+                                    <td><code>"chain_key"</code>, <code>"content"</code>, <code>"concepts"</code>, <code>"importance"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_append"</code></td>
+                                    <td>"Append a durable semantic thought with optional tags, concepts, refs, scope, and signature metadata"</td>
+                                    <td><code>"chain_key"</code>, <code>"thought_type"</code>, <code>"content"</code>, <code>"agent_id"</code>, <code>"tags"</code>, <code>"concepts"</code>, <code>"scope"</code>, <code>"importance"</code>, <code>"confidence"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_append_retrospective"</code></td>
+                                    <td>"Append a guided retrospective memory to prevent future agents from repeating a hard failure"</td>
+                                    <td><code>"chain_key"</code>, <code>"content"</code>, <code>"concepts"</code>, <code>"refs"</code>, <code>"importance"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_search"</code></td>
+                                    <td>"Search thoughts by semantic filters, identity filters, time bounds, and scoring thresholds"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"thought_types"</code>, <code>"roles"</code>, <code>"agent_ids"</code>, <code>"since"</code>, <code>"until"</code>, <code>"min_importance"</code>, <code>"min_confidence"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_lexical_search"</code></td>
+                                    <td>"Return flat ranked lexical matches with explainable term and field provenance"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"thought_types"</code>, <code>"limit"</code>, <code>"offset"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_ranked_search"</code></td>
+                                    <td>"Return flat ranked results with lexical, graph-aware, or heuristic score breakdowns. Supports point-in-time queries and memory scope filtering"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"enable_reranking"</code>, <code>"rerank_k"</code>, <code>"concepts_any"</code>, <code>"roles"</code>, <code>"limit"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_context_bundles"</code></td>
+                                    <td>"Return seed-anchored grouped support context beneath the best lexical seeds"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"graph"</code>, <code>"limit"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_chains"</code></td>
+                                    <td>"List known chains with version, storage adapter, counts, and storage location"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_merge_chains"</code></td>
+                                    <td>"Merge all thoughts from a source chain into a target chain, then permanently delete the source"</td>
+                                    <td><code>"source_chain_key"</code>, <code>"target_chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_branch_from"</code></td>
+                                    <td>"Create a new chain diverging from a thought on an existing chain. Searches on the branch transparently include ancestor results"</td>
+                                    <td><code>"source_chain_key"</code>, <code>"branch_chain_key"</code>, <code>"branch_thought_id"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_agents"</code></td>
+                                    <td>"List the distinct agent identities participating in one chain"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_get_agent"</code></td>
+                                    <td>"Return one full agent registry record including status, aliases, description, keys, and per-chain activity metadata"</td>
+                                    <td><code>"agent_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_agent_registry"</code></td>
+                                    <td>"Return the full per-chain agent registry"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_upsert_agent"</code></td>
+                                    <td>"Create or update a registry record before or after an agent writes thoughts"</td>
+                                    <td><code>"agent_id"</code>, <code>"display_name"</code>, <code>"agent_owner"</code>, <code>"description"</code>, <code>"status"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_set_agent_description"</code></td>
+                                    <td>"Set or clear the description stored for one registered agent"</td>
+                                    <td><code>"agent_id"</code>, <code>"description"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_add_agent_alias"</code></td>
+                                    <td>"Add a historical or alternate alias to a registered agent"</td>
+                                    <td><code>"agent_id"</code>, <code>"alias"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_add_agent_key"</code></td>
+                                    <td>"Add or replace one public verification key on a registered agent"</td>
+                                    <td><code>"agent_id"</code>, <code>"key_id"</code>, <code>"algorithm"</code>, <code>"public_key_bytes"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_revoke_agent_key"</code></td>
+                                    <td>"Revoke one previously registered public key"</td>
+                                    <td><code>"agent_id"</code>, <code>"key_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_disable_agent"</code></td>
+                                    <td>"Disable one agent by marking its registry status as revoked"</td>
+                                    <td><code>"agent_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_recent_context"</code></td>
+                                    <td>"Render recent thoughts into a prompt snippet for session resumption"</td>
+                                    <td><code>"chain_key"</code>, <code>"last_n"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_memory_markdown"</code></td>
+                                    <td>"Export a MEMORY.md-style Markdown view of the full chain or a filtered subset"</td>
+                                    <td><code>"chain_key"</code>, <code>"agent_ids"</code>, <code>"thought_types"</code>, <code>"roles"</code>, <code>"since"</code>, <code>"until"</code>, <code>"limit"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_import_memory_markdown"</code></td>
+                                    <td>"Import a MEMORY.md-formatted Markdown document into a target chain"</td>
+                                    <td><code>"markdown"</code>, <code>"default_agent_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_get_thought"</code></td>
+                                    <td>"Return one stored thought by stable id, chain index, or content hash"</td>
+                                    <td><code>"thought_id"</code>, <code>"thought_index"</code>, <code>"thought_hash"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_get_genesis_thought"</code></td>
+                                    <td>"Return the first thought ever recorded in the chain, if any"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_traverse_thoughts"</code></td>
+                                    <td>"Traverse the chain forward or backward in append order from a chosen anchor, in chunks, with optional filters"</td>
+                                    <td><code>"chain_key"</code>, <code>"anchor_id"</code>, <code>"anchor_index"</code>, <code>"anchor_hash"</code>, <code>"direction"</code>, <code>"chunk_size"</code>, <code>"thought_types"</code>, <code>"roles"</code>, <code>"since"</code>, <code>"until"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_skill_md"</code></td>
+                                    <td>"Return the official embedded MENTISDB_SKILL.md Markdown file"</td>
+                                    <td>(none)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_skills"</code></td>
+                                    <td>"List versioned skill summaries from the skill registry"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_skill_manifest"</code></td>
+                                    <td>"Return the versioned skill-registry manifest including searchable fields and supported formats"</td>
+                                    <td>(none)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_upload_skill"</code></td>
+                                    <td>"Upload a new immutable skill version from Markdown or JSON"</td>
+                                    <td><code>"agent_id"</code>, <code>"skill_id"</code>, <code>"content"</code>, <code>"format"</code>, <code>"signing_key_id"</code>, <code>"skill_signature"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_search_skill"</code></td>
+                                    <td>"Search skills by indexed metadata such as ids, names, tags, triggers, uploader identity, status, format, schema version, and time window"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"skill_ids"</code>, <code>"names"</code>, <code>"statuses"</code>, <code>"since"</code>, <code>"until"</code>, <code>"limit"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_read_skill"</code></td>
+                                    <td>"Read one stored skill as Markdown or JSON. Responses include trust warnings for untrusted or malicious skill content"</td>
+                                    <td><code>"skill_id"</code>, <code>"version_id"</code>, <code>"format"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_skill_versions"</code></td>
+                                    <td>"List immutable uploaded versions for one skill"</td>
+                                    <td><code>"skill_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_deprecate_skill"</code></td>
+                                    <td>"Mark a skill as deprecated while preserving all prior versions"</td>
+                                    <td><code>"skill_id"</code>, <code>"reason"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_revoke_skill"</code></td>
+                                    <td>"Mark a skill as revoked while preserving audit history"</td>
+                                    <td><code>"skill_id"</code>, <code>"reason"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_head"</code></td>
+                                    <td>"Return head metadata, the latest thought at the current chain tip, and integrity state"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_register_webhook"</code></td>
+                                    <td>"Register a webhook to receive HTTP POST notifications when thoughts are appended. Delivery is fire-and-forget with exponential backoff retries (up to 5 attempts)"</td>
+                                    <td><code>"chain_key"</code>, <code>"url"</code>, <code>"event_types"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_webhooks"</code></td>
+                                    <td>"List all registered webhooks"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_delete_webhook"</code></td>
+                                    <td>"Remove a webhook registration by its UUID"</td>
+                                    <td><code>"webhook_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>"JSON-RPC Request/Response Example"</h3>
+                        <p>"MCP uses JSON-RPC 2.0 over HTTP. Send a POST to the MCP endpoint:"</p>
+                        <div class="code-block">
+                            <pre><code>
+    "POST / HTTP/1.1\n\
+    Host: 127.0.0.1:9471\n\
+    Content-Type: application/json\n\
+    \n\
+    {\n\
+    \"jsonrpc\": \"2.0\",\n\
+    \"id\": 1,\n\
+    \"method\": \"tools/call\",\n\
+    \"params\": {\n\
+    \"name\": \"mentisdb_append\",\n\
+    \"arguments\": {\n\
+      \"chain_key\": \"default\",\n\
+      \"agent_id\": \"assistant\",\n\
+      \"thought_type\": \"Insight\",\n\
+      \"content\": \"Memory deduplication triggers when Jaccard similarity exceeds threshold\",\n\
+      \"importance\": 0.7,\n\
+      \"confidence\": 0.9,\n\
+      \"tags\": [\"feature:dedup\"],\n\
+      \"concepts\": [\"memory-dedup\", \"jaccard-similarity\"]\n\
+    }\n\
+    }\n\
+    }\n\
+    \n\
+    // Response:\n\
+    {\n\
+    \"jsonrpc\": \"2.0\",\n\
+    \"id\": 1,\n\
+    \"result\": {\n\
+    \"content\": [\n\
+      {\n\
+        \"type\": \"text\",\n\
+        \"text\": \"Thought appended: a1b2c3... (index 42)\"\n\
+      }\n\
+    ]\n\
+    }\n\
+    }"</code></pre>
+                        </div>
+
+                        <h3>"MCP HTTP Ports"</h3>
+                        <p>
+                            "The MCP server listens on two ports:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"http://127.0.0.1:9471"</code>
+                                " — HTTP (unencrypted), suitable for local development"
+                            </li>
+                            <li>
+                                <code>"https://127.0.0.1:9473"</code>
+                                " — HTTPS (TLS), recommended for production"
+                            </li>
+                        </ul>
                         <p>
                             "The daemon binary ("
                             <code>"mentisdbd"</code>
-                            ") starts the server automatically. For embedding in your own \
+                            ") starts the MCP server automatically. For embedding in your own \
                              Axum app, see the docs.rs API reference for server module details."
                         </p>
 
@@ -335,8 +599,150 @@ pub fn DeveloperDocs() -> impl IntoView {
                              local-text provider ("
                             <code>"local-text-v1"</code>
                             "), and ranked search across REST, MCP, and dashboard surfaces \
-                             upgrades to hybrid scoring when that sidecar is available."
+                              upgrades to hybrid scoring when that sidecar is available."
                         </p>
+
+                        <h3>"REST Example: POST /v1/thoughts (Append Thought)"</h3>
+                        <div class="code-block">
+                            <pre><code>
+    "POST /v1/thoughts HTTP/1.1\n\
+    Host: 127.0.0.1:9471\n\
+    Content-Type: application/json\n\
+    \n\
+    {\n\
+    \"chain_key\": \"default\",\n\
+    \"agent_id\": \"assistant\",\n\
+    \"thought_type\": \"Insight\",\n\
+    \"content\": \"Memory deduplication triggers when Jaccard similarity exceeds threshold\",\n\
+    \"importance\": 0.7,\n\
+    \"confidence\": 0.9,\n\
+    \"tags\": [\"feature:dedup\"],\n\
+    \"concepts\": [\"memory-dedup\", \"jaccard-similarity\"],\n\
+    \"scope\": \"user\",\n\
+    \"relations\": [\n\
+    { \"kind\": \"ContinuesFrom\", \"target_id\": \"<uuid-of-prior-turn>\" }\n\
+    ]\n\
+    }\n\
+    \n\
+    // Response:\n\
+    {\n\
+    \"thought\": {\n\
+    \"id\": \"a1b2c3d4-...\",\n\
+    \"index\": 42,\n\
+    \"hash\": \"9f14...\",\n\
+    \"thought_type\": \"Insight\",\n\
+    \"content\": \"Memory deduplication triggers when Jaccard similarity exceeds threshold\",\n\
+    \"agent_id\": \"assistant\",\n\
+    \"importance\": 0.7,\n\
+    \"confidence\": 0.9,\n\
+    \"tags\": [\"feature:dedup\"],\n\
+    \"concepts\": [\"memory-dedup\", \"jaccard-similarity\"],\n\
+    \"created_at\": \"2026-04-14T12:00:00Z\"\n\
+    }\n\
+    }"</code></pre>
+                        </div>
+
+                        <h3>"REST Example: POST /v1/ranked-search"</h3>
+                        <div class="code-block">
+                            <pre><code>
+    "POST /v1/ranked-search HTTP/1.1\n\
+    Host: 127.0.0.1:9471\n\
+    Content-Type: application/json\n\
+    \n\
+    {\n\
+    \"chain_key\": \"default\",\n\
+    \"text\": \"how does memory deduplication work\",\n\
+    \"scope\": \"user\",\n\
+    \"limit\": 10,\n\
+    \"enable_reranking\": true,\n\
+    \"rerank_k\": 50\n\
+    }\n\
+    \n\
+    // Response:\n\
+    {\n\
+    \"results\": [\n\
+    {\n\
+      \"thought\": {\n\
+        \"id\": \"a1b2c3d4-...\",\n\
+        \"thought_type\": \"Insight\",\n\
+        \"content\": \"Memory deduplication triggers when Jaccard similarity exceeds threshold\",\n\
+        \"importance\": 0.7\n\
+      },\n\
+      \"score\": 4.82,\n\
+      \"lexical_score\": 1.2,\n\
+      \"vector_score\": 3.1,\n\
+      \"session_cohesion\": 0.4,\n\
+      \"rank\": 1\n\
+    }\n\
+    ],\n\
+    \"total\": 1,\n\
+    \"query_time_ms\": 12\n\
+    }"</code></pre>
+                        </div>
+
+                        <h3>"REST Example: POST /v1/context-bundles"</h3>
+                        <div class="code-block">
+                            <pre><code>
+    "POST /v1/context-bundles HTTP/1.1\n\
+    Host: 127.0.0.1:9471\n\
+    Content-Type: application/json\n\
+    \n\
+    {\n\
+    \"chain_key\": \"default\",\n\
+    \"text\": \"memory deduplication decision\",\n\
+    \"scope\": \"user\",\n\
+    \"limit\": 5\n\
+    }\n\
+    \n\
+    // Response:\n\
+    {\n\
+    \"bundles\": [\n\
+    {\n\
+      \"seed\": {\n\
+        \"id\": \"a1b2c3d4-...\",\n\
+        \"thought_type\": \"Decision\",\n\
+        \"content\": \"Enable dedup at 0.85 Jaccard threshold\",\n\
+        \"score\": 5.1\n\
+      },\n\
+      \"supporting\": [\n\
+        {\n\
+          \"id\": \"b2c3d4e5-...\",\n\
+          \"thought_type\": \"LessonLearned\",\n\
+          \"content\": \"Previous attempts at 0.95 threshold produced too many false negatives\",\n\
+          \"chain_key\": \"default\"\n\
+        }\n\
+      ],\n\
+      \"children\": []\n\
+    }\n\
+    ]\n\
+    }"</code></pre>
+                        </div>
+
+                        <h3>"REST Example: POST /v1/webhooks/register"</h3>
+                        <div class="code-block">
+                            <pre><code>
+    "POST /v1/webhooks/register HTTP/1.1\n\
+    Host: 127.0.0.1:9471\n\
+    Content-Type: application/json\n\
+    \n\
+    {\n\
+    \"chain_key\": \"default\",\n\
+    \"url\": \"https://myapp.example.com/mentisdb-webhook\",\n\
+    \"event_types\": [\"thought.append\", \"thought.relation.added\"]\n\
+    }\n\
+    \n\
+    // Response:\n\
+    {\n\
+    \"webhook\": {\n\
+    \"id\": \"wh_abc123\",\n\
+    \"chain_key\": \"default\",\n\
+    \"url\": \"https://myapp.example.com/mentisdb-webhook\",\n\
+    \"event_types\": [\"thought.append\", \"thought.relation.added\"],\n\
+    \"created_at\": \"2026-04-14T12:00:00Z\",\n\
+    \"status\": \"active\"\n\
+    }\n\
+    }"</code></pre>
+                        </div>
 
                         // ── 0.8.0 Improvements ──────────────────────────────
                         <h2 id="0.8.0">"0.8.0 Search &amp; Storage Improvements"</h2>
