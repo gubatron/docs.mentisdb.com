@@ -25,6 +25,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#0.8.1"             class="docs-nav-link">"0.8.1 Improvements"</a>
                             <a href="#0.8.2"             class="docs-nav-link">"0.8.2 Features"</a>
                             <a href="#0.8.6"             class="docs-nav-link">"0.8.6 Features"</a>
+                            <a href="#0.9.x"             class="docs-nav-link">"0.9.x Features"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -37,11 +38,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <h1>"Developer Documentation"</h1>
                         <h2 id="overview">"Overview"</h2>
                         <p>
-                            "MentisDB is a standalone Rust crate available on crates.io. \
-                             Add it to your project:"
+                             "MentisDB is a standalone Rust crate available on crates.io. \
+                              Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.8""#</code>
+                            <code>r#"mentisdb = "0.9.1""#</code>
                         </div>
                         <p>
                             "The crate provides the full memory engine, skill registry, \
@@ -1401,6 +1402,122 @@ pub fn DeveloperDocs() -> impl IntoView {
                              DF exceeds the cutoff for a given field are skipped for that field only. \
                              Default cutoffs: content=0.30, tags=0.30, concepts=0.30, agent_id=0.70, \
                              agent_registry=0.60."
+                        </p>
+
+                        // ── 0.9.x Features ──────────────────────────────────
+                        <h2 id="0.9.x">"0.9.x Features"</h2>
+                        <p>
+                            "MentisDB 0.9.x adds four major features: LLM extraction, federated \
+                             cross-chain search, an official Python client, and an improved setup experience."
+                        </p>
+
+                        <h3>"Opt-in LLM Extraction (0.9.1)"</h3>
+                        <p>
+                            "The "
+                            <code>"extract_memories_from_text"</code>
+                            " function uses GPT-4o (or any OpenAI-compatible endpoint) to convert raw \
+                             agent text, conversation logs, or reasoning traces into structured \
+                             "
+                            <code>"ThoughtInput"</code>
+                            " records. Extraction is opt-in behind the "
+                            <code>"llm-extraction"</code>
+                            " feature (enabled by default). Uses openai-rust2 with 3x retry on 429/5xx, \
+                             60s timeout, temperature 0.1. Configure via "
+                            <code>"OPENAI_API_KEY"</code>
+                            ", "
+                            <code>"LLM_BASE_URL"</code>
+                            ", and "
+                            <code>"LLM_MODEL"</code>
+                            " env vars. The pipeline returns raw "
+                            <code>"ExtractionResult"</code>
+                            " — callers must review and validate thoughts before appending to protect \
+                             the hash chain from untrusted LLM output."
+                        </p>
+
+                        <h3>"Federated Cross-Chain Search (0.9.1)"</h3>
+                        <p>
+                            "The "
+                            <code>"BranchesFrom"</code>
+                            " primitive enables fleet memory hierarchies. A project chain branches \
+                             from a company-wide knowledge chain at a checkpoint. Ranked search on \
+                             the branch transparently queries both the local chain and ancestor \
+                             chains, annotated with "
+                            <code>"chain_key"</code>
+                            " so you know where each result originated. REST: \
+                             "
+                            <code>"POST /v1/chains/branch"</code>
+                            ". MCP: "
+                            <code>"mentisdb_branch_from"</code>
+                            "."
+                        </p>
+
+                        <h3>"Python Client — pymentisdb (0.9.1)"</h3>
+                        <p>
+                            "pymentisdb is on PyPI. Full "
+                            <code>"MentisDbClient"</code>
+                            " with typed enums, LangChain "
+                            <code>"MentisDbMemory"</code>
+                            ", webhook management, skill registry, and memory import/export. Install:"
+                        </p>
+                        <div class="code-block">
+                            <code>"pip install pymentisdb"</code>
+                        </div>
+                        <p>
+                            "Or with LangChain:"
+                        </p>
+                        <div class="code-block">
+                            <code>"pip install pymentisdb[langchain]"</code>
+                        </div>
+
+                        <h3>"Webhook Callbacks (0.9.1)"</h3>
+                        <p>
+                            "Register HTTP POST callbacks that fire when thoughts are appended. \
+                             Useful for reactive agents, cross-system sync, or audit logging. REST: \
+                             "
+                            <code>"POST /v1/webhooks"</code>
+                            ". MCP: "
+                            <code>"mentisdb_register_webhook"</code>
+                            ", "
+                            <code>"mentisdb_list_webhooks"</code>
+                            ", "
+                            <code>"mentisdb_delete_webhook"</code>
+                            ". Delivery is fire-and-forget with exponential backoff retries."
+                        </p>
+
+                        <h3>"Wizard Brew-First Setup (0.9.1)"</h3>
+                        <p>
+                            "The interactive setup wizard "
+                            <code>"mentisdbd setup"</code>
+                            " now tries "
+                            <code>"brew install mcp-remote"</code>
+                            " before npm. It detects Homebrew-installed mcp-remote (which has a \
+                             proper shebang pointing to the correct Node version) and writes the \
+                             minimal Claude Desktop config automatically."
+                        </p>
+
+                        <h3>"Custom Ontology — entity_type (0.8.7)"</h3>
+                        <p>
+                            "Thoughts can carry an optional "
+                            <code>"entity_type"</code>
+                            " label (e.g. \"bug_report\", \"architecture_decision\"). The \
+                             "
+                            <code>"ThoughtQuery"</code>
+                            " accepts "
+                            <code>"entity_type"</code>
+                            " as a filter. Entity types are auto-observed per chain and \
+                             persisted in a "
+                            <code>"chain_key-entity-types.json"</code>
+                            " sidecar."
+                        </p>
+
+                        <h3>"Episode Provenance — source_episode (0.8.8)"</h3>
+                        <p>
+                            "Thoughts can carry a "
+                            <code>"source_episode"</code>
+                            " field pointing to the original thought, with a new \
+                             "
+                            <code>"DerivedFrom"</code>
+                            " relation kind. The dashboard shows full provenance graphs."
                         </p>
 
                         // ── Benchmarking ────────────────────────────────────

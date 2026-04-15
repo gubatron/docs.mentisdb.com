@@ -73,8 +73,7 @@ pub fn App() -> impl IntoView {
                     let _ = html.set_attribute("data-theme", theme);
                 }
             }
-            if let Some(storage) = web_sys::window()
-                .and_then(|w| w.local_storage().ok().flatten())
+            if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten())
             {
                 let _ = storage.set_item("theme", theme);
             }

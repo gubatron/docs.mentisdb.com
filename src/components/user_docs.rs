@@ -18,6 +18,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
                                 <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                                 <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
+                                <a class="docs-nav-link" href="#backup-restore">"Backup & Restore"</a>
                                 <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
                                 <a class="docs-nav-link" href="#connecting-automated">"Automated Setup"</a>
                                 <a class="docs-nav-link" href="#connecting-manual">"Manual MCP Config"</a>
@@ -1015,6 +1016,179 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                      directly to the chain, and you export with "
                                     <code>"mentisdb_memory_markdown"</code>
                                     " whenever you need a portable snapshot."
+                                </div>
+                            </section>
+
+                            // ── Backup & Restore ──────────────────────────────────
+                            <section class="docs-section" id="backup-restore">
+                                <h2 id="backup-restore">"Backup & Restore"</h2>
+                                <p>
+                                    "MentisDB stores all chain data on disk under "
+                                    <code>"~/.cloudllm/mentisdb/"</code>
+                                    ". Back up that directory at any time using the built-in "
+                                    <code>"mentisdbd backup"</code>
+                                    " command, and restore from a backup with "
+                                    <code>"mentisdbd restore"</code>
+                                    "."
+                                </p>
+
+                                <h3>"Archive format"</h3>
+                                <p>
+                                    "Backups are standard ZIP archives with a "
+                                    <code>".mbak"</code>
+                                    " extension. Each archive contains a SHA-256 manifest ("
+                                    <code>"MENTISDB_MANIFEST.txt"</code>
+                                    ") listing every file path and its digest, so integrity can be verified after download or copy."
+                                </p>
+
+                                <h3>"mentisdbd backup"</h3>
+                                <div class="code-block">
+                                    <code>"mentisdbd backup &lt;source_dir&gt; [output_path] [--flush] [--include-tls]"</code>
+                                </div>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Argument"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"source_dir"</code></td>
+                                            <td>"Path to the MentisDB data directory to back up (e.g. "
+                                                <code>"~/.cloudllm/mentisdb"</code>
+                                                ")"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"output_path"</code></td>
+                                            <td>"Optional output path for the "
+                                                <code>".mbak"</code>
+                                                " archive. Defaults to "
+                                                <code>"~/.cloudllm/mentisdb/backup-&lt;timestamp&gt;.mbak"</code>
+                                                "."</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Options"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Flag"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"--flush"</code></td>
+                                            <td>
+                                                "Detects if "
+                                                <code>"mentisdbd"</code>
+                                                " is running on the local machine. If so, calls "
+                                                <code>"POST /v1/admin/flush"</code>
+                                                " to force a durability flush before archiving. The backup then proceeds with the daemon either stopped or freshly flushed. Use this to ensure the archive captures all committed thoughts."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"--include-tls"</code></td>
+                                            <td>
+                                                "Include TLS certificate and private key files in the archive. By default these are excluded (they are machine-specific and should be re-generated on the target machine). This flag is opt-in so you consciously choose to include them."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"mentisdbd restore"</h3>
+                                <div class="code-block">
+                                    <code>"mentisdbd restore &lt;archive_path&gt; &lt;target_dir&gt; [--overwrite] [--yes]"</code>
+                                </div>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Argument"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"archive_path"</code></td>
+                                            <td>"Path to the "
+                                                <code>".mbak"</code>
+                                                " archive to restore."</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"target_dir"</code></td>
+                                            <td>"Directory to extract the archive into."</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"Options"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Flag"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"--overwrite"</code></td>
+                                            <td>"Replace existing files without prompting when there is a conflict."</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"--yes"</code></td>
+                                            <td>"Answer yes to all interactive prompts (equivalent to "
+                                                <code>"--overwrite"</code>
+                                                ")."</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Interactive restore behavior"</h3>
+                                <p>
+                                    "During restore, if any file in the archive already exists in the target directory, "
+                                    <code>"mentisdbd restore"</code>
+                                    " prompts you to decide what to do with that file. Pass "
+                                    <code>"--overwrite"</code>
+                                    " or "
+                                    <code>"--yes"</code>
+                                    " to skip the prompt and overwrite unconditionally."
+                                </p>
+
+                                <h3>"Example commands"</h3>
+                                <div class="code-block">
+                                    <pre><code>{r#"# Create a backup (archive written to ~/.cloudllm/mentisdb/backup-2025-01-15-143022.mbak)
+mentisdbd backup ~/.cloudllm/mentisdb
+
+# Create a backup to a specific path
+mentisdbd backup ~/.cloudllm/mentisdb /tmp/my-mentisdb-backup.mbak
+
+# Create a backup with a running daemon flush first
+mentisdbd backup ~/.cloudllm/mentisdb --flush
+
+# Include TLS material in the backup (machine-specific — restore on same machine)
+mentisdbd backup ~/.cloudllm/mentisdb --include-tls
+
+# Restore a backup (prompts for existing files)
+mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb
+
+# Restore, overwriting any conflicting files without prompting
+mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"#}</code></pre>
+                                </div>
+
+                                <h3>"Security note on --include-tls"</h3>
+                                <p>
+                                    "TLS certificates and private keys are machine-specific. Including them in a backup is only appropriate when restoring to the same physical machine. If you restore to a new machine, omit "
+                                    <code>"--include-tls"</code>
+                                    " and let MentisDB auto-generate a fresh certificate on first start — then re-trust it on that machine."
+                                </p>
+
+                                <div class="docs-callout docs-callout-tip">
+                                    <strong>"Back up before destructive operations."</strong>
+                                    " Run "
+                                    <code>"mentisdbd backup"</code>
+                                    " before any chain merge, chain deletion, skill revocation, or daemon self-update that involves storage format changes. Backups take only seconds and let you recover exactly where you were if something goes wrong."
                                 </div>
                             </section>
 

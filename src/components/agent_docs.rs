@@ -21,6 +21,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#skills-registry">"Skills Registry"</a>
                         <a class="docs-nav-link" href="#thought-relations">"Thought Relations"</a>
                         <a class="docs-nav-link" href="#import-tool">"Import MEMORY.md Tool"</a>
+                        <a class="docs-nav-link" href="#backup-restore">"Backup & Restore"</a>
                         <a class="docs-nav-link" href="#mcp-tools">"MCP Tool Reference"</a>
                         <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                         <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
@@ -1139,6 +1140,164 @@ pub fn AgentDocs() -> impl IntoView {
                             <strong>"📥 Import MEMORY.md"</strong>
                             ". Human operators can use this without any MCP or API access."
                         </p>
+                    </section>
+
+                    // ── Backup & Restore ─────────────────────────────────
+                    <section class="docs-section" id="backup-restore">
+                        <h2 id="backup-restore">"Backup & Restore for Agent Continuity"</h2>
+                        <p>
+                            "Your memories are durable only if the chain they live in survives. \
+                             MentisDB backs up and restores via two CLI commands on the daemon host: \
+                             "
+                            <code>"mentisdbd backup"</code>
+                            " and "
+                            <code>"mentisdbd restore"</code>
+                            ". As an agent, you do not run these yourself — the human operator \
+                             runs them. But you should understand why they matter so you can \
+                             recommend them at the right moments."
+                        </p>
+
+                        <h3>"Why backup matters for agents"</h3>
+                        <ul>
+                            <li>
+                                <strong>"Continuity after failure."</strong>
+                                " If the daemon crashes or the host is restarted, the operator \
+                                 can restore from the most recent archive and you resume exactly \
+                                 where the chain left off — no thought loss."
+                            </li>
+                            <li>
+                                <strong>"Disaster recovery."</strong>
+                                " Chain data lives on disk. Hardware failure, accidental deletion, \
+                                 or a botched migration can wipe months of accumulated context. \
+                                 A current backup means the team starts over from a known checkpoint, \
+                                 not from zero."
+                            </li>
+                            <li>
+                                <strong>"Chain migration between environments."</strong>
+                                " Moving a fleet from a development host to a production host \
+                                 requires exporting the chain data, copying the archive, and \
+                                 restoring it on the target. Backups are the mechanism for that \
+                                 migration."
+                            </li>
+                            <li>
+                                <strong>"Destructive operation safety."</strong>
+                                " Before any chain merge, deletion, or storage reformat, the \
+                                 operator should back up first. If something goes wrong, the \
+                                 backup lets you recover the pre-operation state."
+                            </li>
+                        </ul>
+
+                        <h3>"How backup works"</h3>
+                        <p>
+                            "The operator runs "
+                            <code>"mentisdbd backup ~/.cloudllm/mentisdb"</code>
+                            " on the host. This produces a "
+                            <code>".mbak"</code>
+                            " ZIP archive containing all chain data (binary ledgers, agent registry, \
+                             skills registry, vector sidecars) plus a SHA-256 manifest so integrity \
+                             can be verified after copy."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdbd backup ~/.cloudllm/mentisdb
+    # Archive → ~/.cloudllm/mentisdb/backup-2025-01-15-143022.mbak"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "If the daemon is running at the time of backup, the operator can pass \
+                             "
+                            <code>"--flush"</code>
+                            " to force a durability flush before archiving, ensuring all committed \
+                             thoughts are on disk."
+                        </p>
+
+                        <h3>"The --flush flag and you"</h3>
+                        <p>
+                            "When "
+                            <code>"--flush"</code>
+                            " is passed, "
+                            <code>"mentisdbd backup"</code>
+                            " detects if the daemon is running and calls "
+                            <code>"POST /v1/admin/flush"</code>
+                            " before packaging the archive. This matters because if you have \
+                             appended thoughts in the last few milliseconds, the binary writer \
+                             may not have flushed them to disk yet. Flushing first ensures the \
+                             archive captures your latest work."
+                        </p>
+
+                        <h3>"When to recommend a backup to the user"</h3>
+                        <p>"Recommend the operator run a backup before:"</p>
+                        <ul>
+                            <li>"Any chain merge ("
+                                <code>"mentisdb_merge_chains"</code>
+                                " — the source chain is deleted)"</li>
+                            <li>"Any chain deletion via the dashboard or API"</li>
+                            <li>"A daemon self-update that includes storage format changes"</li>
+                            <li>"Migrating the chain to a new machine or environment"</li>
+                            <li>"Any bulk operation that rewrites many thoughts at once"</li>
+                        </ul>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Before your first session on a new host:"</strong>
+                            " If you are being spawned on a new machine, check whether a backup \
+                             exists for the chain you are about to write to. If the chain was \
+                             migrated without a backup, you may be writing to an empty chain — \
+                             ask the operator to restore from the last archive if continuity \
+                             matters."
+                        </div>
+
+                        <h3>"Restore and chain migration"</h3>
+                        <p>
+                            "The restore command extracts a "
+                            <code>".mbak"</code>
+                            " archive to a target directory. If files already exist in the \
+                             target, the operator is prompted unless "
+                            <code>"--overwrite"</code>
+                            " or "
+                            <code>"--yes"</code>
+                            " is passed."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb
+    # Interactive: asks about each conflicting file
+    mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite
+    # Non-interactive: overwrites without prompting"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "When restoring to a new machine, omit "
+                            <code>"--include-tls"</code>
+                            " (TLS material is machine-specific). MentisDB will auto-generate \
+                             a new certificate on first start."
+                        </p>
+
+                        <h3>"What is included and excluded"</h3>
+                        <ul>
+                            <li>
+                                <strong>"Included:"</strong>
+                                " all binary chain ledgers, agent registry, skill registry, \
+                                 vector sidecar data, configuration snapshots."
+                            </li>
+                            <li>
+                                <strong>"Excluded by default:"</strong>
+                                " TLS certificates and private keys ("
+                                <code>"tls/"</code>
+                                " directory) — use "
+                                <code>"--include-tls"</code>
+                                " only when restoring to the same physical machine."
+                            </li>
+                        </ul>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Your role:"</strong>
+                            " You do not need to know the exact backup commands by heart. \
+                             But when the user asks about disaster recovery, chain migration, \
+                             or restoring a previous session — point them to the "
+                            <a href="#backup-restore">"Backup & Restore"</a>
+                            " section in the User Guide. That is where the operator \
+                             will find the exact commands."
+                        </div>
                     </section>
 
                     // ── Memory Scopes ───────────────────────────────────────
