@@ -1484,6 +1484,21 @@ pub fn DeveloperDocs() -> impl IntoView {
                             ". Delivery is fire-and-forget with exponential backoff retries."
                         </p>
 
+                        <h3>"Smart Stdio Mode — Auto-Detect Daemon (0.9.2)"</h3>
+                        <p>
+                            "The stdio MCP mode now detects if a daemon is already running on the \
+                             configured MCP port via the health endpoint. If running, the stdio \
+                             process acts as a lightweight proxy forwarding requests to the daemon's \
+                             HTTP MCP endpoints. If not running, it launches the daemon in the \
+                             background (nohup on Unix, start /B on Windows) and proxies. This means \
+                             Claude Desktop users get shared live state with zero configuration — just \
+                             set the command to "
+                            <code>"mentisdbd"</code>
+                            " with args "
+                            <code>"--mode stdio"</code>
+                            "."
+                        </p>
+
                         <h3>"Wizard Brew-First Setup (0.9.1)"</h3>
                         <p>
                             "The interactive setup wizard "

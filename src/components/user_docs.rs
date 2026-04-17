@@ -1349,22 +1349,47 @@ mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"
 
                                 <h4>"Claude for Desktop"</h4>
                                 <p>
-                                    "Claude for Desktop connects to MCP servers via the "
+                                    "Claude for Desktop supports two connection modes. "
+                                    <strong>"Stdio mode (recommended)"</strong>
+                                    " requires no daemon, no Node.js, and no mcp-remote — just point \
+                                     Claude Desktop at the "
+                                    <code>"mentisdbd"</code>
+                                    " binary. The stdio process automatically detects a running daemon \
+                                     and proxies to it, or launches one in the background if none is found."
+                                </p>
+
+                                <h5>"Option 1: Stdio mode (recommended)"</h5>
+                                <p>"Edit your "
                                     <code>"claude_desktop_config.json"</code>
-                                    " file. MentisDB uses "
+                                    " and add:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "command": "mentisdbd",
+      "args": ["--mode", "stdio"]
+    }
+  }
+}"#}</code></pre>
+                                </div>
+                                <p>"That's it. No daemon pre-start, no TLS config, no Node.js dependency. \
+                                 The stdio process handles everything."</p>
+
+                                <h5>"Option 2: HTTP via mcp-remote"</h5>
+                                <p>
+                                    "If you prefer the HTTP transport (e.g. for a remote daemon), use the "
                                     <a href="https://www.npmjs.com/package/mcp-remote" target="_blank" rel="noopener noreferrer">
                                         <code>"mcp-remote"</code>
                                     </a>
-                                    " as the bridge between Claude Desktop and the local MentisDB HTTPS server."
+                                    " bridge. This requires Node.js >= 20."
                                 </p>
 
-                                <h4>"Step 1 — Install mcp-remote"</h4>
-                                <p>"Install it globally with npm (Node.js required):"</p>
+                                <p>"Install mcp-remote globally:"</p>
                                 <div class="code-block">
                                     <pre><code>"npm install -g mcp-remote"</code></pre>
                                 </div>
 
-                                <h4>"Step 2 — Edit the config file"</h4>
                                 <p>"Config file location by OS:"</p>
                                 <ul>
                                     <li>
@@ -1381,7 +1406,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"
                                     </li>
                                 </ul>
 
-                                <h4>"macOS"</h4>
+                                <h5>"macOS (mcp-remote)"</h5>
                                 <div class="code-block">
                                     <pre><code>{r#"{
   "mcpServers": {
@@ -1415,7 +1440,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"
                                     " value."
                                 </p>
 
-                                <h4>"Windows"</h4>
+                                <h5>"Windows (mcp-remote)"</h5>
                                 <div class="code-block">
                                     <pre><code>{r#"{
   "mcpServers": {
@@ -1437,7 +1462,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"
                                     <pre><code>{r#""command": "C:\\Users\\YourName\\AppData\\Roaming\\npm\\mcp-remote.cmd""#}</code></pre>
                                 </div>
 
-                                <h4>"Linux"</h4>
+                                <h5>"Linux (mcp-remote)"</h5>
                                 <div class="code-block">
                                     <pre><code>{r#"{
   "mcpServers": {
