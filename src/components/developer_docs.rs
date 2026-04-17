@@ -1535,6 +1535,69 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " relation kind. The dashboard shows full provenance graphs."
                         </p>
 
+                        <h3>"LLM-Based Reranking (0.8.8)"</h3>
+                        <p>
+                            "In addition to arithmetic RRF, "
+                            <code>"RankedSearchQuery"</code>
+                            " accepts an optional "
+                            <code>"llm_rerank"</code>
+                            " block that delegates the final rerank of the top-"
+                            <code>"rerank_k"</code>
+                            " candidates to an OpenAI-compatible model. The server sends the candidate \
+                             thoughts and the original query, parses the model's ranked IDs, and blends \
+                             the returned ordinal score (under the "
+                            <code>"llm_score"</code>
+                            " field on each hit) with the arithmetic signals as an additive tie-breaker. \
+                             LLM reranking is strictly opt-in and disabled by default; the core pipeline \
+                             remains LLM-free."
+                        </p>
+
+                        // ── Operations & Admin ─────────────────────────────
+                        <h2 id="operations">"Operations & Admin"</h2>
+
+                        <h3 id="admin-flush">"POST /v1/admin/flush"</h3>
+                        <p>
+                            "REST endpoint that walks every open chain and calls "
+                            <code>"flush()"</code>
+                            " on its storage adapter. Useful in buffered-write mode ("
+                            <code>"MENTISDB_AUTO_FLUSH=false"</code>
+                            ") where up to "
+                            <code>"FLUSH_THRESHOLD − 1"</code>
+                            " records can sit in the background-writer queue. The backup CLI calls this "
+                            "automatically when it detects a running daemon; consistent on-disk state is \
+                             a precondition for a reliable "<code>".mbak"</code>" archive."
+                        </p>
+
+                        <h3 id="backup-restore">"Backup & Restore (.mbak archive)"</h3>
+                        <p>
+                            <code>"mentisdbd backup"</code>
+                            " produces a "<code>".mbak"</code>" ZIP archive covering every chain data file \
+                             ("<code>"*.tcbin"</code>", "<code>"*.agents.json"</code>", "
+                            <code>"*.entity-types.json"</code>", "<code>"*.vectors.*.json"</code>"), the \
+                             global chain registry, the skill registry, and optionally TLS certificates. \
+                             When a daemon is running the CLI first POSTs to "
+                            <code>"/v1/admin/flush"</code>
+                            " so pending writes are on disk before the archive is assembled."
+                        </p>
+                        <p>
+                            <code>"mentisdbd restore"</code>
+                            " reverses the operation. Path traversal is rejected server-side — manifest \
+                             entries containing "<code>"../"</code>" or absolute paths fail with "
+                            <code>"InvalidData"</code>
+                            " before any file is written outside the target directory. Existing files are \
+                             preserved by default; pass "<code>"--overwrite"</code>" to replace them, or \
+                             answer "<code>"yes"</code>" to the interactive confirmation."
+                        </p>
+
+                        <h3 id="dashboard-pin">"Dashboard PIN"</h3>
+                        <p>
+                            "Set "<code>"MENTISDB_DASHBOARD_PIN"</code>" to require a shared PIN before the \
+                             web dashboard accepts any request. An empty string is treated as absent. \
+                             Failed logins are rate-limited per-IP to prevent brute-force enumeration; \
+                             the dashboard is always served over TLS so the PIN is never transmitted in \
+                             the clear on a local network."
+                        </p>
+
                         // ── Benchmarking ────────────────────────────────────
                         <h2 id="benchmarking">"Benchmarking"</h2>
                         <p>

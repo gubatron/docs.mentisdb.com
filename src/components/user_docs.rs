@@ -2027,6 +2027,171 @@ mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"
                                 </div>
                             </section>
 
+                            // ── Advanced Retrieval ───────────────────────────────────
+                            <section class="docs-section" id="advanced-retrieval">
+                                <h2 id="advanced-retrieval">"Advanced Retrieval"</h2>
+                                <p>
+                                    "MentisDB layers four complementary signals over its append-only chain — "
+                                    "lexical (BM25), dense-vector (cosine), graph BFS, and session cohesion — "
+                                    "and fuses them into a single ranked result set. The full algorithmic pipeline "
+                                    "is described in the "
+                                    <a href="https://docs.mentisdb.com/ranked-search-pipeline">"ranked-search pipeline blog post"</a>
+                                    " and the "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/WHITEPAPER.md">"white paper"</a>
+                                    "; this section summarises the knobs you can turn."
+                                </p>
+
+                                <h3 id="rrf-reranking">"Reciprocal Rank Fusion (RRF)"</h3>
+                                <p>
+                                    "Set "<code>"enable_reranking: true"</code>" on any "
+                                    <code>"mentisdb_ranked_search"</code>
+                                    " call to rerank the top "<code>"rerank_k"</code>" candidates (default 50) by merging "
+                                    "three independent rankings — lexical-only, vector-only, and graph-only — through "
+                                    "Reciprocal Rank Fusion with damping constant "<code>"k=60"</code>". RRF is robust when "
+                                    "the absolute magnitudes of the component scores are not directly comparable."
+                                </p>
+
+                                <h3 id="context-bundles">"Context Bundles"</h3>
+                                <p>
+                                    <code>"mentisdb_context_bundles"</code>
+                                    " returns seed-anchored grouped results instead of a flat list. Each bundle pairs "
+                                    "one lexical seed with its graph-expanded neighbours in provenance order, so the "
+                                    "agent can inspect "<em>"why"</em>" a supporting thought surfaced. Use bundles when "
+                                    "you want to preserve evidence groupings rather than collapse everything into "
+                                    "ranked rows."
+                                </p>
+
+                                <h3 id="vector-sidecars">"Dense-Vector Sidecars"</h3>
+                                <p>
+                                    "Vector state lives in rebuildable per-chain sidecars partitioned by chain, thought id, "
+                                    "model, dimension, and embedding version. The daemon ships the "
+                                    <code>"fastembed-minilm"</code>
+                                    " provider by default — a 384-dimension MiniLM model running locally via ONNX, "
+                                    "with no cloud dependency and no API key. Hybrid ranking blends lexical and cosine "
+                                    "scores via a smooth exponential fusion that amplifies pure-semantic matches "
+                                    "(~36×) and decays to additive composition as lexical evidence grows."
+                                </p>
+
+                                <h3 id="branching-chains">"Branching Chains"</h3>
+                                <p>
+                                    <code>"mentisdb_branch_from"</code>
+                                    " forks a new chain from an existing thought. The branch receives a genesis thought "
+                                    "with a "<code>"BranchesFrom"</code>" relation pointing at the fork point; ranked "
+                                    "search on the branch transparently includes results from ancestor chains, so "
+                                    "experimental or tenant-scoped branches can read shared context without "
+                                    "cross-contaminating it. Ancestor discovery is transitive."
+                                </p>
+
+                                <h3 id="federated-search">"Federated Cross-Chain Search"</h3>
+                                <p>
+                                    <code>"mentisdb_federated_search"</code>
+                                    " runs one ranked-search query across a list of chains concurrently and returns one "
+                                    "merged, deduplicated, re-scored result set. Each hit carries the "
+                                    <code>"chain_key"</code>
+                                    " it originated from, so multi-agent hubs and cross-organisational memory "
+                                    "aggregations can share a single query surface. Per-chain overrides let you "
+                                    "apply different filters, limits, or RRF settings per chain."
+                                </p>
+                            </section>
+
+                            // ── Entity Types & Provenance ────────────────────────────
+                            <section class="docs-section" id="entity-types-and-provenance">
+                                <h2 id="entity-types-and-provenance">"Entity Types & Provenance"</h2>
+
+                                <h3 id="entity-types">"Per-Chain Entity Types"</h3>
+                                <p>
+                                    "Attach an "<code>"entity_type"</code>" label to any thought — e.g. "
+                                    <code>"\"incident\""</code>", "<code>"\"customer\""</code>", "
+                                    <code>"\"deploy\""</code>" — to categorise memory beyond free-form tags. Entity types "
+                                    "are registered per chain through "
+                                    <code>"mentisdb_upsert_entity_type"</code>
+                                    " and discoverable via "
+                                    <code>"mentisdb_list_entity_types"</code>
+                                    "; each carries an optional description and a usage counter. Ranked search filters "
+                                    "by entity type, and the dashboard explorer surfaces them as a first-class facet."
+                                </p>
+
+                                <h3 id="source-episode">"source_episode — Derived Memory Provenance"</h3>
+                                <p>
+                                    "When a thought is derived from a larger episode (a conversation turn, an ingested "
+                                    "document, a batch job), set the optional "<code>"source_episode"</code>" field to a "
+                                    "stable identifier so every derived thought can later be traced back to its source. "
+                                    "Ranked search filters by "<code>"source_episode"</code>" exactly the same way it "
+                                    "filters by agent or tag."
+                                </p>
+                            </section>
+
+                            // ── Webhooks ─────────────────────────────────────────────
+                            <section class="docs-section" id="webhooks">
+                                <h2 id="webhooks">"Webhook Callbacks"</h2>
+                                <p>
+                                    "Register an HTTP endpoint that MentisDB will POST to whenever a thought is "
+                                    "appended to a chain. Useful for syncing an external index, triggering downstream "
+                                    "workflows, or mirroring writes to observability pipelines."
+                                </p>
+                                <p>
+                                    "Delivery is fire-and-forget with exponential-backoff retries (up to 5 attempts). "
+                                    "Registrations persist to "<code>"webhooks.json"</code>" next to the chain registry "
+                                    "and survive daemon restarts. Fan-out is bounded by a queue and concurrency "
+                                    "semaphore, so bursty appends cannot spawn unlimited outgoing tasks."
+                                </p>
+                                <p>"MCP tools: "
+                                    <code>"mentisdb_register_webhook"</code>", "
+                                    <code>"mentisdb_list_webhooks"</code>", "
+                                    <code>"mentisdb_delete_webhook"</code>
+                                    ". REST routes are documented in the developer guide."
+                                </p>
+                            </section>
+
+                            // ── LLM-Extracted Memories ───────────────────────────────
+                            <section class="docs-section" id="llm-extracted-memories">
+                                <h2 id="llm-extracted-memories">"LLM-Extracted Memories"</h2>
+                                <p>
+                                    "Turn raw text — a chat transcript, a pasted document, a ticket comment — into a "
+                                    "review-ready slate of typed thoughts. The "
+                                    <code>"mentisdb_extract_memories"</code>
+                                    " tool calls a configured OpenAI-compatible model, validates the JSON schema of the "
+                                    "candidate thoughts, and returns them to the caller. "
+                                    <strong>"Nothing is written to the chain until the caller explicitly appends the reviewed candidates."</strong>
+                                </p>
+                                <p>
+                                    "Defaults to "<code>"gpt-4o"</code>", configurable via environment variables. The "
+                                    "prompt enforces strict JSON output and the server validates schemas before return, "
+                                    "so provider quirks (for example OpenAI-compatible endpoints that reject the "
+                                    <code>"response_format"</code>
+                                    " hint) cannot poison the chain. See "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/docs/llm-extracted-memories-design.md">"llm-extracted-memories-design.md"</a>
+                                    " for the full contract."
+                                </p>
+                            </section>
+
+                            // ── Python Client ────────────────────────────────────────
+                            <section class="docs-section" id="python-client">
+                                <h2 id="python-client">"Python Client (pymentisdb)"</h2>
+                                <p>
+                                    <code>"pymentisdb"</code>
+                                    " is the official Python client, published to PyPI. It wraps the REST surface with "
+                                    "typed request and response objects and integrates natively with LangChain via "
+                                    <code>"MentisDbMemory"</code>
+                                    "."
+                                </p>
+                                <div class="code-block">
+                                    <code>"pip install pymentisdb"</code>
+                                </div>
+                                <div class="code-block">
+                                    <code>"from pymentisdb import MentisDbClient, ThoughtType\n\n\
+client = MentisDbClient(\"http://127.0.0.1:9472\")\n\
+client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n    thought_type=ThoughtType.DECISION,\n    content=\"Adopt LRU eviction for the response cache\",\n)\nhits = client.ranked_search(chain_key=\"my-chain\", text=\"cache eviction\", limit=5)"</code>
+                                </div>
+                                <p>"See the "
+                                    <a href="https://pypi.org/project/pymentisdb/">"PyPI listing"</a>
+                                    " and the "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/tree/master/pymentisdb">"pymentisdb/"</a>
+                                    " folder for the full API surface, typed relations, context bundles, and a working "
+                                    "LangChain example."
+                                </p>
+                            </section>
+
                             // ── CLI Subcommands ──────────────────────────────────────
                             <section class="docs-section" id="cli-subcommands">
                                 <h2 id="cli-subcommands">"CLI Subcommands"</h2>
