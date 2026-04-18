@@ -1555,6 +1555,18 @@ pub fn DeveloperDocs() -> impl IntoView {
                         // ── Operations & Admin ─────────────────────────────
                         <h2 id="operations">"Operations & Admin"</h2>
 
+                        <p>
+                            "For the full list of environment variables that tune storage, \
+                             behaviour, networking, TLS, the dashboard, updates, and audio \
+                             cues, see the "
+                            <a href="/user#environment-variables">
+                                "Environment Variables Reference"
+                            </a>
+                            " in the user manual — every "
+                            <code>"MENTISDB_*"</code>
+                            " knob is documented there with defaults, purpose, and a concrete example."
+                        </p>
+
                         <h3 id="admin-flush">"POST /v1/admin/flush"</h3>
                         <p>
                             "REST endpoint that walks every open chain and calls "

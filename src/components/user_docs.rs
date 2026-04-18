@@ -289,6 +289,392 @@ mentisdbd agents"#}</code></pre>
                                 </table>
                             </section>
 
+                            // ── Environment Variables Reference ──────────────────────
+                            <section class="docs-section" id="environment-variables">
+                                <h2 id="environment-variables">"Environment Variables Reference"</h2>
+                                <p>
+                                    "Every MentisDB environment variable, grouped by concern. \
+                                     Each row lists the default, a one-sentence purpose, and a \
+                                     concrete example with a rationale for when you'd reach for \
+                                     it. All variables are read once at "
+                                    <code>"mentisdbd"</code>
+                                    " startup unless noted otherwise."
+                                </p>
+
+                                <h3>"Storage"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_DIR"</code></td>
+                                            <td><code>"~/.cloudllm/mentisdb"</code></td>
+                                            <td>
+                                                "Root directory where chain files, the chain \
+                                                 registry, the skill registry, and TLS certs live."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DIR=/mnt/ssd/mentisdb"</code>
+                                                " — point storage at a large fast disk in production."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <code>"MENTISDB_DEFAULT_CHAIN_KEY"</code>
+                                                <br/>
+                                                <small><em>
+                                                    "(deprecated alias: "
+                                                    <code>"MENTISDB_DEFAULT_KEY"</code>
+                                                    ")"
+                                                </em></small>
+                                            </td>
+                                            <td><code>"borganism-brain"</code></td>
+                                            <td>
+                                                "Chain used when a request omits "
+                                                <code>"chain_key"</code>
+                                                "."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DEFAULT_CHAIN_KEY=team-core"</code>
+                                                " — make a shared team chain the implicit default."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_STORAGE_ADAPTER"</code></td>
+                                            <td><code>"binary"</code></td>
+                                            <td>
+                                                "Storage format for new chains; only "
+                                                <code>"binary"</code>
+                                                " is supported for new chains."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_STORAGE_ADAPTER=binary"</code>
+                                                " — set explicitly in ops manifests for future-proofing."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Behaviour"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_AUTO_FLUSH"</code></td>
+                                            <td><code>"true"</code></td>
+                                            <td>
+                                                <code>"true"</code>
+                                                " fsyncs on every append (strict durability); "
+                                                <code>"false"</code>
+                                                " batches up to 16 records in a background writer \
+                                                 (higher throughput, up to 15 records may be lost \
+                                                 on hard crash)."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_AUTO_FLUSH=false"</code>
+                                                " — for write-heavy multi-agent hubs where throughput \
+                                                 matters more than last-second durability."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_GROUP_COMMIT_MS"</code></td>
+                                            <td><code>"2"</code></td>
+                                            <td>
+                                                "Window in milliseconds for the strict-mode writer \
+                                                 to coalesce concurrent appends into one flush."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_GROUP_COMMIT_MS=5"</code>
+                                                " — bigger window amortises fsync cost at the price \
+                                                 of 3ms extra p99 latency."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DEDUP_THRESHOLD"</code></td>
+                                            <td><em>"unset (disabled)"</em></td>
+                                            <td>
+                                                "Jaccard similarity threshold in "
+                                                <code>"[0.0, 1.0]"</code>
+                                                " for auto-emitting "
+                                                <code>"Supersedes"</code>
+                                                " relations on near-duplicate appends."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DEDUP_THRESHOLD=0.85"</code>
+                                                " — collapse near-identical retrospectives."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DEDUP_SCAN_WINDOW"</code></td>
+                                            <td><code>"64"</code></td>
+                                            <td>
+                                                "How many recent thoughts to scan when dedup is enabled."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DEDUP_SCAN_WINDOW=128"</code>
+                                                " — widen the comparison window on chatty chains \
+                                                 where near-duplicates arrive in bursts."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_VERBOSE"</code></td>
+                                            <td><code>"true"</code></td>
+                                            <td>
+                                                "Log each MentisDB operation to the "
+                                                <code>"mentisdb::interaction"</code>
+                                                " target."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_VERBOSE=false"</code>
+                                                " in production where you've attached your own \
+                                                 observability and don't need the built-in stream."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_LOG_FILE"</code></td>
+                                            <td><em>"unset (stdout only)"</em></td>
+                                            <td>
+                                                "Optional file path for interaction logs."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_LOG_FILE=/var/log/mentisdb/interactions.log"</code>
+                                                " — persist the interaction stream for later audit \
+                                                 or log-shipping."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Networking / TLS"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_BIND_HOST"</code></td>
+                                            <td><code>"127.0.0.1"</code></td>
+                                            <td>
+                                                "IP address for all server sockets."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_BIND_HOST=0.0.0.0"</code>
+                                                " — bind to all interfaces (use with care; firewall \
+                                                 or set a dashboard PIN first)."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_MCP_PORT"</code></td>
+                                            <td><code>"9471"</code></td>
+                                            <td>"HTTP MCP server port."</td>
+                                            <td>
+                                                <code>"MENTISDB_MCP_PORT=19471"</code>
+                                                " — move off the default when running a second \
+                                                 daemon on the same host."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_REST_PORT"</code></td>
+                                            <td><code>"9472"</code></td>
+                                            <td>"HTTP REST server port."</td>
+                                            <td>
+                                                <code>"MENTISDB_REST_PORT=19472"</code>
+                                                " — align with the MCP port offset when running a \
+                                                 side-by-side instance."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HTTPS_MCP_PORT"</code></td>
+                                            <td><code>"9473"</code></td>
+                                            <td>
+                                                "HTTPS MCP port; set to "
+                                                <code>"0"</code>
+                                                " to disable."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_HTTPS_MCP_PORT=0"</code>
+                                                " — turn off HTTPS MCP entirely on a fully-internal host."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HTTPS_REST_PORT"</code></td>
+                                            <td><code>"9474"</code></td>
+                                            <td>
+                                                "HTTPS REST port; set to "
+                                                <code>"0"</code>
+                                                " to disable."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_HTTPS_REST_PORT=0"</code>
+                                                " — disable HTTPS REST when terminating TLS at a reverse proxy."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_TLS_CERT"</code></td>
+                                            <td><code>"<MENTISDB_DIR>/tls/cert.pem"</code></td>
+                                            <td>
+                                                "PEM cert path. Auto-generated on first boot if absent."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_TLS_CERT=/etc/ssl/mentisdb/fullchain.pem"</code>
+                                                " — swap in a CA-signed cert instead of the default self-signed one."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_TLS_KEY"</code></td>
+                                            <td><code>"<MENTISDB_DIR>/tls/key.pem"</code></td>
+                                            <td>"PEM key path."</td>
+                                            <td>
+                                                <code>"MENTISDB_TLS_KEY=/etc/ssl/mentisdb/privkey.pem"</code>
+                                                " — pair with a CA-signed cert from a secrets mount."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Dashboard"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_DASHBOARD_PORT"</code></td>
+                                            <td><code>"9475"</code></td>
+                                            <td>
+                                                "HTTPS-only dashboard port; set to "
+                                                <code>"0"</code>
+                                                " to disable entirely."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DASHBOARD_PORT=0"</code>
+                                                " — turn the dashboard off on headless servers where \
+                                                 only the MCP/REST APIs are needed."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DASHBOARD_PIN"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>
+                                                "Shared PIN required to access the dashboard; empty \
+                                                 string is treated as absent."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_DASHBOARD_PIN=8472-9471"</code>
+                                                " — required whenever you bind the dashboard off "
+                                                <code>"127.0.0.1"</code>
+                                                "."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Updates"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_UPDATE_CHECK"</code></td>
+                                            <td><code>"true"</code></td>
+                                            <td>
+                                                "Enable/disable the automatic update check on daemon startup."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_UPDATE_CHECK=false"</code>
+                                                " in CI — keeps test runs deterministic and offline."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_UPDATE_REPO"</code></td>
+                                            <td><code>"CloudLLM-ai/mentisdb"</code></td>
+                                            <td>
+                                                "Override the GitHub repo the updater polls (useful for forks)."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_UPDATE_REPO=my-org/mentisdb-fork"</code>
+                                                " — track an internal fork's release channel instead of upstream."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Audio"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Variable"</th>
+                                            <th>"Default"</th>
+                                            <th>"Purpose"</th>
+                                            <th>"Why / example"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"MENTISDB_STARTUP_SOUND"</code></td>
+                                            <td><em>"unset (off)"</em></td>
+                                            <td>
+                                                "Set to "
+                                                <code>"1"</code>
+                                                "/"
+                                                <code>"true"</code>
+                                                " to play the startup chime."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_STARTUP_SOUND=true"</code>
+                                                " on a dev workstation — audible cue that the daemon \
+                                                 is up after a restart."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_THOUGHT_SOUNDS"</code></td>
+                                            <td><em>"unset (off)"</em></td>
+                                            <td>
+                                                "Set to "
+                                                <code>"1"</code>
+                                                "/"
+                                                <code>"true"</code>
+                                                " to play a per-thought-type sound on each append."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_THOUGHT_SOUNDS=true"</code>
+                                                " — audible feedback while pair-programming with an \
+                                                 agent; leave off on shared machines."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </section>
+
                             // ── Priming Your Agent ───────────────────────────────────
                             <section class="docs-section" id="priming">
                                 <h2 id="priming">"Priming Your Agent"</h2>
