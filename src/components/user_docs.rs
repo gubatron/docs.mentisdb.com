@@ -1421,7 +1421,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                 <h3>"Archive format"</h3>
                                 <p>
                                     "Backups are standard ZIP archives with a "
-                                    <code>".mbak"</code>
+                                    <code>".mentis"</code>
                                     " extension. Each archive contains a SHA-256 manifest ("
                                     <code>"MENTISDB_MANIFEST.txt"</code>
                                     ") listing every file path and its digest, so integrity can be verified after download or copy."
@@ -1429,7 +1429,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
 
                                 <h3>"mentisdbd backup"</h3>
                                 <div class="code-block">
-                                    <code>"mentisdbd backup &lt;source_dir&gt; [output_path] [--flush] [--include-tls]"</code>
+                                    <code>"mentisdbd backup [-o &lt;path&gt;] [--dir &lt;path&gt;] [--flush] [--include-tls]"</code>
                                 </div>
                                 <table class="config-table">
                                     <thead>
@@ -1448,9 +1448,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                         <tr>
                                             <td><code>"output_path"</code></td>
                                             <td>"Optional output path for the "
-                                                <code>".mbak"</code>
+                                                <code>".mentis"</code>
                                                 " archive. Defaults to "
-                                                <code>"~/.cloudllm/mentisdb/backup-&lt;timestamp&gt;.mbak"</code>
+                                                <code>"~/.cloudllm/mentisdb/backup-&lt;timestamp&gt;.mentis"</code>
                                                 "."</td>
                                         </tr>
                                     </tbody>
@@ -1486,7 +1486,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
 
                                 <h3>"mentisdbd restore"</h3>
                                 <div class="code-block">
-                                    <code>"mentisdbd restore &lt;archive_path&gt; &lt;target_dir&gt; [--overwrite] [--yes]"</code>
+                                    <code>"mentisdbd restore &lt;archive.mentis&gt; [--dir &lt;path&gt;] [--overwrite] [--yes]"</code>
                                 </div>
                                 <table class="config-table">
                                     <thead>
@@ -1499,7 +1499,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                         <tr>
                                             <td><code>"archive_path"</code></td>
                                             <td>"Path to the "
-                                                <code>".mbak"</code>
+                                                <code>".mentis"</code>
                                                 " archive to restore."</td>
                                         </tr>
                                         <tr>
@@ -1544,23 +1544,29 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
 
                                 <h3>"Example commands"</h3>
                                 <div class="code-block">
-                                    <pre><code>{r#"# Create a backup (archive written to ~/.cloudllm/mentisdb/backup-2025-01-15-143022.mbak)
-mentisdbd backup ~/.cloudllm/mentisdb
+                                    <pre><code>{r#"# Create a backup (archive written to ./mentisdb-2026-04-28-153022.mentis)
+mentisdbd backup
 
 # Create a backup to a specific path
-mentisdbd backup ~/.cloudllm/mentisdb /tmp/my-mentisdb-backup.mbak
+mentisdbd backup -o /tmp/my-mentisdb-backup.mentis
+
+# Create a backup from a specific source directory
+mentisdbd backup --dir ~/.cloudllm/mentisdb -o /tmp/backup.mentis
 
 # Create a backup with a running daemon flush first
-mentisdbd backup ~/.cloudllm/mentisdb --flush
+mentisdbd backup --flush
 
 # Include TLS material in the backup (machine-specific — restore on same machine)
-mentisdbd backup ~/.cloudllm/mentisdb --include-tls
+mentisdbd backup --include-tls
 
-# Restore a backup (prompts for existing files)
-mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb
+# Restore a backup (prompts for existing files, daemon must be stopped)
+mentisdbd restore /tmp/my-mentisdb-backup.mentis
+
+# Restore to a specific directory
+mentisdbd restore /tmp/my-mentisdb-backup.mentis --dir ~/.cloudllm/mentisdb
 
 # Restore, overwriting any conflicting files without prompting
-mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite"#}</code></pre>
+mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 </div>
 
                                 <h3>"Security note on --include-tls"</h3>

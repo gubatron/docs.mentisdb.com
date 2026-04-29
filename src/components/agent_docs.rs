@@ -1190,17 +1190,19 @@ pub fn AgentDocs() -> impl IntoView {
                         <h3>"How backup works"</h3>
                         <p>
                             "The operator runs "
-                            <code>"mentisdbd backup ~/.cloudllm/mentisdb"</code>
+                            <code>"mentisdbd backup"</code>
                             " on the host. This produces a "
-                            <code>".mbak"</code>
+                            <code>".mentis"</code>
                             " ZIP archive containing all chain data (binary ledgers, agent registry, \
                              skills registry, vector sidecars) plus a SHA-256 manifest so integrity \
                              can be verified after copy."
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdbd backup ~/.cloudllm/mentisdb
-    # Archive → ~/.cloudllm/mentisdb/backup-2025-01-15-143022.mbak"
+    "mentisdbd backup
+    # Archive → ./mentisdb-2026-04-28-153022.mentis
+    mentisdbd backup -o /tmp/my-mentisdb-backup.mentis
+    # Archive → /tmp/my-mentisdb-backup.mentis"
                             </code></pre>
                         </div>
                         <p>
@@ -1249,7 +1251,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <h3>"Restore and chain migration"</h3>
                         <p>
                             "The restore command extracts a "
-                            <code>".mbak"</code>
+                            <code>".mentis"</code>
                             " archive to a target directory. If files already exist in the \
                              target, the operator is prompted unless "
                             <code>"--overwrite"</code>
@@ -1259,9 +1261,9 @@ pub fn AgentDocs() -> impl IntoView {
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb
+    "mentisdbd restore /tmp/my-mentisdb-backup.mentis
     # Interactive: asks about each conflicting file
-    mentisdbd restore /tmp/my-mentisdb-backup.mbak ~/.cloudllm/mentisdb --overwrite
+    mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite
     # Non-interactive: overwrites without prompting"
                             </code></pre>
                         </div>

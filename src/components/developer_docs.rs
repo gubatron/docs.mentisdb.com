@@ -1577,13 +1577,13 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <code>"FLUSH_THRESHOLD − 1"</code>
                             " records can sit in the background-writer queue. The backup CLI calls this "
                             "automatically when it detects a running daemon; consistent on-disk state is \
-                             a precondition for a reliable "<code>".mbak"</code>" archive."
+                             a precondition for a reliable "<code>".mentis"</code>" archive."
                         </p>
 
-                        <h3 id="backup-restore">"Backup & Restore (.mbak archive)"</h3>
+                        <h3 id="backup-restore">"Backup & Restore (.mentis archive)"</h3>
                         <p>
                             <code>"mentisdbd backup"</code>
-                            " produces a "<code>".mbak"</code>" ZIP archive covering every chain data file \
+                            " produces a "<code>".mentis"</code>" ZIP archive covering every chain data file \
                              ("<code>"*.tcbin"</code>", "<code>"*.agents.json"</code>", "
                             <code>"*.entity-types.json"</code>", "<code>"*.vectors.*.json"</code>"), the \
                              global chain registry, the skill registry, and optionally TLS certificates. \
