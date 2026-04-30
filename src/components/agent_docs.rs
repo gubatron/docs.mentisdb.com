@@ -677,6 +677,15 @@ pub fn AgentDocs() -> impl IntoView {
                             <code>"skill_id"</code>
                             " automatically creates the next version — no separate upsert call needed."
                         </p>
+                        <p>
+                            "A human operator can perform the same versioned edit from the web \
+                             dashboard: click "
+                            <em>"Edit"</em>
+                            " in the Skills table or "
+                            <em>"Edit Skill"</em>
+                            " on a skill detail page. The dashboard saves through the upload path, \
+                             so history remains immutable."
+                        </p>
 
                         // ── Searching and reading ────────────────────────────
                         <h3>"Finding and Reading Skills"</h3>
@@ -921,9 +930,10 @@ pub fn AgentDocs() -> impl IntoView {
                         <p>
                             "\"The Skills Registry shows all skills including deprecated and \
                              revoked ones. If a skill is causing problems or was uploaded \
-                             incorrectly, the operator can revoke it via the dashboard without \
-                             any API calls. Revoked skills are preserved for audit but agents \
-                             should not execute them.\""
+                             incorrectly, the operator can edit it into a new immutable version \
+                             directly from the Skills table or skill detail page, or revoke it \
+                             via the dashboard without any API calls. Revoked skills are \
+                             preserved for audit but agents should not execute them.\""
                         </p>
 
                         <div class="docs-callout docs-callout-tip">

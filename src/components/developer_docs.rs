@@ -1490,13 +1490,21 @@ pub fn DeveloperDocs() -> impl IntoView {
                              configured MCP port via the health endpoint. If running, the stdio \
                              process acts as a lightweight proxy forwarding requests to the daemon's \
                              HTTP MCP endpoints. If not running, it launches the daemon in the \
-                             background (nohup on Unix, start /B on Windows) and proxies. This means \
-                             Claude Desktop users get shared live state with zero configuration — just \
-                             set the command to "
+                             background (nohup on Unix, start /B on Windows) in headless HTTP mode \
+                             and proxies. This means Claude Desktop users get shared live state with \
+                             zero configuration — just set the command to "
                             <code>"mentisdbd"</code>
                             " with args "
                             <code>"--mode stdio"</code>
                             "."
+                        </p>
+
+                        <h3>"Dashboard Skill Editing (0.9.7)"</h3>
+                        <p>
+                            "The web dashboard can now edit skills from both the Skills table and \
+                             a skill detail page. Saving creates a new immutable skill version \
+                             through the existing upload path, preserving audit history instead of \
+                             mutating prior content."
                         </p>
 
                         <h3>"Wizard Brew-First Setup (0.9.1)"</h3>
