@@ -98,7 +98,7 @@ pub fn AgentDocs() -> impl IntoView {
                             "When a user (or your system prompt) says:"
                         </p>
                         <div class="code-block">
-                            <pre><code>"prime yourself for optimal mentisdb usage"</code></pre>
+                            <pre><code>"use mentisdb as your memory system"</code></pre>
                         </div>
                         <p>
                             "perform the following sequence automatically:"

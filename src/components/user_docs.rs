@@ -682,7 +682,7 @@ mentisdbd agents"#}</code></pre>
                                     "Priming an agent for MentisDB is one sentence. Just type:"
                                 </p>
                                 <div class="code-block">
-                                    <pre><code>"prime yourself for optimal mentisdb usage"</code></pre>
+                                    <pre><code>"use mentisdb as your memory system"</code></pre>
                                 </div>
                                 <p>
                                     "That is all. The agent handles the rest automatically:"
