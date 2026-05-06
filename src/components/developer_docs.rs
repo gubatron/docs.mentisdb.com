@@ -375,7 +375,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                         </ul>
                         <p>
                             "The daemon binary ("
-                            <code>"mentisdbd"</code>
+                            <code>"mentisdb"</code>
                             ") starts the MCP server automatically. For embedding in your own \
                              Axum app, see the docs.rs API reference for server module details."
                         </p>
@@ -985,23 +985,23 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <h3>"CLI Subcommands"</h3>
                         <p>
                             "The "
-                            <code>"mentisdbd"</code>
+                            <code>"mentisdb"</code>
                             " binary now supports inline subcommands for quick operations without \
                              an MCP client:"
                         </p>
                         <ul>
                             <li>
-                                <code>"mentisdbd add \"content\""</code>
+                                <code>"mentisdb add \"content\""</code>
                                 " — append a thought directly from the command line (uses "
                                 <code>"ureq"</code>
                                 " to POST to the local daemon)"
                             </li>
                             <li>
-                                <code>"mentisdbd search \"query\" --limit 5"</code>
+                                <code>"mentisdb search \"query\" --limit 5"</code>
                                 " — ranked search from the terminal"
                             </li>
                             <li>
-                                <code>"mentisdbd agents"</code>
+                                <code>"mentisdb agents"</code>
                                 " — list registered agents across all chains"
                             </li>
                         </ul>
@@ -1493,7 +1493,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                              background (nohup on Unix, start /B on Windows) in headless HTTP mode \
                              and proxies. This means Claude Desktop users get shared live state with \
                              zero configuration — just set the command to "
-                            <code>"mentisdbd"</code>
+                            <code>"mentisdb"</code>
                             " with args "
                             <code>"--mode stdio"</code>
                             "."
@@ -1510,7 +1510,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <h3>"Wizard Brew-First Setup (0.9.1)"</h3>
                         <p>
                             "The interactive setup wizard "
-                            <code>"mentisdbd setup"</code>
+                            <code>"mentisdb setup"</code>
                             " now tries "
                             <code>"brew install mcp-remote"</code>
                             " before npm. It detects Homebrew-installed mcp-remote (which has a \
@@ -1590,7 +1590,7 @@ pub fn DeveloperDocs() -> impl IntoView {
 
                         <h3 id="backup-restore">"Backup & Restore (.mentis archive)"</h3>
                         <p>
-                            <code>"mentisdbd backup"</code>
+                            <code>"mentisdb backup"</code>
                             " produces a "<code>".mentis"</code>" ZIP archive covering every chain data file \
                              ("<code>"*.tcbin"</code>", "<code>"*.agents.json"</code>", "
                             <code>"*.entity-types.json"</code>", "<code>"*.vectors.*.json"</code>"), the \
@@ -1600,7 +1600,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             " so pending writes are on disk before the archive is assembled."
                         </p>
                         <p>
-                            <code>"mentisdbd restore"</code>
+                            <code>"mentisdb restore"</code>
                             " reverses the operation. Path traversal is rejected server-side — manifest \
                              entries containing "<code>"../"</code>" or absolute paths fail with "
                             <code>"InvalidData"</code>
@@ -1631,7 +1631,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <li>
                                 <strong>"HTTP concurrency benchmarks"</strong>
                                 " for live "
-                                <code>"mentisdbd"</code>
+                                <code>"mentisdb"</code>
                                 " write/read waves under concurrent client load"
                             </li>
                         </ul>

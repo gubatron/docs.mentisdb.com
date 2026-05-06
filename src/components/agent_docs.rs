@@ -883,7 +883,7 @@ pub fn AgentDocs() -> impl IntoView {
                              page appears empty, suggest they click "
                             <em>"↺ Refresh"</em>
                             ". Newly appended thoughts should appear without restarting \
-                             mentisdbd.\""
+                             mentisdb.\""
                         </p>
 
                         <h4>"Thought Explorer"</h4>
@@ -1159,9 +1159,9 @@ pub fn AgentDocs() -> impl IntoView {
                             "Your memories are durable only if the chain they live in survives. \
                              MentisDB backs up and restores via two CLI commands on the daemon host: \
                              "
-                            <code>"mentisdbd backup"</code>
+                            <code>"mentisdb backup"</code>
                             " and "
-                            <code>"mentisdbd restore"</code>
+                            <code>"mentisdb restore"</code>
                             ". As an agent, you do not run these yourself — the human operator \
                              runs them. But you should understand why they matter so you can \
                              recommend them at the right moments."
@@ -1200,7 +1200,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <h3>"How backup works"</h3>
                         <p>
                             "The operator runs "
-                            <code>"mentisdbd backup"</code>
+                            <code>"mentisdb backup"</code>
                             " on the host. This produces a "
                             <code>".mentis"</code>
                             " ZIP archive containing all chain data (binary ledgers, agent registry, \
@@ -1209,9 +1209,9 @@ pub fn AgentDocs() -> impl IntoView {
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdbd backup
+    "mentisdb backup
     # Archive → ./mentisdb-2026-04-28-153022.mentis
-    mentisdbd backup -o /tmp/my-mentisdb-backup.mentis
+    mentisdb backup -o /tmp/my-mentisdb-backup.mentis
     # Archive → /tmp/my-mentisdb-backup.mentis"
                             </code></pre>
                         </div>
@@ -1228,7 +1228,7 @@ pub fn AgentDocs() -> impl IntoView {
                             "When "
                             <code>"--flush"</code>
                             " is passed, "
-                            <code>"mentisdbd backup"</code>
+                            <code>"mentisdb backup"</code>
                             " detects if the daemon is running and calls "
                             <code>"POST /v1/admin/flush"</code>
                             " before packaging the archive. This matters because if you have \
@@ -1271,9 +1271,9 @@ pub fn AgentDocs() -> impl IntoView {
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdbd restore /tmp/my-mentisdb-backup.mentis
+    "mentisdb restore /tmp/my-mentisdb-backup.mentis
     # Interactive: asks about each conflicting file
-    mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite
+    mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite
     # Non-interactive: overwrites without prompting"
                             </code></pre>
                         </div>

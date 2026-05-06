@@ -54,11 +54,11 @@ pub fn UserDocs() -> impl IntoView {
                                 <h2 id="running">"Running the Daemon"</h2>
                                 <p>"Start the daemon — it listens on port 9471 by default:"</p>
                                 <div class="code-block">
-                                    <code>"mentisdbd"</code>
+                                    <code>"mentisdb"</code>
                                 </div>
                                 <p>"To keep it running after closing your terminal:"</p>
                                 <div class="code-block">
-                                    <code>"nohup mentisdbd &"</code>
+                                    <code>"nohup mentisdb &"</code>
                                 </div>
                                 <p>
                                     "The daemon serves both MCP (for AI tools) and REST endpoints \
@@ -66,9 +66,9 @@ pub fn UserDocs() -> impl IntoView {
                                 </p>
                                 <p>"CLI subcommands for quick operations without an MCP client:"</p>
                                 <div class="code-block">
-                                    <pre><code>{r#"mentisdbd add "The sky is blue"
-mentisdbd search "cache invalidation" --limit 5
-mentisdbd agents"#}</code></pre>
+                                    <pre><code>{r#"mentisdb add "The sky is blue"
+mentisdb search "cache invalidation" --limit 5
+mentisdb agents"#}</code></pre>
                                 </div>
                             </section>
 
@@ -255,7 +255,7 @@ mentisdbd agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_UPDATE_CHECK"</code></td>
                                             <td><code>"true"</code></td>
-                                            <td>"Background GitHub release check for mentisdbd. Set it to false to disable the startup-time prompt."</td>
+                                            <td>"Background GitHub release check for mentisdb. Set it to false to disable the startup-time prompt."</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_UPDATE_REPO"</code></td>
@@ -297,7 +297,7 @@ mentisdbd agents"#}</code></pre>
                                      Each row lists the default, a one-sentence purpose, and a \
                                      concrete example with a rationale for when you'd reach for \
                                      it. All variables are read once at "
-                                    <code>"mentisdbd"</code>
+                                    <code>"mentisdb"</code>
                                     " startup unless noted otherwise."
                                 </p>
 
@@ -785,7 +785,7 @@ mentisdbd agents"#}</code></pre>
                                     "."
                                 </p>
                                 <div class="code-block">
-                                    <code>"MENTISDB_UPDATE_CHECK=0 mentisdbd"</code>
+                                    <code>"MENTISDB_UPDATE_CHECK=0 mentisdb"</code>
                                 </div>
                                 <p>
                                     "Version comparison uses the first three numeric components only. \
@@ -958,7 +958,7 @@ sudo update-ca-certificates"#}</code></pre>
                                  for open (localhost-only) access."
                             </p>
                             <div class="code-block">
-                                <code>"MENTISDB_DASHBOARD_PIN=my-secret-pin mentisdbd"</code>
+                                <code>"MENTISDB_DASHBOARD_PIN=my-secret-pin mentisdb"</code>
                             </div>
                             <p>
                                 "PIN verification uses constant-time comparison ("
@@ -979,7 +979,7 @@ sudo update-ca-certificates"#}</code></pre>
 
                             <h3>"Disabling the Dashboard"</h3>
                                 <div class="code-block">
-                                    <code>"MENTISDB_DASHBOARD_PORT=0 mentisdbd"</code>
+                                    <code>"MENTISDB_DASHBOARD_PORT=0 mentisdb"</code>
                                 </div>
 
                                 <h3>"Sections"</h3>
@@ -1019,7 +1019,7 @@ sudo update-ca-certificates"#}</code></pre>
                                     "Each chain page also has a "
                                     <strong>"Vector Sidecars"</strong>
                                     " panel for the daemon's managed embedding indexes. By default \
-                                     `mentisdbd` keeps a local `local-text-v1` sidecar in sync for each \
+                                     `mentisdb` keeps a local `local-text-v1` sidecar in sync for each \
                                      chain it opens. Operators can expand the panel to inspect freshness, \
                                      indexed-thought counts, and the sidecar path; disable or re-enable \
                                      append-time sync; run "
@@ -1412,9 +1412,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     "MentisDB stores all chain data on disk under "
                                     <code>"~/.cloudllm/mentisdb/"</code>
                                     ". Back up that directory at any time using the built-in "
-                                    <code>"mentisdbd backup"</code>
+                                    <code>"mentisdb backup"</code>
                                     " command, and restore from a backup with "
-                                    <code>"mentisdbd restore"</code>
+                                    <code>"mentisdb restore"</code>
                                     "."
                                 </p>
 
@@ -1427,9 +1427,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     ") listing every file path and its digest, so integrity can be verified after download or copy."
                                 </p>
 
-                                <h3>"mentisdbd backup"</h3>
+                                <h3>"mentisdb backup"</h3>
                                 <div class="code-block">
-                                    <code>"mentisdbd backup [-o &lt;path&gt;] [--dir &lt;path&gt;] [--flush] [--include-tls]"</code>
+                                    <code>"mentisdb backup [-o &lt;path&gt;] [--dir &lt;path&gt;] [--flush] [--include-tls]"</code>
                                 </div>
                                 <table class="config-table">
                                     <thead>
@@ -1469,7 +1469,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                             <td><code>"--flush"</code></td>
                                             <td>
                                                 "Detects if "
-                                                <code>"mentisdbd"</code>
+                                                <code>"mentisdb"</code>
                                                 " is running on the local machine. If so, calls "
                                                 <code>"POST /v1/admin/flush"</code>
                                                 " to force a durability flush before archiving. The backup then proceeds with the daemon either stopped or freshly flushed. Use this to ensure the archive captures all committed thoughts."
@@ -1484,9 +1484,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     </tbody>
                                 </table>
 
-                                <h3>"mentisdbd restore"</h3>
+                                <h3>"mentisdb restore"</h3>
                                 <div class="code-block">
-                                    <code>"mentisdbd restore &lt;archive.mentis&gt; [--dir &lt;path&gt;] [--overwrite] [--yes]"</code>
+                                    <code>"mentisdb restore &lt;archive.mentis&gt; [--dir &lt;path&gt;] [--overwrite] [--yes]"</code>
                                 </div>
                                 <table class="config-table">
                                     <thead>
@@ -1534,7 +1534,7 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                 <h3>"Interactive restore behavior"</h3>
                                 <p>
                                     "During restore, if any file in the archive already exists in the target directory, "
-                                    <code>"mentisdbd restore"</code>
+                                    <code>"mentisdb restore"</code>
                                     " prompts you to decide what to do with that file. Pass "
                                     <code>"--overwrite"</code>
                                     " or "
@@ -1545,28 +1545,28 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                 <h3>"Example commands"</h3>
                                 <div class="code-block">
                                     <pre><code>{r#"# Create a backup (archive written to ./mentisdb-2026-04-28-153022.mentis)
-mentisdbd backup
+mentisdb backup
 
 # Create a backup to a specific path
-mentisdbd backup -o /tmp/my-mentisdb-backup.mentis
+mentisdb backup -o /tmp/my-mentisdb-backup.mentis
 
 # Create a backup from a specific source directory
-mentisdbd backup --dir ~/.cloudllm/mentisdb -o /tmp/backup.mentis
+mentisdb backup --dir ~/.cloudllm/mentisdb -o /tmp/backup.mentis
 
 # Create a backup with a running daemon flush first
-mentisdbd backup --flush
+mentisdb backup --flush
 
 # Include TLS material in the backup (machine-specific — restore on same machine)
-mentisdbd backup --include-tls
+mentisdb backup --include-tls
 
 # Restore a backup (prompts for existing files, daemon must be stopped)
-mentisdbd restore /tmp/my-mentisdb-backup.mentis
+mentisdb restore /tmp/my-mentisdb-backup.mentis
 
 # Restore to a specific directory
-mentisdbd restore /tmp/my-mentisdb-backup.mentis --dir ~/.cloudllm/mentisdb
+mentisdb restore /tmp/my-mentisdb-backup.mentis --dir ~/.cloudllm/mentisdb
 
 # Restore, overwriting any conflicting files without prompting
-mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
+mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 </div>
 
                                 <h3>"Security note on --include-tls"</h3>
@@ -1579,7 +1579,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 <div class="docs-callout docs-callout-tip">
                                     <strong>"Back up before destructive operations."</strong>
                                     " Run "
-                                    <code>"mentisdbd backup"</code>
+                                    <code>"mentisdb backup"</code>
                                     " before any chain merge, chain deletion, skill revocation, or daemon self-update that involves storage format changes. Backups take only seconds and let you recover exactly where you were if something goes wrong."
                                 </div>
                             </section>
@@ -1606,19 +1606,19 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                      choose which to configure, and applies changes with your confirmation."
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd wizard"</code>
+                                    <code>"mentisdb wizard"</code>
                                 </div>
                                 <p>
                                     "Accept all defaults and skip already-configured integrations (non-interactive):"
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd wizard --yes"</code>
+                                    <code>"mentisdb wizard --yes"</code>
                                 </div>
                                 <p>
                                     "Point all selected integrations at a custom MCP URL:"
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd wizard --url https://my.mentisdb.com:9473"</code>
+                                    <code>"mentisdb wizard --url https://my.mentisdb.com:9473"</code>
                                 </div>
 
                                 <h4>"Setup One Agent"</h4>
@@ -1629,25 +1629,25 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     " to preview without touching anything."
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd setup claude-code"</code>
+                                    <code>"mentisdb setup claude-code"</code>
                                 </div>
                                 <p>"Setup all detected agents at once:"</p>
                                 <div class="code-block">
-                                    <code>"mentisdbd setup all"</code>
+                                    <code>"mentisdb setup all"</code>
                                 </div>
                                 <p>"Preview what would be written without writing anything:"</p>
                                 <div class="code-block">
-                                    <code>"mentisdbd setup all --dry-run"</code>
+                                    <code>"mentisdb setup all --dry-run"</code>
                                 </div>
                                 <p>"Use a custom MCP URL:"</p>
                                 <div class="code-block">
-                                    <code>"mentisdbd setup all --url https://my.mentisdb.com:9473"</code>
+                                    <code>"mentisdb setup all --url https://my.mentisdb.com:9473"</code>
                                 </div>
 
                                 <h4>"Supported integrations"</h4>
                                 <p>
                                     "Use any of these names with "
-                                    <code>"mentisdbd setup"</code>
+                                    <code>"mentisdb setup"</code>
                                     ":"
                                 </p>
                                 <table class="config-table">
@@ -1745,7 +1745,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <strong>"Stdio mode (recommended)"</strong>
                                     " requires no daemon, no Node.js, and no mcp-remote — just point \
                                      Claude Desktop at the "
-                                    <code>"mentisdbd"</code>
+                                    <code>"mentisdb"</code>
                                     " binary. The stdio process automatically detects a running daemon \
                                      and proxies to it, or launches one in the background if none is found."
                                 </p>
@@ -1759,7 +1759,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <pre><code>{r#"{
   "mcpServers": {
     "mentisdb": {
-      "command": "mentisdbd",
+      "command": "mentisdb",
       "args": ["--mode", "stdio"]
     }
   }
@@ -1879,7 +1879,7 @@ mentisdbd restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
 
                                 <h4>"Claude Code"</h4>
                                 <p>
-                                    "`mentisdbd setup claude-code` writes the MCP entry under "
+                                    "`mentisdb setup claude-code` writes the MCP entry under "
                                     <code>"mcpServers.mentisdb"</code>
                                     " in "
                                     <code>"~/.claude.json"</code>
@@ -2589,7 +2589,7 @@ client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n
                                 <h2 id="cli-subcommands">"CLI Subcommands"</h2>
                                 <p>
                                     "The "
-                                    <code>"mentisdbd"</code>
+                                    <code>"mentisdb"</code>
                                     " binary includes subcommands for interacting with a running daemon
                                      from the terminal. These are useful for quick manual entries, scripting,
                                      and debugging — no MCP client or dashboard needed."
@@ -2605,13 +2605,13 @@ client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n
                                      or piping data into MentisDB."
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd add \"The sky is blue\""</code>
+                                    <code>"mentisdb add \"The sky is blue\""</code>
                                 </div>
                                 <div class="code-block">
-                                    <code>"mentisdbd add \"Session fact\" --scope session --tag important"</code>
+                                    <code>"mentisdb add \"Session fact\" --scope session --tag important"</code>
                                 </div>
                                 <div class="code-block">
-                                    <code>"mentisdbd add \"Insight\" --type insight --agent my-agent"</code>
+                                    <code>"mentisdb add \"Insight\" --type insight --agent my-agent"</code>
                                 </div>
                                 <table>
                                     <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
@@ -2631,10 +2631,10 @@ client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n
                                      and MCP tools. Returns JSON with score breakdowns."
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd search \"cache invalidation\""</code>
+                                    <code>"mentisdb search \"cache invalidation\""</code>
                                 </div>
                                 <div class="code-block">
-                                    <code>"mentisdbd search \"performance\" --limit 5 --scope session"</code>
+                                    <code>"mentisdb search \"performance\" --limit 5 --scope session"</code>
                                 </div>
                                 <p>
                                     "Pipe results through "
@@ -2642,7 +2642,7 @@ client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n
                                     " for scripting:"
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd search \"deploy\" --limit 20 | jq '.hits[].thought.content'"</code>
+                                    <code>"mentisdb search \"deploy\" --limit 20 | jq '.hits[].thought.content'"</code>
                                 </div>
                                 <table>
                                     <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
@@ -2660,10 +2660,10 @@ client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n
                                      for auditing which agents have written to your MentisDB instance."
                                 </p>
                                 <div class="code-block">
-                                    <code>"mentisdbd agents"</code>
+                                    <code>"mentisdb agents"</code>
                                 </div>
                                 <div class="code-block">
-                                    <code>"mentisdbd agents --chain my-project"</code>
+                                    <code>"mentisdb agents --chain my-project"</code>
                                 </div>
                                 <table>
                                     <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
