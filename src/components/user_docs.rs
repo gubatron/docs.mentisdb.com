@@ -2428,10 +2428,11 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     "and fuses them into a single ranked result set. The full algorithmic pipeline "
                                     "is described in the "
                                     <a href="https://docs.mentisdb.com/ranked-search-pipeline">"ranked-search pipeline blog post"</a>
-                                    " and the "
-                                    <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/WHITEPAPER.md">"white paper"</a>
-                                    "; this section summarises the knobs you can turn."
-                                </p>
+                                     " and the "
+                                     <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/WHITEPAPER.md">"white paper"</a>
+                                     "; this section summarises the knobs you can turn."
+                                     " As of 0.9.9, ranked search automatically applies the built-in thesaurus (~900 headwords + lemmas) on every query for better recall on vocabulary mismatch and verb forms — no extra parameters needed."
+                                 </p>
 
                                 <h3 id="rrf-reranking">"Reciprocal Rank Fusion (RRF)"</h3>
                                 <p>
