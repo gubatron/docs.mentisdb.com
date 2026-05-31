@@ -1010,7 +1010,7 @@ mentisdb bearertoken remove alice-agent"#}</code></pre>
                                 <div class="code-block">
                                     <pre><code>{r#"[mcp_servers.mentisdb]
 url = "https://my.mentisdb.com:9473"
-headers = { Authorization = "Bearer mdb_live_replace_me" }"#}</code></pre>
+headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 </div>
                                 <p>
                                     "The token registry already tracks creation, revocation, and last \
