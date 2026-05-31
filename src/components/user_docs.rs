@@ -16,6 +16,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#priming">"Priming Your Agent"</a>
                                 <a class="docs-nav-link" href="#self-update">"Self-Update"</a>
                                 <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
+                                <a class="docs-nav-link" href="#bearer-token-access">"Bearer Tokens"</a>
                                 <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                                 <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
                                 <a class="docs-nav-link" href="#backup-restore">"Backup & Restore"</a>
@@ -248,6 +249,11 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"MENTISDB_DASHBOARD_PIN"</code></td>
                                             <td><em>"unset"</em></td>
                                             <td>"Optional PIN to gate dashboard access. Unset = open (localhost only)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_BEARER_TOKEN_ACCESS"</code></td>
+                                            <td><code>"false"</code></td>
+                                            <td>"Require bearer tokens for MCP requests; use this for remote and multi-user MCP servers"</td>
                                         </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
@@ -589,6 +595,18 @@ mentisdb agents"#}</code></pre>
                                                 "."
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_BEARER_TOKEN_ACCESS"</code></td>
+                                            <td><code>"false"</code></td>
+                                            <td>
+                                                "When true, MCP requests must include an active bearer \
+                                                 token. Tokens can be global or limited to one or more chains."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_BEARER_TOKEN_ACCESS=true"</code>
+                                                " — turn this on before exposing MCP to remote users."
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
 
@@ -919,6 +937,87 @@ sudo update-ca-certificates"#}</code></pre>
                                     <pre><code>{r#"MENTISDB_HTTPS_MCP_PORT=0
             MENTISDB_HTTPS_REST_PORT=0"#}</code></pre>
                                 </div>
+                            </section>
+
+                            // ── Bearer Token Access ─────────────────────────────────
+                            <section class="docs-section" id="bearer-token-access">
+                                <h2 id="bearer-token-access">"Bearer Token MCP Access"</h2>
+                                <p>
+                                    "Bearer-token access protects the MCP surface when a MentisDB \
+                                     server runs on a remote host or serves multiple users. It is off \
+                                     by default for local development. Turn it on with:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"MENTISDB_BIND_HOST=0.0.0.0
+MENTISDB_BEARER_TOKEN_ACCESS=true
+MENTISDB_DASHBOARD_PIN=change-me
+mentisdb"#}</code></pre>
+                                </div>
+                                <p>
+                                    "The switch can also be toggled live from the dashboard Settings \
+                                     screen without restarting the daemon. Token records are stored in \
+                                     the MentisDB directory as hashes and metadata; raw tokens are \
+                                     printed once and are never persisted."
+                                </p>
+
+                                <h3>"Token Scopes"</h3>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Scope"</th>
+                                            <th>"Create command"</th>
+                                            <th>"What it can access"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"global"</code></td>
+                                            <td><code>"mentisdb bearertoken create --global admin-laptop"</code></td>
+                                            <td>"Every chain and server-wide MCP tools such as chain listing."</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"chain:<key>"</code>" or "<code>"chains:<key>,<key>"</code></td>
+                                            <td><code>"mentisdb bearertoken create team-agent --chain alice --chain shared"</code></td>
+                                            <td>"Only MCP calls that operate on one of those chains. Server-wide tools require a global token."</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h3>"Managing Tokens"</h3>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb bearertoken
+mentisdb bearertoken create --global admin-laptop
+mentisdb bearertoken create --chain alice alice-agent
+mentisdb bearertoken create bob-agent --chain bob
+mentisdb bearertoken create team-agent --chain alice --chain shared
+mentisdb bearertoken list
+mentisdb bearertoken list --chain alice
+mentisdb bearertoken list --chain alice --chain shared
+mentisdb bearertoken remove alice-agent"#}</code></pre>
+                                </div>
+                                <p>
+                                    "The dashboard Settings screen exposes the same create, list, and \
+                                     revoke operations with an alias field, a Global/Chains selector, \
+                                     a multi-chain picker, and a token table. Keep global tokens for \
+                                     trusted administrators; issue chain tokens to users or agents that \
+                                     should only work in a bounded set of memory chains."
+                                </p>
+
+                                <h3>"Codex Remote MCP Config"</h3>
+                                <p>
+                                    "For Codex, put the token in the MCP server headers:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"[mcp_servers.mentisdb]
+url = "https://my.mentisdb.com:9473"
+headers = { Authorization = "Bearer mdb_live_replace_me" }"#}</code></pre>
+                                </div>
+                                <p>
+                                    "The token registry already tracks creation, revocation, and last \
+                                     successful use. Later versions can extend those records with \
+                                     per-token request counters or chain-level usage stats without \
+                                     changing the client authentication model."
+                                </p>
                             </section>
 
                             // ── Web Dashboard ────────────────────────────────────────
@@ -2573,8 +2672,8 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 </div>
                                 <div class="code-block">
                                     <code>"from pymentisdb import MentisDbClient, ThoughtType\n\n\
-client = MentisDbClient(\"http://127.0.0.1:9472\")\n\
-client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n    thought_type=ThoughtType.DECISION,\n    content=\"Adopt LRU eviction for the response cache\",\n)\nhits = client.ranked_search(chain_key=\"my-chain\", text=\"cache eviction\", limit=5)"</code>
+    client = MentisDbClient(\"http://127.0.0.1:9472\")\n\
+    client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n    thought_type=ThoughtType.DECISION,\n    content=\"Adopt LRU eviction for the response cache\",\n)\nhits = client.ranked_search(chain_key=\"my-chain\", text=\"cache eviction\", limit=5)"</code>
                                 </div>
                                 <p>"See the "
                                     <a href="https://pypi.org/project/pymentisdb/">"PyPI listing"</a>

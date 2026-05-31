@@ -802,7 +802,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               <strong>automatically by default</strong> to every ranked search query \
                               (REST <code>POST /v1/ranked-search</code>, MCP <code>mentisdb_ranked_search</code>, \
                               dashboard, and CLI). No client changes or extra parameters are required. \
-                              With full embeddings this delivered the target LoCoMo-10P $R@10 = 72.6\%$. \
+                              With full embeddings this delivered the target LoCoMo-10P $R@10 = 72.6%. \
                               The expansion happens server-side via <code>apply_thesaurus_if_text</code> \
                               before BM25 scoring."
                          </p>
