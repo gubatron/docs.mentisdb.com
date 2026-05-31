@@ -1619,26 +1619,24 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     <tbody>
                                         <tr>
                                             <td><code>"--overwrite"</code></td>
-                                            <td>"Replace existing files without prompting when there is a conflict."</td>
+                                            <td>"Allow same-path chain files to be replaced when a safe suffix merge is not possible. The local registry is still preserved and merged."</td>
                                         </tr>
                                         <tr>
                                             <td><code>"--yes"</code></td>
-                                            <td>"Answer yes to all interactive prompts (equivalent to "
-                                                <code>"--overwrite"</code>
-                                                ")."</td>
+                                            <td>"Skip interactive confirmation prompts while keeping the default preserve-and-merge behavior."</td>
                                         </tr>
                                     </tbody>
                                 </table>
 
                                 <h3>"Interactive restore behavior"</h3>
                                 <p>
-                                    "During restore, if any file in the archive already exists in the target directory, "
-                                    <code>"mentisdb restore"</code>
-                                    " prompts you to decide what to do with that file. Pass "
-                                    <code>"--overwrite"</code>
-                                    " or "
-                                    <code>"--yes"</code>
-                                    " to skip the prompt and overwrite unconditionally."
+                                    "When restoring into an empty directory, MentisDB imports the full instance. \
+                                     When restoring into an existing instance, MentisDB preserves the local \
+                                     registry, uses the backup registry as a hint, adds new chains, appends \
+                                     verified same-key suffixes, ignores older backup chains, and imports \
+                                     same-name chains with different genesis under a non-conflicting "
+                                    <code>"-imported"</code>
+                                    " chain key."
                                 </p>
 
                                 <h3>"Example commands"</h3>
@@ -1658,13 +1656,13 @@ mentisdb backup --flush
 # Include TLS material in the backup (machine-specific — restore on same machine)
 mentisdb backup --include-tls
 
-# Restore a backup (prompts for existing files, daemon must be stopped)
+# Restore a backup (daemon must be stopped)
 mentisdb restore /tmp/my-mentisdb-backup.mentis
 
 # Restore to a specific directory
 mentisdb restore /tmp/my-mentisdb-backup.mentis --dir ~/.cloudllm/mentisdb
 
-# Restore, overwriting any conflicting files without prompting
+# Restore, allowing same-path chain overwrite when safe merge is impossible
 mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 </div>
 
