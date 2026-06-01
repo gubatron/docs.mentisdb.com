@@ -1003,14 +1003,107 @@ mentisdb bearertoken remove alice-agent"#}</code></pre>
                                      should only work in a bounded set of memory chains."
                                 </p>
 
-                                <h3>"Codex Remote MCP Config"</h3>
+                                <h3>"Harness Configuration Examples"</h3>
                                 <p>
-                                    "For Codex, put the token in the MCP server headers:"
+                                    "Every remote harness must send the same HTTP header:"
                                 </p>
+                                <div class="code-block">
+                                    <pre><code>"Authorization: Bearer mentisdb_replace_me"</code></pre>
+                                </div>
+
+                                <h4>"Codex"</h4>
+                                <p>"Edit " <code>"~/.codex/config.toml"</code> ":"</p>
                                 <div class="code-block">
                                     <pre><code>{r#"[mcp_servers.mentisdb]
 url = "https://my.mentisdb.com:9473"
 headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
+                                </div>
+
+                                <h4>"Claude Code"</h4>
+                                <div class="code-block">
+                                    <pre><code>{r#"claude mcp add-json mentisdb \
+    '{"type":"http","url":"https://my.mentisdb.com:9473","headers":{"Authorization":"Bearer mentisdb_replace_me"}}' \
+    --scope user"#}</code></pre>
+                                </div>
+
+                                <h4>"Qwen Code"</h4>
+                                <div class="code-block">
+                                    <pre><code>{r#"qwen mcp add --scope user --transport http mentisdb https://my.mentisdb.com:9473 \
+    --header "Authorization: Bearer mentisdb_replace_me""#}</code></pre>
+                                </div>
+                                <p>"Or edit " <code>"~/.qwen/settings.json"</code> ":"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "httpUrl": "https://my.mentisdb.com:9473",
+      "headers": {
+        "Authorization": "Bearer mentisdb_replace_me"
+      }
+    }
+  }
+}"#}</code></pre>
+                                </div>
+
+                                <h4>"GitHub Copilot CLI"</h4>
+                                <p>"Edit " <code>"~/.copilot/mcp-config.json"</code> ":"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "https://my.mentisdb.com:9473",
+      "headers": {
+        "Authorization": "Bearer mentisdb_replace_me"
+      },
+      "tools": ["*"]
+    }
+  }
+}"#}</code></pre>
+                                </div>
+
+                                <h4>"VS Code + Copilot"</h4>
+                                <p>"Edit " <code>".vscode/mcp.json"</code> " or your user " <code>"mcp.json"</code> ":"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "servers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "https://my.mentisdb.com:9473",
+      "headers": {
+        "Authorization": "Bearer mentisdb_replace_me"
+      }
+    }
+  }
+}"#}</code></pre>
+                                </div>
+
+                                <h4>"OpenCode"</h4>
+                                <p>"Edit " <code>"~/.config/opencode/opencode.json"</code> ":"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "mcp": {
+    "mentisdb": {
+      "type": "remote",
+      "url": "https://my.mentisdb.com:9473",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer mentisdb_replace_me"
+      }
+    }
+  }
+}"#}</code></pre>
+                                </div>
+
+                                <h4>"Hermes Agent"</h4>
+                                <p>"Edit " <code>"~/.hermes/config.yaml"</code> ":"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mcp_servers:
+  mentisdb:
+    url: "https://my.mentisdb.com:9473"
+    headers:
+      Authorization: "Bearer mentisdb_replace_me""#}</code></pre>
                                 </div>
                                 <p>
                                     "The token registry already tracks creation, revocation, and last \
