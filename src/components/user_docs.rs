@@ -65,6 +65,39 @@ pub fn UserDocs() -> impl IntoView {
                                     "The daemon serves both MCP (for AI tools) and REST endpoints \
                                      plus an HTTPS dashboard for human operators."
                                 </p>
+                                <h3 id="headless-mode">"Headless Mode"</h3>
+                                <p>
+                                    "The daemon auto-promotes to headless HTTP mode whenever \
+                                     stdin or stdout is not a TTY. Every common non-interactive \
+                                     launch — Docker without "
+                                    <code>"-t"</code>
+                                    ", "
+                                    <code>"nohup mentisdb &"</code>
+                                    ", "
+                                    <code>"systemd"</code>
+                                    " without "
+                                    <code>"StandardInput=tty"</code>
+                                    ", "
+                                    <code>"cron"</code>
+                                    ", an SSH session that was disconnected — gets the right \
+                                     behavior automatically. The HTTP/MCP/REST servers come up \
+                                     and the process idles near 0% CPU."
+                                </p>
+                                <p>
+                                    "To run the headless code path on a machine that does have \
+                                     a TTY (for testing, or to suppress the dashboard), pass the \
+                                     explicit flag:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb --headless               # HTTP/MCP/REST only, no TUI
+mentisdb --mode http --headless   # equivalent; the stdio-proxy form"#}</code></pre>
+                                </div>
+                                <p>
+                                    "Both forms are accepted in either flag order. "
+                                    <code>"mentisdb --help"</code>
+                                    " lists the flag in the Usage block and gives a full \
+                                     description under Flags."
+                                </p>
                                 <p>"CLI subcommands for quick operations without an MCP client:"</p>
                                 <div class="code-block">
                                     <pre><code>{r#"mentisdb add "The sky is blue"
