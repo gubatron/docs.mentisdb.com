@@ -964,6 +964,190 @@ sudo update-ca-certificates"#}</code></pre>
                                     " as the server URL."
                                 </div>
 
+                                <h3>"Minting a Custom Certificate"</h3>
+                                <p>
+                                    "When the auto-generated SAN set is not enough — for example you are \
+                                     running the daemon on a VPS with a public IP, or you need the cert \
+                                     to be valid for a custom hostname your team uses — use the "
+                                    <code>"mentisdb cert"</code>
+                                    " subcommand to mint a fresh self-signed certificate with an \
+                                     extra Subject Alternative Name (SAN) of your choice. The command \
+                                     also writes the new paths into your local "
+                                    <code>".env"</code>
+                                    " so the next daemon start picks the new cert up automatically."
+                                </p>
+
+                                <h4>"What gets included in the SAN set"</h4>
+                                <ul>
+                                    <li>
+                                        <code>"my.mentisdb.com"</code>
+                                        " (DNS) and "
+                                        <code>"localhost"</code>
+                                        " (DNS) — always present so the daemon is reachable by the \
+                                         friendly local hostname."
+                                    </li>
+                                    <li>
+                                        <code>"127.0.0.1"</code>
+                                        " and every unicast IPv6 / IPv4 address on every active host \
+                                         interface — the cert is valid for any IP the box exposes."
+                                    </li>
+                                    <li>
+                                        <code>"MENTISDB_BIND_HOST"</code>
+                                        " when it is a DNS name — useful for "
+                                        <code>"vps.example.com"</code>
+                                        "-style deployments."
+                                    </li>
+                                    <li>
+                                        "Your "
+                                        <code>"<ip-or-domain>"</code>
+                                        " argument, when supplied — IP literals are added as "
+                                        <code>"IPAddress"</code>
+                                        " SANs, everything else as "
+                                        <code>"DnsName"</code>
+                                        " SANs."
+                                    </li>
+                                </ul>
+
+                                <h4>"Usage"</h4>
+                                <pre><code>{r#"# 1. Standard cert into the default location (writes to
+#    ~/.cloudllm/mentisdb/tls/ and updates ./.env)
+mentisdb cert
+
+# 2. Add a public VPS IP as a SAN so the cert is valid for that IP
+mentisdb cert 192.0.2.10
+
+# 3. Add a custom DNS hostname
+mentisdb cert vps.example.com
+
+# 4. Regenerate an existing cert (e.g. after adding a new IP to the box)
+mentisdb cert 192.0.2.10 --force
+
+# 5. Reset to factory defaults: delete existing cert/key, then generate fresh
+mentisdb cert --reset
+
+# 6. Write to a non-default directory and update a custom .env file
+mentisdb cert 192.0.2.10 \
+    --out-dir /etc/mentisdb/tls \
+    --env-file /etc/mentisdb/mentisdb.env
+
+# 7. Print the values without touching any .env (for ephemeral hosts)
+mentisdb cert --no-env-update"#}</code></pre>
+
+                                <h4>"Options"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Argument / Flag"</th>
+                                            <th>"Description"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"&lt;ip-or-domain&gt;"</code></td>
+                                            <td>
+                                                "Optional IP literal or DNS hostname to add as an extra \
+                                                 SAN. IPv4 and IPv6 literals become IP SANs; anything \
+                                                 else becomes a DNS SAN. Omit to mint a cert with only the \
+                                                 standard SAN set."
+                                            </td>
+                                        </tr>
+                                         <tr>
+                                             <td><code>"--force"</code></td>
+                                             <td>
+                                                 "Overwrite an existing "
+                                                 <code>"cert.pem"</code>
+                                                 " / "
+                                                 <code>"key.pem"</code>
+                                                 " on disk. Without this flag the command refuses to \
+                                                  clobber a pre-existing cert so operators do not \
+                                                  accidentally invalidate an already-trusted one."
+                                             </td>
+                                         </tr>
+                                         <tr>
+                                             <td><code>"--reset"</code></td>
+                                             <td>
+                                                 "Delete any existing "
+                                                 <code>"cert.pem"</code>
+                                                 " / "
+                                                 <code>"key.pem"</code>
+                                                 " files first, then generate a fresh factory-default \
+                                                  certificate",
+                                             </td>
+                                         </tr>
+                                        <tr>
+                                            <td><code>"--out-dir &lt;path&gt;"</code></td>
+                                            <td>
+                                                "Directory to write "
+                                                <code>"cert.pem"</code>
+                                                " and "
+                                                <code>"key.pem"</code>
+                                                " into. Defaults to the directory of "
+                                                <code>"MENTISDB_TLS_CERT"</code>
+                                                " (or the platform default "
+                                                <code>"~/.cloudllm/mentisdb/tls/"</code>
+                                                ")."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"--env-file &lt;path&gt;"</code></td>
+                                            <td>
+                                                "Path to the "
+                                                <code>".env"</code>
+                                                " file to update with the new cert paths. Defaults to "
+                                                <code>"./.env"</code>
+                                                "."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"--no-env-update"</code></td>
+                                            <td>
+                                                "Skip updating the "
+                                                <code>".env"</code>
+                                                " file. The cert is still minted, the SAN list and SHA-256 \
+                                                 fingerprint are still printed, and the command prints the \
+                                                 "
+                                                <code>"export MENTISDB_TLS_CERT=..."</code>
+                                                " lines for you to paste into a shell rc."
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>"When the new cert takes effect"</h4>
+                                <p>
+                                    "The new "
+                                    <code>"cert.pem"</code>
+                                    " and "
+                                    <code>"key.pem"</code>
+                                    " are written immediately and "
+                                    <code>"MENTISDB_TLS_CERT"</code>
+                                    " / "
+                                    <code>"MENTISDB_TLS_KEY"</code>
+                                    " are updated on disk. The running daemon keeps using the cert it \
+                                     loaded at startup, so "
+                                    <strong>"restart the daemon"</strong>
+                                    " ("
+                                    <code>"Ctrl-C"</code>
+                                    " in the TUI or stop the background process) for the new cert to be \
+                                     served on the next HTTPS request. Subsequent calls to "
+                                    <code>"mentisdb cert"</code>
+                                    " without "
+                                    <code>"--force"</code>
+                                    " reuse the existing cert so the in-flight HTTPS fingerprint stays \
+                                     stable across restarts."
+                                </p>
+
+                                <div class="docs-callout docs-callout-tip">
+                                    "Cross-check the new cert from any machine with "
+                                    <code>"openssl s_client -connect &lt;host&gt;:9473 -showcerts &lt;/dev/null 2&gt;/dev/null | openssl x509 -fingerprint -sha256 -noout"</code>
+                                    " and compare against the "
+                                    <code>"SHA-256 fingerprint:"</code>
+                                    " line that "
+                                    <code>"mentisdb cert"</code>
+                                    " prints. If they match, the running daemon is serving the cert you \
+                                     just minted."
+                                </div>
+
                                 <h3>"Disabling HTTPS"</h3>
                                 <p>"Set both HTTPS ports to 0 to run HTTP-only:"</p>
                                 <div class="code-block">

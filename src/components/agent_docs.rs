@@ -1312,6 +1312,137 @@ pub fn AgentDocs() -> impl IntoView {
                         </div>
                     </section>
 
+                    // ── Minting a New TLS Certificate ─────────────────────────
+                    <section class="docs-section" id="cert-command">
+                        <h2 id="cert-command">"When the Operator Needs a New TLS Certificate"</h2>
+                        <p>
+                            "The HTTPS MCP and REST surfaces serve a self-signed certificate that the \
+                             daemon auto-generates on first start. That cert is fine for local-only \
+                             use, but there are common situations where the user will need to mint a \
+                             fresh one with an extra Subject Alternative Name (SAN). You should \
+                             recognize these situations and tell the user about the "
+                            <code>"mentisdb cert"</code>
+                            " subcommand rather than trying to do it yourself."
+                        </p>
+
+                        <h3>"When the operator needs to mint a new cert"</h3>
+                        <ul>
+                            <li>
+                                "They connected to you over a remote / VPS IP (e.g. "
+                                <code>"https://&lt;vps-ip&gt;:9473"</code>
+                                ") and your MCP client refuses the self-signed cert because the IP \
+                                 is not in the SAN list."
+                            </li>
+                            <li>
+                                "They use a custom hostname (e.g. "
+                                <code>"vps.example.com"</code>
+                                ") and want the cert to be valid for that name without adding it to \
+                                 their system trust store by fingerprint."
+                            </li>
+                            <li>
+                                "They added a new network interface or new IP to the host and need \
+                                 the cert to cover the new IP."
+                            </li>
+                            <li>
+                                "They rotated the private key for security reasons and want a new \
+                                 cert + key pair."
+                            </li>
+                            <li>
+                                "They migrated the daemon to a new machine and the old cert (still on \
+                                 the old box) needs to be regenerated locally so the new daemon can \
+                                 serve it."
+                            </li>
+                        </ul>
+
+                        <h3>"What the command does (so you can explain it)"</h3>
+                        <p>
+                            "The "
+                            <code>"mentisdb cert"</code>
+                            " subcommand:"
+                        </p>
+                        <ol>
+                            <li>
+                                "Mints a fresh self-signed ECDSA certificate (via "
+                                <code>"rcgen"</code>
+                                ") that always includes the standard SAN set — "
+                                <code>"my.mentisdb.com"</code>
+                                ", "
+                                <code>"localhost"</code>
+                                ", "
+                                <code>"127.0.0.1"</code>
+                                ", every unicast IP on every host interface, plus "
+                                <code>"MENTISDB_BIND_HOST"</code>
+                                " when it is a DNS name — and appends the operator's "
+                                <code>"&lt;ip-or-domain&gt;"</code>
+                                " argument as an extra SAN when supplied."
+                            </li>
+                            <li>
+                                "Writes "
+                                <code>"cert.pem"</code>
+                                " and "
+                                <code>"key.pem"</code>
+                                " to the directory held in "
+                                <code>"MENTISDB_TLS_CERT"</code>
+                                " (or the platform default "
+                                <code>"~/.cloudllm/mentisdb/tls/"</code>
+                                ")."
+                            </li>
+                            <li>
+                                "Updates the local "
+                                <code>".env"</code>
+                                " (or "
+                                <code>"--env-file"</code>
+                                ") in place — preserving every other entry — so the next daemon \
+                                 start automatically picks the new paths up."
+                            </li>
+                            <li>
+                                "Prints the SAN list and the SHA-256 fingerprint so the operator \
+                                 can compare it with "
+                                <code>"openssl x509 -fingerprint -sha256 -noout"</code>
+                                "."
+                            </li>
+                        </ol>
+
+                        <h3>"Your role"</h3>
+                        <p>
+                            "You do not run "
+                            <code>"mentisdb cert"</code>
+                            " yourself — the daemon is your peer, not your process. But you should:"
+                        </p>
+                        <ul>
+                            <li>
+                                "Recognize the symptoms above and tell the human operator to run "
+                                <code>"mentisdb cert &lt;ip-or-domain&gt; --force"</code>
+                                " (or <code>"mentisdb cert --reset"</code> to reset to factory defaults) "
+                                "then restart the daemon."
+                            </li>
+                            <li>
+                                "If they ask for the exact command, point them to the "
+                                <a href="#https">"HTTPS & TLS section of the User Guide"</a>
+                                " which has the full worked examples, flag reference, and the \
+                                 "
+                                <code>"openssl s_client"</code>
+                                " cross-check snippet."
+                            </li>
+                            <li>
+                                "After the restart, you can confirm the new fingerprint by hitting "
+                                "the HTTPS health endpoint with "
+                                <code>"openssl s_client -connect &lt;host&gt;:9473 -showcerts &lt;/dev/null 2&gt;/dev/null | openssl x509 -fingerprint -sha256 -noout"</code>
+                                " and verifying the SHA-256 matches the line "
+                                <code>"mentisdb cert"</code>
+                                " printed. If it does, the cert is live."
+                            </li>
+                        </ul>
+
+                        <div class="docs-callout docs-callout-warning">
+                            <strong>"Restarts are required."</strong>
+                            " The cert is loaded once at daemon startup, so a fresh "
+                            <code>"mentisdb cert"</code>
+                            " is only used for subsequent HTTPS connections. Always tell the user \
+                             to restart the daemon after running the command."
+                        </div>
+                    </section>
+
                     // ── Memory Scopes ───────────────────────────────────────
                     <section class="docs-section" id="memory-scopes">
                         <h2 id="memory-scopes">"Memory Scopes"</h2>
