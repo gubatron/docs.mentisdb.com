@@ -90,7 +90,7 @@ pub fn UserDocs() -> impl IntoView {
                                 </p>
                                 <div class="code-block">
                                     <pre><code>{r#"mentisdb --headless               # HTTP/MCP/REST only, no TUI
-mentisdb --mode http --headless   # equivalent; the stdio-proxy form"#}</code></pre>
+    mentisdb --mode http --headless   # equivalent; the stdio-proxy form"#}</code></pre>
                                 </div>
                                 <p>
                                     "Both forms are accepted in either flag order. "

@@ -85,6 +85,19 @@ pub fn DocsHome() -> impl IntoView {
                     />
 
                 </div>
+
+                // ── Featured cookbook CTA ────────────────────────────────
+                <a
+                    href="https://cloudllm-ai.github.io/mentisdb/cookbook/cookbook.html"
+                    class="cookbook-feature"
+                >
+                    <div class="cookbook-feature-kicker">"New: Agent Memory Cookbook"</div>
+                    <div class="cookbook-feature-title">"Make your coding agents remember, improve, and compound"</div>
+                    <p>
+                        "A practical operator playbook for OpenCode, Codex, Claude Code, and other MCP harnesses — plus runnable patterns for search-first memory, checkpoints, handoffs, skills, retrieval tuning, and deployment."
+                    </p>
+                    <span>"Read the Cookbook →"</span>
+                </a>
             </div>
         </div>
     }

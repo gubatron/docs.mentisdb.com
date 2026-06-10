@@ -1413,7 +1413,9 @@ pub fn AgentDocs() -> impl IntoView {
                             <li>
                                 "Recognize the symptoms above and tell the human operator to run "
                                 <code>"mentisdb cert &lt;ip-or-domain&gt; --force"</code>
-                                " (or <code>"mentisdb cert --reset"</code> to reset to factory defaults) "
+                                " (or "
+                                <code>"mentisdb cert --reset"</code>
+                                " to reset to factory defaults) "
                                 "then restart the daemon."
                             </li>
                             <li>
