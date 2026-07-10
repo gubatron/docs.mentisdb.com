@@ -29,6 +29,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
+                                <a class="docs-nav-link" href="#invalidation-dedup">"Invalidation & Dedup"</a>
                                 <a class="docs-nav-link" href="#cli-subcommands">"CLI Subcommands"</a>
                             </nav>
                         </aside>
@@ -306,12 +307,19 @@ mentisdb agents"#}</code></pre>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_DEDUP_THRESHOLD"</code></td>
-                                            <td><em>"unset"</em></td>
+                                            <td><em>"unset (disabled)"</em></td>
                                             <td>
                                                 "Jaccard threshold for auto-dedup on append (0.0–1.0). \
                                                  When set, MentisDB compares new thoughts against recent \
-                                                 memories and auto-Supersedes duplicates above this \
-                                                 threshold. Disabled when unset."
+                                                 memories and auto-emits "
+                                                <code>"Supersedes"</code>
+                                                " so default search hides the older thought. \
+                                                 Recommended for multi-agent / long-lived chains: "
+                                                <code>"0.85"</code>
+                                                ". Without this (or agent-written Supersedes/Corrects/Invalidates), \
+                                                 the invalidation set stays empty. See "
+                                                <a href="#invalidation-dedup">"Invalidation & Dedup"</a>
+                                                "."
                                             </td>
                                         </tr>
                                         <tr>
@@ -321,7 +329,7 @@ mentisdb agents"#}</code></pre>
                                                 "Number of recent thoughts to scan for dedup comparison. \
                                                  Only used when "
                                                 <code>"MENTISDB_DEDUP_THRESHOLD"</code>
-                                                " is set."
+                                                " is set. Raise on chatty chains (e.g. 128)."
                                             </td>
                                         </tr>
                                     </tbody>
@@ -453,7 +461,9 @@ mentisdb agents"#}</code></pre>
                                             </td>
                                             <td>
                                                 <code>"MENTISDB_DEDUP_THRESHOLD=0.85"</code>
-                                                " — collapse near-identical retrospectives."
+                                                " — recommended for production agent memory so \
+                                                 near-duplicates get Supersedes edges and stay \
+                                                 out of default search."
                                             </td>
                                         </tr>
                                         <tr>
@@ -2787,9 +2797,12 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <code>"as_of"</code>
                                     " (an RFC 3339 timestamp) to search and traversal tools to \
                                      see only thoughts that existed at that time. Thoughts appended \
-                                     after the timestamp are excluded from results. This is useful \
-                                     for auditing what an agent knew at a specific moment, or for \
-                                     reproducing decisions made under a previous state of knowledge."
+                                     after the timestamp are excluded. Thoughts that were later \
+                                     superseded are still returned if they were valid at "
+                                    <code>"as_of"</code>
+                                    ". This is useful for auditing what an agent knew at a specific \
+                                     moment, or for reproducing decisions made under a previous \
+                                     state of knowledge."
                                 </p>
                                 <div class="code-block">
                                     <pre><code>{r#"mentisdb_ranked_search(
@@ -2826,6 +2839,80 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                 </div>
                             </section>
 
+                            // ── Invalidation & Dedup ─────────────────────────────────
+                            <section class="docs-section" id="invalidation-dedup">
+                                <h2 id="invalidation-dedup">"Invalidation & Dedup"</h2>
+                                <p>
+                                    "MentisDB never deletes corrected or superseded thoughts. Instead it builds an \
+                                     in-memory "
+                                    <code>"invalidated_thought_ids"</code>
+                                    " set for any thought that is the "
+                                    <strong>"target"</strong>
+                                    " of a later "
+                                    <code>"Supersedes"</code>
+                                    ", "
+                                    <code>"Corrects"</code>
+                                    ", or "
+                                    <code>"Invalidates"</code>
+                                    " relation."
+                                </p>
+                                <h3>"Default search hides stale memory"</h3>
+                                <p>
+                                    "By default, ranked search, plain search, context bundles, recent context, and \
+                                     memory markdown export "
+                                    <strong>"exclude"</strong>
+                                    " those IDs so agents see "
+                                    <em>"current"</em>
+                                    " memory. Pass "
+                                    <code>"include_invalidated: true"</code>
+                                    " on MCP/REST search tools (or "
+                                    <code>"ThoughtQuery::with_include_invalidated(true)"</code>
+                                    " in the crate) for full audit archaeology."
+                                </p>
+                                <h3>"The set only fills when edges exist"</h3>
+                                <p>
+                                    "Filtering alone does not invent edges. The invalidation set stays empty unless:"
+                                </p>
+                                <ol>
+                                    <li>
+                                        <strong>"Agents write typed edges"</strong>
+                                        " — search before append and link with Supersedes / Corrects / Invalidates \
+                                         (MentisDB skill)."
+                                    </li>
+                                    <li>
+                                        <strong>"Auto-dedup is enabled"</strong>
+                                        " — set "
+                                        <code>"MENTISDB_DEDUP_THRESHOLD=0.85"</code>
+                                        " (recommended for multi-agent and long-lived chains). Near-duplicate appends \
+                                         then auto-emit "
+                                        <code>"Supersedes"</code>
+                                        " against a recent match ("
+                                        <code>"MENTISDB_DEDUP_SCAN_WINDOW"</code>
+                                        " recent thoughts, default 64). Dedup is "
+                                        <strong>"off"</strong>
+                                        " when the env var is unset."
+                                    </li>
+                                </ol>
+                                <div class="docs-callout docs-callout-tip">
+                                    <strong>"Production tip: "</strong>
+                                    "For long-running agent brains, enable "
+                                    <code>"MENTISDB_DEDUP_THRESHOLD=0.85"</code>
+                                    " in "
+                                    <code>".env"</code>
+                                    " or the process environment so near-duplicate noise is linked and hidden from \
+                                     default search without relying solely on harness discipline."
+                                </div>
+                                <div class="code-block">
+                                    <pre><code>{r#"# Recommended for multi-agent / long-lived daemons
+MENTISDB_DEDUP_THRESHOLD=0.85
+MENTISDB_DEDUP_SCAN_WINDOW=64
+
+# Audit: include superseded thoughts in MCP ranked search
+# mentisdb_ranked_search(text: "...", include_invalidated: true)
+"#}</code></pre>
+                                </div>
+                            </section>
+
                             // ── Advanced Retrieval ───────────────────────────────────
                             <section class="docs-section" id="advanced-retrieval">
                                 <h2 id="advanced-retrieval">"Advanced Retrieval"</h2>
@@ -2839,6 +2926,9 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                      <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/WHITEPAPER.md">"white paper"</a>
                                      "; this section summarises the knobs you can turn."
                                      " As of 0.9.9, ranked search automatically applies the built-in thesaurus (~900 headwords + lemmas) on every query for better recall on vocabulary mismatch and verb forms — no extra parameters needed."
+                                     " Default search also excludes superseded/corrected/invalidated thoughts; see "
+                                     <a href="#invalidation-dedup">"Invalidation & Dedup"</a>
+                                     "."
                                  </p>
 
                                 <h3 id="rrf-reranking">"Reciprocal Rank Fusion (RRF)"</h3>

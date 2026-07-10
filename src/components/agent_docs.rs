@@ -77,17 +77,24 @@ pub fn AgentDocs() -> impl IntoView {
                              secrets or tokens."
                         </p>
                         <div class="docs-callout docs-callout-tip">
-                            <strong>"Auto-dedup: "</strong>
+                            <strong>"Auto-dedup + invalidation: "</strong>
                             "When "
                             <code>"MENTISDB_DEDUP_THRESHOLD"</code>
-                            " is set on the server, MentisDB automatically compares each new \
-                             thought against recent memories using Jaccard similarity. If a new \
-                             thought exceeds the threshold, it is auto-Superseded instead of \
-                             appended as a duplicate. You still see the thought in your results, \
-                             but it is linked to the prior memory via a "
+                            " is set (recommended "
+                            <code>"0.85"</code>
+                            " for long-lived chains; "
+                            <strong>"off"</strong>
+                            " by default), MentisDB compares each new thought against recent \
+                             memories (Jaccard). Near-duplicates get an automatic "
                             <code>"Supersedes"</code>
-                            " relation. Write concisely and specifically to avoid accidental \
-                             dedup of distinct memories."
+                            " edge to the prior thought. Default search, ranked search, context \
+                             bundles, and recent context then "
+                            <strong>"hide the older thought"</strong>
+                            " so you see current memory. Pass "
+                            <code>"include_invalidated: true"</code>
+                            " only for audit. Without dedup or agent-written Supersedes/Corrects/Invalidates \
+                             edges, the invalidation set stays empty. Write concisely so distinct lessons \
+                             are not treated as near-duplicates."
                         </div>
                     </section>
 
@@ -419,9 +426,14 @@ pub fn AgentDocs() -> impl IntoView {
                             "Use "
                             <code>"mentisdb_ranked_search"</code>
                             " when you need the best flat matches for a topic, paraphrase, or \
-                             partial recollection. In 0.8.0 this is seamless hybrid retrieval: \
-                             lexical + graph signals plus vector-sidecar similarity when a managed \
-                             sidecar is enabled for the chain. It returns ranking diagnostics such as "
+                             partial recollection. This is seamless hybrid retrieval: lexical + graph \
+                             signals plus vector-sidecar similarity when a managed sidecar is enabled. \
+                             By default it "
+                            <strong>"excludes"</strong>
+                            " thoughts that later memory superseded, corrected, or invalidated so you \
+                             see current beliefs. Pass "
+                            <code>"include_invalidated: true"</code>
+                            " only when you need the audit trail. Diagnostics include "
                             <code>"backend"</code>
                             ", "
                             <code>"score.vector"</code>
@@ -431,7 +443,7 @@ pub fn AgentDocs() -> impl IntoView {
                             <code>"match_sources"</code>
                             ", "
                             <code>"graph_distance"</code>
-                            ", and score breakdowns so you can inspect why a memory surfaced."
+                            ", and score breakdowns."
                         </p>
 
                         <h3>"Point-in-time queries with as_of"</h3>
@@ -443,9 +455,11 @@ pub fn AgentDocs() -> impl IntoView {
                             " or "
                             <code>"mentisdb_traverse_thoughts"</code>
                             " to see only thoughts that existed at that point in time. Thoughts \
-                             appended after the timestamp are excluded. Use this when you need to \
-                             understand what was known at a specific moment — for example, why a \
-                             decision was made before a later correction was appended."
+                             appended after the timestamp are excluded. Thoughts that were later \
+                             superseded still appear if they were valid at "
+                            <code>"as_of"</code>
+                            ". Use this when you need to understand what was known at a specific \
+                             moment — for example, why a decision was made before a later correction."
                         </p>
 
                         <h3>"Scope-filtered search"</h3>

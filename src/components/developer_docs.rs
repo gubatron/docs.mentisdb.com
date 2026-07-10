@@ -807,6 +807,42 @@ pub fn DeveloperDocs() -> impl IntoView {
                               before BM25 scoring."
                          </p>
 
+                         <h3>"Invalidation filtering (default retrieval)"</h3>
+                         <p>
+                             "Thoughts that are the target of a later "
+                             <code>"Supersedes"</code>
+                             ", "
+                             <code>"Corrects"</code>
+                             ", or "
+                             <code>"Invalidates"</code>
+                             " relation are recorded in "
+                             <code>"invalidated_thought_ids"</code>
+                             " and "
+                             <strong>"excluded by default"</strong>
+                             " from "
+                             <code>"MentisDb::query"</code>
+                             ", "
+                             <code>"query_ranked"</code>
+                             ", context bundles, recent context, and related REST/MCP search. \
+                              Pass "
+                             <code>"include_invalidated: true"</code>
+                             " (crate builders: "
+                             <code>"with_include_invalidated(true)"</code>
+                             ") for audit. Point-in-time "
+                             <code>"as_of"</code>
+                             " still returns thoughts that were valid at that timestamp."
+                         </p>
+                         <p>
+                             "Auto-dedup is "
+                             <strong>"off"</strong>
+                             " unless "
+                             <code>"MENTISDB_DEDUP_THRESHOLD"</code>
+                             " is set (recommended "
+                             <code>"0.85"</code>
+                             " for long-lived agent chains). Without dedup or agent-written \
+                              invalidation edges, the set stays empty and search cannot hide noise."
+                         </p>
+
                          // ── Benchmarking ────────────────────────────────────
                         <h2 id="benchmarking">"Benchmarking"</h2>
                         <p>
