@@ -42,7 +42,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.9.1""#</code>
+                            <code>r#"mentisdb = "0.10.7""#</code>
                         </div>
                         <p>
                             "The crate provides the full memory engine, skill registry, \

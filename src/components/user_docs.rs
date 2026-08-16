@@ -2725,6 +2725,21 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     " call the same crate API. Prefer revoke when you need a forensic \
                                      trail."
                                 </p>
+
+                                <h3>"Upgrading past 0.10.6"</h3>
+                                <p>
+                                    "0.10.6 inserted "
+                                    <code>"SkillVersion.schema_version"</code>
+                                    " in the middle of the bincode record. Existing "
+                                    <code>"mentisdb-skills.bin"</code>
+                                    " files from 0.10.5 then failed to deserialize and the daemon \
+                                     panicked on boot. "
+                                    <strong>"0.10.7"</strong>
+                                    " decodes that older V2 layout and rewrites the file on open. \
+                                     Do not delete the skill registry. Upgrade with "
+                                    <code>"cargo install mentisdb --locked --force"</code>
+                                    " and restart the daemon."
+                                </p>
                             </section>
 
                             // ── Cryptographic Signatures ─────────────────────────────
