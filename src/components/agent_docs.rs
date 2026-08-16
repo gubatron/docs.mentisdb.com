@@ -761,6 +761,14 @@ pub fn AgentDocs() -> impl IntoView {
                                 <code>"mentisdb_revoke_skill(skill_id: \"my-skill\", reason: \"security issue\")"</code>
                                 " — mark as untrusted; agents should refuse to execute it"
                             </li>
+                            <li>
+                                <code>"mentisdb_delete_skill(skill_id: \"my-skill\")"</code>
+                                " — permanently remove the skill and every version. This cannot be \
+                                 undone. Use revoke when you need an audit record. After delete the \
+                                 same "
+                                <code>"skill_id"</code>
+                                " can be uploaded again as a new Active skill."
+                            </li>
                         </ul>
                         <div class="docs-callout docs-callout-tip">
                             "When searching, filter by "

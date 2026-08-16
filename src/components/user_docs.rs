@@ -1459,16 +1459,23 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
 
                                 <h4>"Skills Registry"</h4>
                                 <p>
-                                    "Browse all skills with their version count and lifecycle status \
-                                     (active, deprecated, revoked). Click a skill to view it with three \
-                                     tabs: "
+                                    "The Skills page summary bar shows total, active, revoked, and \
+                                     deprecated counts. Browse skills with their version count and \
+                                     lifecycle status. Click a skill to view it with three tabs: "
                                     <strong>"Rendered"</strong>
                                     " (formatted Markdown), "
                                     <strong>"Source"</strong>
                                     " (raw text), and "
                                     <strong>"Diff"</strong>
-                                    " (side-by-side version comparison). Revoke or deprecate a skill \
-                                     directly from the UI with a confirmation step."
+                                    " (side-by-side version comparison). Deprecate or revoke a skill \
+                                     with a confirmation step. After revoke, "
+                                    <strong>"Delete"</strong>
+                                    " on the list row or "
+                                    <strong>"Delete Permanently…"</strong>
+                                    " on the detail pane (type the skill id to confirm) removes the \
+                                     skill and every version so the same "
+                                    <code>"skill_id"</code>
+                                    " can be uploaded again."
                                 </p>
 
                                 <h3>"Dashboard API"</h3>
@@ -1716,6 +1723,11 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                             <td><code>"POST"</code></td>
                                             <td><code>"/skills/{skill_id}/deprecate"</code></td>
                                             <td>"Mark a skill as deprecated"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"DELETE"</code></td>
+                                            <td><code>"/skills/{skill_id}"</code></td>
+                                            <td>"Permanently delete a skill and all versions (same skill_id can be re-uploaded)"</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -2690,7 +2702,28 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     " to get the latest version, or pass "
                                     <code>"version_id"</code>
                                     " for a specific historical version. Full version history is always \
-                                     preserved."
+                                     preserved until you permanently delete the skill."
+                                </p>
+
+                                <h3>"Deprecate, revoke, delete"</h3>
+                                <p>
+                                    <code>"mentisdb_deprecate_skill"</code>
+                                    " marks a skill as superseded but still readable. "
+                                    <code>"mentisdb_revoke_skill"</code>
+                                    " keeps every version for audit; agents should refuse to execute \
+                                     it. "
+                                    <code>"mentisdb_delete_skill"</code>
+                                    " is the explicit exception: it removes the skill and all versions \
+                                     from "
+                                    <code>"mentisdb-skills.bin"</code>
+                                    " so the same "
+                                    <code>"skill_id"</code>
+                                    " can be uploaded again as Active. REST "
+                                    <code>"POST /v1/skills/delete"</code>
+                                    " and the dashboard "
+                                    <code>"DELETE /dashboard/api/skills/{id}"</code>
+                                    " call the same crate API. Prefer revoke when you need a forensic \
+                                     trail."
                                 </p>
                             </section>
 
@@ -2960,6 +2993,17 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "with no cloud dependency and no API key. Hybrid ranking blends lexical and cosine "
                                     "scores via a smooth exponential fusion that amplifies pure-semantic matches "
                                     "(~36×) and decays to additive composition as lexical evidence grows."
+                                </p>
+                                <p>
+                                    "Since 0.10.6, each append writes one integrity-chained WAL record \
+                                     beside the JSON snapshot ("
+                                    <code>"*.json.wal"</code>
+                                    ", magic "
+                                    <code>"MDBVWAL1"</code>
+                                    "). Load verifies the snapshot digest, then replays the WAL. After \
+                                     32 records the snapshot is compacted and the WAL is removed. Older \
+                                     binaries that only read JSON treat a sidecar with a pending WAL as \
+                                     stale and rebuild from the chain. The thought log remains canonical."
                                 </p>
 
                                 <h3 id="branching-chains">"Branching Chains"</h3>

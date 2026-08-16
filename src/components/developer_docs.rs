@@ -295,6 +295,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"skill_id"</code>, <code>"reason"</code>, <code>"chain_key"</code></td>
                                 </tr>
                                 <tr>
+                                    <td><code>"mentisdb_delete_skill"</code></td>
+                                    <td>"Permanently remove a skill and all of its versions. After delete the same skill_id can be uploaded again. Prefer revoke when you need an audit row."</td>
+                                    <td><code>"skill_id"</code>, <code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
                                     <td><code>"mentisdb_head"</code></td>
                                     <td>"Return head metadata, the latest thought at the current chain tip, and integrity state"</td>
                                     <td><code>"chain_key"</code></td>
@@ -529,6 +534,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/skills/revoke"</code></td>
                                     <td>"Mark a stored skill as revoked"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/skills/delete"</code></td>
+                                    <td>"Permanently delete a skill and all versions so the skill_id can be reused"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
