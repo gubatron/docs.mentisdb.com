@@ -42,7 +42,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.10.7""#</code>
+                            <code>r#"mentisdb = "0.10.8""#</code>
                         </div>
                         <p>
                             "The crate provides the full memory engine, skill registry, \
@@ -305,9 +305,14 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"chain_key"</code></td>
                                 </tr>
                                 <tr>
+                                    <td><code>"mentisdb_summary_candidates"</code></td>
+                                    <td>"Suggest groups of thoughts that are candidates for summarization"</td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"limit"</code></td>
+                                </tr>
+                                <tr>
                                     <td><code>"mentisdb_register_webhook"</code></td>
                                     <td>"Register a webhook to receive HTTP POST notifications when thoughts are appended. Delivery is fire-and-forget with exponential backoff retries (up to 5 attempts)"</td>
-                                    <td><code>"chain_key"</code>, <code>"url"</code>, <code>"event_types"</code></td>
+                                    <td><code>"url"</code>, <code>"chain_key_filter"</code>, <code>"thought_type_filter"</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_list_webhooks"</code></td>
@@ -317,7 +322,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"mentisdb_delete_webhook"</code></td>
                                     <td>"Remove a webhook registration by its UUID"</td>
-                                    <td><code>"webhook_id"</code>, <code>"chain_key"</code></td>
+                                    <td><code>"id"</code></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -469,6 +474,46 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/head"</code></td>
                                     <td>"Return current chain head metadata and the latest thought"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/federated-search"</code></td>
+                                    <td>"Ranked search fused across several chains (chain_keys)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/summary-candidates"</code></td>
+                                    <td>"Suggest groups of thoughts that are candidates for summarization"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/extract-memories"</code></td>
+                                    <td>"Turn raw text into typed memory candidates with the configured LLM"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/entity-types"</code></td>
+                                    <td>"List entity types defined on a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/entity-types/upsert"</code></td>
+                                    <td>"Create or update an entity type on a chain"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/v1/webhooks"</code></td>
+                                    <td>"List registered webhooks"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/webhooks"</code></td>
+                                    <td>"Register a webhook (url, optional chain_key_filter, optional thought_type_filter)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"DELETE"</code></td>
+                                    <td><code>"/v1/webhooks/{id}"</code></td>
+                                    <td>"Delete a webhook by id"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"GET"</code></td>
@@ -729,28 +774,28 @@ pub fn DeveloperDocs() -> impl IntoView {
     }"</code></pre>
                         </div>
 
-                        <h3>"REST Example: POST /v1/webhooks/register"</h3>
+                        <h3>"REST Example: POST /v1/webhooks"</h3>
                         <div class="code-block">
                             <pre><code>
-    "POST /v1/webhooks/register HTTP/1.1\n\
+    "POST /v1/webhooks HTTP/1.1\n\
     Host: 127.0.0.1:9471\n\
     Content-Type: application/json\n\
     \n\
     {\n\
-    \"chain_key\": \"default\",\n\
     \"url\": \"https://myapp.example.com/mentisdb-webhook\",\n\
-    \"event_types\": [\"thought.append\", \"thought.relation.added\"]\n\
+    \"chain_key_filter\": \"default\",\n\
+    \"thought_type_filter\": [\"Decision\", \"Constraint\"]\n\
     }\n\
     \n\
     // Response:\n\
     {\n\
     \"webhook\": {\n\
-    \"id\": \"wh_abc123\",\n\
-    \"chain_key\": \"default\",\n\
+    \"id\": \"6f1c2a9e-...\",\n\
     \"url\": \"https://myapp.example.com/mentisdb-webhook\",\n\
-    \"event_types\": [\"thought.append\", \"thought.relation.added\"],\n\
+    \"chain_key_filter\": \"default\",\n\
+    \"thought_type_filter\": [\"Decision\", \"Constraint\"],\n\
     \"created_at\": \"2026-04-14T12:00:00Z\",\n\
-    \"status\": \"active\"\n\
+    \"active\": true\n\
     }\n\
     }"</code></pre>
                         </div>

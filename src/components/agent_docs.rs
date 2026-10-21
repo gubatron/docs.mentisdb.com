@@ -175,7 +175,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <p>
                             "ThoughtType is the semantic label for "
                             <em>"what changed in the agent's internal model"</em>
-                            ". There are 29 types grouped by purpose. Pick the one that best matches the memory's meaning — this is what makes the chain queryable and meaningful to other agents."
+                            ". There are 31 types grouped by purpose. Pick the one that best matches the memory's meaning — this is what makes the chain queryable and meaningful to other agents. Names are parsed case- and separator-insensitively (Decision, decision, and fact-learned all resolve), and REST and MCP accept every type including Goal and LLMExtracted."
                         </p>
 
                         <h3 class="thought-type-group-label">"🧑 About the User"</h3>
@@ -219,6 +219,10 @@ pub fn AgentDocs() -> impl IntoView {
                             <div class="thought-type-card">
                                 <span class="thought-type-name"><code>"Surprise"</code></span>
                                 <p>"An unexpected outcome or mismatch was observed — something that violated a prior expectation. Worth capturing to update the model."</p>
+                            </div>
+                            <div class="thought-type-card">
+                                <span class="thought-type-name"><code>"LLMExtracted"</code></span>
+                                <p>"Marks the extraction pipeline itself as the source of a memory. Extracted memories normally get more specific types such as Decision or PreferenceUpdate."</p>
                             </div>
                         </div>
 
@@ -911,7 +915,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <h4>"Thought Explorer"</h4>
                         <p>
                             "\"The Thought Explorer lets your operator browse every thought you \
-                             have written, paginated and filterable by all 29 ThoughtTypes. It \
+                             have written, paginated and filterable by all 31 ThoughtTypes. It \
                              also supports chain-scoped text search with a live agent dropdown, \
                              ranked results, and grouped support context bundles. Ranked search \
                              uses lexical + graph + vector hybrid scoring automatically when the \
@@ -1076,7 +1080,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <div class="docs-callout">
                             <pre><code>
     "mentisdb_append(\n\
-    thought_type: \"Observation\",\n\
+    thought_type: \"Insight\",\n\
     content: \"The retry logic resolved the timeout — root cause was DNS.\",\n\
     relations: [{ kind: \"ContinuesFrom\", target_id: \"<uuid-of-prior-turn>\" }]\n\
     )"
@@ -1508,7 +1512,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <div class="docs-callout">
                             <pre><code>
     "mentisdb_append(\n\
-    thought_type: \"WorkingMemory\",\n\
+    thought_type: \"FactLearned\",\n\
     content: \"Scratch: trying cache-aside pattern\",\n\
     scope: \"Session\"           // optional; default is User\n\
     )"

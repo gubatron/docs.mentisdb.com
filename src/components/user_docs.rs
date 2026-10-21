@@ -332,6 +332,39 @@ mentisdb agents"#}</code></pre>
                                                 " is set. Raise on chatty chains (e.g. 128)."
                                             </td>
                                         </tr>
+                                        <tr class="config-group-header">
+                                            <td colspan="3"><strong>"Vector Index &amp; Auto-Edges"</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HNSW_THRESHOLD"</code></td>
+                                            <td><code>"50000"</code></td>
+                                            <td>"Minimum number of vectors before the HNSW approximate backend replaces exact cosine search"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HNSW_EF_CONSTRUCTION"</code></td>
+                                            <td><code>"400"</code></td>
+                                            <td>"Search width while building the HNSW graph (higher is better recall, slower build)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HNSW_EF_SEARCH"</code></td>
+                                            <td><code>"128"</code></td>
+                                            <td>"Search width for HNSW queries (higher is better recall, slower search)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_HNSW_BACKGROUND_BUILD"</code></td>
+                                            <td><code>"true"</code></td>
+                                            <td>"Build HNSW graphs on a background thread"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_AUTO_EDGE_THRESHOLD"</code></td>
+                                            <td><code>"0.85"</code></td>
+                                            <td>"Similarity threshold for implicit semantic edges used by graph-aware ranked search"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_AUTO_EDGE_K"</code></td>
+                                            <td><code>"5"</code></td>
+                                            <td>"Maximum implicit neighbours per thought"</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </section>
@@ -1416,7 +1449,7 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 <h4>"Thought Explorer"</h4>
                                 <p>
                                     "Paginated table of all thoughts in a chain. Filter by any of the \
-                                     30 ThoughtTypes using the grouped filter panel — each type is shown \
+                                     31 ThoughtTypes using the grouped filter panel — each type is shown \
                                      with a coloured badge. The explorer also supports chain-scoped text \
                                      search plus a live agent dropdown; when text search is active it \
                                      returns hybrid ranked results and grouped context bundles instead of \
@@ -3018,7 +3051,9 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "). Load verifies the snapshot digest, then replays the WAL. After \
                                      32 records the snapshot is compacted and the WAL is removed. Older \
                                      binaries that only read JSON treat a sidecar with a pending WAL as \
-                                     stale and rebuild from the chain. The thought log remains canonical."
+                                     stale and rebuild from the chain. The thought log remains canonical. Since \
+                                     0.10.8 an unreadable sidecar (for example a stale or mismatched WAL) no \
+                                     longer blocks opening the chain: it is logged and rebuilt from the thought log."
                                 </p>
 
                                 <h3 id="branching-chains">"Branching Chains"</h3>
@@ -3080,7 +3115,7 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                 </p>
                                 <p>
                                     "Delivery is fire-and-forget with exponential-backoff retries (up to 5 attempts). "
-                                    "Registrations persist to "<code>"webhooks.json"</code>" next to the chain registry "
+                                    "Registrations persist to "<code>"mentisdb-webhooks.json"</code>" next to the chain registry "
                                     "and survive daemon restarts. Fan-out is bounded by a queue and concurrency "
                                     "semaphore, so bursty appends cannot spawn unlimited outgoing tasks."
                                 </p>
@@ -3173,7 +3208,7 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                 <table>
                                     <thead><tr><th>"Option"</th><th>"Description"</th></tr></thead>
                                     <tbody>
-                                        <tr><td><code>"--type"</code></td><td>"Thought type (default: fact-learned)"</td></tr>
+                                        <tr><td><code>"--type"</code></td><td>"Thought type, case- and separator-insensitive (insight, Insight, fact-learned, and fact_learned all work). Defaults to fact-learned when omitted"</td></tr>
                                         <tr><td><code>"--scope"</code></td><td>"Memory scope: user, session, or agent"</td></tr>
                                         <tr><td><code>"--tag"</code></td><td>"Add a tag (repeatable)"</td></tr>
                                         <tr><td><code>"--agent"</code></td><td>"Agent ID for the thought"</td></tr>
