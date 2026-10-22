@@ -328,6 +328,11 @@ mentisdb agents"#}</code></pre>
                                             <td><em>"unset"</em></td>
                                             <td>"CLI only: global token that mentisdb backup / restore send to the running daemon's /v1/admin/flush when bearer-token access is on"</td>
                                         </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_WEBHOOK_ALLOWED_CIDRS"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"Comma- or space-separated CIDRs or IPs that webhooks may target despite the private-address block (e.g. 100.64.0.0/10,fd7a:115c:a1e0::/48 for Tailscale). Unset = all internal ranges blocked; an invalid entry or /0 stops startup. Set via environment, ./.env or <MENTISDB_DIR>/.env. See "<a href="#webhook-allowed-cidrs">"Private webhook targets"</a></td>
+                                        </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
                                         </tr>
@@ -3597,7 +3602,7 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                 <ul>
                                     <li>"Only http and https URLs are accepted, and redirects are never followed."</li>
                                     <li>
-                                        "localhost, loopback, private (RFC 1918), link-local, CGNAT (100.64.0.0/10), \
+                                        "By default, localhost, loopback, private (RFC 1918), link-local, CGNAT (100.64.0.0/10), \
                                          documentation and benchmarking ranges, multicast, broadcast, reserved and \
                                          unspecified addresses are rejected, as are IPv6 unique-local, link-local and \
                                          documentation addresses and IPv6 forms that embed a blocked IPv4 address \
@@ -3629,6 +3634,54 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                      token. A chain-scoped token may register a webhook only with a "
                                     <code>"chain_key_filter"</code>
                                     " inside its scope."
+                                </p>
+                                <h3 id="webhook-allowed-cidrs">"Private webhook targets"</h3>
+                                <p>
+                                    "Self-hosted deployments whose webhook consumers live on a private network \
+                                     (a Tailscale tailnet, a WireGuard subnet, a LAN host) can open just those ranges with "
+                                    <code>"MENTISDB_WEBHOOK_ALLOWED_CIDRS"</code>
+                                    ", set in the environment, "<code>"./.env"</code>" or "<code>"<MENTISDB_DIR>/.env"</code>":"
+                                </p>
+                                <pre><code>"# Tailscale tailnet (IPv4 CGNAT range + Tailscale's IPv6 ULA prefix)\n\
+MENTISDB_WEBHOOK_ALLOWED_CIDRS=100.64.0.0/10,fd7a:115c:a1e0::/48\n\
+# a WireGuard subnet\n\
+MENTISDB_WEBHOOK_ALLOWED_CIDRS=10.8.0.0/24\n\
+# a single host (a bare address means /32 or /128)\n\
+MENTISDB_WEBHOOK_ALLOWED_CIDRS=192.168.1.50"</code></pre>
+                                <ul>
+                                    <li>
+                                        "Entries are separated by commas and/or whitespace. Each is address/prefix \
+                                         (IPv4 or IPv6, brackets allowed around IPv6) or a bare address. Host bits \
+                                         are normalized, so 10.8.0.7/24 becomes 10.8.0.0/24."
+                                    </li>
+                                    <li>
+                                        "An address inside a listed range is allowed even if it falls in a blocked \
+                                         range; every other internal range stays blocked. IPv4-mapped IPv6 addresses \
+                                         (::ffff:a.b.c.d) match IPv4 ranges."
+                                    </li>
+                                    <li>
+                                        "localhost host names are still rejected even if loopback is listed; use the \
+                                         IP literal (http://127.0.0.1:8080/hook)."
+                                    </li>
+                                    <li>
+                                        "The list applies at registration, when persisted registrations are reloaded, \
+                                         and at delivery time (every resolved DNS address and literal IPs are \
+                                         re-checked). Removing the variable, or narrowing it so a registration is no \
+                                         longer covered, loads that registration inactive again on the next start."
+                                    </li>
+                                    <li>
+                                        "A /0 entry or any unparsable entry makes the daemon refuse to start. The \
+                                         active ranges are logged as a warning at startup. Unset keeps the strict default."
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>"Security: "</strong>
+                                    "list only the narrowest ranges your consumers live in (your tailnet, one /24, \
+                                     one host). Never list cloud metadata (169.254.169.254, 169.254.0.0/16) or broad \
+                                     ranges such as 10.0.0.0/8. Any token allowed to register webhooks (global tokens, \
+                                     and chain-scoped tokens with an in-scope "
+                                    <code>"chain_key_filter"</code>
+                                    ") can make the daemon send requests into the listed ranges."
                                 </p>
                             </section>
 
