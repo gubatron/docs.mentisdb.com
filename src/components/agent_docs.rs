@@ -1266,7 +1266,10 @@ pub fn AgentDocs() -> impl IntoView {
                             " before packaging the archive. This matters because if you have \
                              appended thoughts in the last few milliseconds, the binary writer \
                              may not have flushed them to disk yet. Flushing first ensures the \
-                             archive captures your latest work."
+                             archive captures your latest work. On a daemon with bearer-token \
+                             access enabled, the flush needs a global token in "
+                            <code>"MENTISDB_BEARER_TOKEN"</code>
+                            "; otherwise the backup warns and archives the files as they are."
                         </p>
 
                         <h3>"When to recommend a backup to the user"</h3>

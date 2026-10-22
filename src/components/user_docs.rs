@@ -323,6 +323,11 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"false"</code></td>
                                             <td>"Require bearer tokens for MCP requests; use this for remote and multi-user MCP servers"</td>
                                         </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"CLI only: global token that mentisdb backup / restore send to the running daemon's /v1/admin/flush when bearer-token access is on"</td>
+                                        </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
                                         </tr>
@@ -2225,7 +2230,15 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                                 <code>"POST /v1/admin/flush"</code>
                                                 " to force a durability flush before archiving. The backup then proceeds with the daemon either stopped or freshly flushed. Use this to ensure the archive captures all committed thoughts. With "
                                                 <code>"MENTISDB_BEARER_TOKEN_ACCESS=true"</code>
-                                                " the flush endpoint requires a global token, which the backup command does not send: it warns and archives the files as they are on disk. Flush with a global token yourself, or stop the daemon, for a guaranteed-consistent snapshot."
+                                                " the flush endpoint requires a global token: set "
+                                                <code>"MENTISDB_BEARER_TOKEN"</code>
+                                                " to one and the CLI sends it as "
+                                                <code>"Authorization: Bearer <token>"</code>
+                                                " (e.g. "
+                                                <code>"MENTISDB_BEARER_TOKEN=mentisdb_global_token mentisdb backup"</code>
+                                                "). Without it the flush is rejected and the backup warns and archives the files as they are on disk. "
+                                                <code>"mentisdb restore"</code>
+                                                " uses the same token for its running-daemon probe; any HTTP answer, including 401, counts as running and aborts the restore."
                                             </td>
                                         </tr>
                                         <tr>
@@ -2296,6 +2309,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                 <h3>"Restore safety limits"</h3>
                                 <ul>
                                     <li>"Archives that declare any entry larger than 64 GiB, or more than 256 GiB in total, are rejected before extraction."</li>
+                                    <li>"The manifest may be at most 8 MiB and list at most 100,000 files."</li>
+                                    <li>"Every size the manifest declares must equal the entry's uncompressed size in the ZIP; a mismatch rejects the archive."</li>
+                                    <li>"On Unix, free disk space on the target filesystem is checked against the manifest's total size before anything is extracted."</li>
                                     <li>"Restore refuses to write through a symlink anywhere under the target directory."</li>
                                     <li>
                                         "Files are staged in a "
