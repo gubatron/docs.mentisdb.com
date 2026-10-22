@@ -3578,7 +3578,9 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                          documentation and benchmarking ranges, multicast, broadcast, reserved and \
                                          unspecified addresses are rejected, as are IPv6 unique-local, link-local and \
                                          documentation addresses and IPv6 forms that embed a blocked IPv4 address \
-                                         (IPv4-mapped, NAT64, 6to4)."
+                                         (IPv4-mapped, IPv4-translated ::ffff:0:0:0/96, NAT64, 6to4). The \
+                                         local-use NAT64 prefix 64:ff9b:1::/48 and Teredo 2001::/32 are \
+                                         rejected outright."
                                     </li>
                                     <li>
                                         "The same check runs on every address a hostname resolves to at delivery \
