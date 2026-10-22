@@ -637,6 +637,65 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                             </tbody>
                         </table>
+
+                        <h3 id="rest-errors">"Chain Resolution and Error Statuses"</h3>
+                        <p>
+                            "Only writes create a chain whose "
+                            <code>"chain_key"</code>
+                            " does not exist yet: "
+                            <code>"/v1/bootstrap"</code>
+                            ", "
+                            <code>"/v1/thoughts"</code>
+                            ", "
+                            <code>"/v1/retrospectives"</code>
+                            ", "
+                            <code>"/v1/import-markdown"</code>
+                            ", "
+                            <code>"/v1/agents/upsert"</code>
+                            ", "
+                            <code>"/v1/entity-types/upsert"</code>
+                            " and the target of "
+                            <code>"/v1/chains/merge"</code>
+                            ". Every other route returns 404 for an unknown chain and persists nothing; \
+                             the configured default chain is the only one created on demand for reads. \
+                             Chain keys must be non-empty, at most 256 bytes and free of control \
+                             characters (400 otherwise). The MCP tools behave the same way."
+                        </p>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>"Status"</th>
+                                    <th>"Meaning"</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>"400"</code></td><td>"Invalid input: malformed JSON, bad UUID, unknown thought type or role, invalid chain key"</td></tr>
+                                <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, or a token whose scope does not cover the operation"</td></tr>
+                                <tr><td><code>"403"</code></td><td>"Permission denied, e.g. missing or invalid signature on a signed skill upload"</td></tr>
+                                <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
+                                <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already holds thoughts"</td></tr>
+                                <tr><td><code>"413"</code></td><td>"Request body over 1 MiB (enforced while bearer-token access is enabled)"</td></tr>
+                                <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
+                                <tr><td><code>"501"</code></td><td>"/v1/extract-memories on a build without the llm-extraction feature"</td></tr>
+                            </tbody>
+                        </table>
+                        <p>
+                            "With bearer-token access enabled, "
+                            <code>"GET /v1/chains"</code>
+                            ", "
+                            <code>"GET /v1/webhooks"</code>
+                            ", "
+                            <code>"DELETE /v1/webhooks/{id}"</code>
+                            ", "
+                            <code>"/v1/skills/{upload,deprecate,revoke,delete}"</code>
+                            " and "
+                            <code>"/v1/admin/flush"</code>
+                            " require a global token; "
+                            <code>"POST /v1/webhooks"</code>
+                            " with a chain-scoped token requires a "
+                            <code>"chain_key_filter"</code>
+                            " inside its scope."
+                        </p>
                         <p>
                             "For MCP-native agents, prefer the streamable HTTP root at "
                             <code>"POST /"</code>
