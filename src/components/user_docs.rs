@@ -65,6 +65,71 @@ pub fn UserDocs() -> impl IntoView {
                                     <code>"--features server"</code>
                                     ") are supported."
                                 </p>
+                                <h3 id="docker">"Docker"</h3>
+                                <p>
+                                    "Multi-arch ("
+                                    <code>"linux/amd64"</code>
+                                    ", "
+                                    <code>"linux/arm64"</code>
+                                    ") images are published to GitHub Container Registry on every \
+                                     release, tagged with the release tag, the crate version and "
+                                    <code>"latest"</code>
+                                    ". The image runs "
+                                    <code>"mentisdb --headless"</code>
+                                    " as a non-root user under "
+                                    <code>"tini"</code>
+                                    ", so no TTY is needed and "
+                                    <code>"docker stop"</code>
+                                    " shuts the daemon down cleanly."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"docker run -d --name mentisdb \
+      -p 127.0.0.1:9471:9471 -p 127.0.0.1:9472:9472 -p 127.0.0.1:9475:9475 \
+      -v mentisdb-data:/var/lib/mentisdb \
+      ghcr.io/cloudllm-ai/mentisdb:latest
+
+    curl http://127.0.0.1:9472/health"#}</code></pre>
+                                </div>
+                                <ul>
+                                    <li>
+                                        <code>"/var/lib/mentisdb"</code>
+                                        " is "
+                                        <code>"MENTISDB_DIR"</code>
+                                        ": chains, skills, TLS certificates and the local-embedding model cache ("
+                                        <code>".fastembed_cache"</code>
+                                        ") persist in the volume. Bind mounts must be writable by uid 991."
+                                    </li>
+                                    <li>
+                                        "Ports: 9471 MCP, 9472 REST, 9475 dashboard (HTTPS). HTTPS MCP/REST (9473/9474) are disabled in the image; enable them with "
+                                        <code>"MENTISDB_HTTPS_MCP_PORT"</code>
+                                        " / "
+                                        <code>"MENTISDB_HTTPS_REST_PORT"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        "Any variable from "
+                                        <a href="#configuration">"Configuration"</a>
+                                        " can be passed with "
+                                        <code>"-e"</code>
+                                        "."
+                                    </li>
+                                </ul>
+                                <p>
+                                    <strong>"Security."</strong>
+                                    " The container binds "
+                                    <code>"0.0.0.0"</code>
+                                    " so published ports work, and a fresh daemon has no authentication. Publish ports on "
+                                    <code>"127.0.0.1"</code>
+                                    " unless a TLS reverse proxy or VPN is in front, set "
+                                    <code>"MENTISDB_BEARER_TOKEN_ACCESS=true"</code>
+                                    " (create tokens with "
+                                    <code>"docker exec mentisdb mentisdb bearertoken create --global admin"</code>
+                                    "), set "
+                                    <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                    ", and add the hostnames you use to reach the dashboard to "
+                                    <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                    "."
+                                </p>
                             </section>
 
                             // ── Running the Daemon ───────────────────────────────────
