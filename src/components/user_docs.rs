@@ -3237,6 +3237,19 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "Reciprocal Rank Fusion with damping constant "<code>"k=60"</code>". RRF is robust when "
                                     "the absolute magnitudes of the component scores are not directly comparable."
                                 </p>
+                                <p>
+                                    "Since 0.10.9 the fused RRF score is added to the normal ranked score as a consensus "
+                                    "bonus scaled by 50 (a rank-1 hit in all three lists is worth about +2.5), and only "
+                                    "lists that actually scored a candidate contribute. Earlier releases replaced the "
+                                    "ranked score with the tiny raw RRF total, which badly degraded results when "
+                                    "reranking was enabled; if you turned it off for that reason, it is safe to use again."
+                                </p>
+                                <p>
+                                    "Also in 0.10.9: thesaurus synonyms are keyed by stem, so inflected query terms "
+                                    "(\"debugging\", \"deploys\") expand like their base forms; ranked, lexical, vector and "
+                                    "graph paths are substantially faster; and filtered vector search over an HNSW index "
+                                    "falls back to an exact scan or oversamples so filters no longer drop matches."
+                                </p>
 
                                 <h3 id="context-bundles">"Context Bundles"</h3>
                                 <p>
@@ -3271,6 +3284,23 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                      0.10.8 an unreadable sidecar (for example a stale or mismatched WAL) no \
                                      longer blocks opening the chain: it is logged and rebuilt from the thought log."
                                 </p>
+                                <p>
+                                    "Since 0.10.9 one FastEmbed model is shared by every chain in the process and texts \
+                                     are embedded in small bounded batches, so memory no longer grows with the number of \
+                                     open chains. The model cache lives in "
+                                    <code>"<MENTISDB_DIR>/.fastembed_cache"</code>
+                                    " (override with "
+                                    <code>"FASTEMBED_CACHE_DIR"</code>
+                                    "). Opening a chain with more than 32 thoughts and no fresh sidecar no longer \
+                                     embeds its history on the request path: a single background worker rebuilds the \
+                                     sidecar, and ranked search on that chain returns lexical and graph results until \
+                                     the rebuilt sidecar is adopted on a later request or append. Opening a chain never \
+                                     rewrites its persisted vector provider configuration. Set "
+                                    <code>"MENTISDB_EMBEDDINGS=off"</code>
+                                    " or "
+                                    <code>"local-text"</code>
+                                    " to opt out of FastEmbed entirely."
+                                </p>
 
                                 <h3 id="branching-chains">"Branching Chains"</h3>
                                 <p>
@@ -3291,6 +3321,14 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     " it originated from, so multi-agent hubs and cross-organisational memory "
                                     "aggregations can share a single query surface. Per-chain overrides let you "
                                     "apply different filters, limits, or RRF settings per chain."
+                                </p>
+                                <p>
+                                    "Since 0.10.9 per-chain rankings are fused by the same additive RRF bonus, keyed by "
+                                    "chain and thought id, and duplicates are removed before "
+                                    <code>"offset"</code>
+                                    " / "
+                                    <code>"limit"</code>
+                                    " paging, so pages no longer repeat or skip results."
                                 </p>
                             </section>
 
