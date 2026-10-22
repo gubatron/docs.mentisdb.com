@@ -1358,15 +1358,53 @@ mentisdb"#}</code></pre>
                                         <tr>
                                             <td><code>"global"</code></td>
                                             <td><code>"mentisdb bearertoken create --global admin-laptop"</code></td>
-                                            <td>"Every chain and server-wide MCP tools such as chain listing."</td>
+                                            <td>"Every chain and every server-wide operation: chain listing, webhook list/delete, skill upload/deprecate/revoke/delete, and "<code>"/v1/admin/flush"</code>"."</td>
                                         </tr>
                                         <tr>
                                             <td><code>"chain:<key>"</code>" or "<code>"chains:<key>,<key>"</code></td>
                                             <td><code>"mentisdb bearertoken create team-agent --chain alice --chain shared"</code></td>
-                                            <td>"Only MCP calls that operate on one of those chains. Server-wide tools require a global token."</td>
+                                            <td>"Only REST and MCP calls that operate on one of those chains. Server-wide operations require a global token."</td>
                                         </tr>
                                     </tbody>
                                 </table>
+                                <p>
+                                    "REST and MCP share one authorization table. With a chain-scoped token: "
+                                </p>
+                                <ul>
+                                    <li>
+                                        <code>"GET /v1/chains"</code>
+                                        " / "
+                                        <code>"mentisdb_list_chains"</code>
+                                        ", "
+                                        <code>"GET /v1/webhooks"</code>
+                                        ", "
+                                        <code>"DELETE /v1/webhooks/{id}"</code>
+                                        ", skill upload/deprecate/revoke/delete and "
+                                        <code>"POST /v1/admin/flush"</code>
+                                        " are rejected (global-only)."
+                                    </li>
+                                    <li>
+                                        "Webhook registration is allowed only with a "
+                                        <code>"chain_key_filter"</code>
+                                        " inside the token's scope."
+                                    </li>
+                                    <li>
+                                        <code>"POST /v1/agents"</code>
+                                        " and the other agent-registry routes are checked against the requested "
+                                        <code>"chain_key"</code>
+                                        "; a single-chain token that omits it gets its own chain."
+                                    </li>
+                                    <li>"Out-of-scope calls return 401."</li>
+                                </ul>
+                                <p>
+                                    "A token's "
+                                    <code>"last_used_at"</code>
+                                    " is tracked in memory on every request but written to disk at most once a \
+                                     minute, so "
+                                    <code>"mentisdb bearertoken list"</code>
+                                    " can lag by up to 60 seconds. While bearer-token access is enabled, REST \
+                                     request bodies larger than 1 MiB are rejected with 413."
+                                </p>
 
                                 <h3>"Managing Tokens"</h3>
                                 <div class="code-block">
