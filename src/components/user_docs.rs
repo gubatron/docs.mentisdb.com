@@ -314,6 +314,11 @@ mentisdb agents"#}</code></pre>
                                             <td>"Optional PIN to gate dashboard access. Unset = open (localhost only)"</td>
                                         </tr>
                                         <tr>
+                                            <td><code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"Comma-separated extra hostnames/IPs the dashboard accepts in the Host header (public DNS name, reverse-proxy name). Set via environment or .env; not editable from the dashboard"</td>
+                                        </tr>
+                                        <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN_ACCESS"</code></td>
                                             <td><code>"false"</code></td>
                                             <td>"Require bearer tokens for MCP requests; use this for remote and multi-user MCP servers"</td>
@@ -1596,7 +1601,71 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 " endpoint enforces rate limiting: 5 failed PIN attempts per IP \
                                  address within a 5-minute window results in "
                                 <strong>"HTTP 429 Too Many Requests"</strong>
-                                ". Successful attempts reset the counter."
+                                ". Successful attempts reset the counter. The limiter is keyed by \
+                                 the connecting client IP; "
+                                <code>"X-Forwarded-For"</code>
+                                " is ignored, so behind a reverse proxy all clients share the \
+                                 proxy's address and one limit."
+                            </p>
+                            <p>
+                                "The login "
+                                <code>"POST"</code>
+                                " is under the same CSRF check as the dashboard API: it needs a \
+                                 same-host "
+                                <code>"Origin"</code>
+                                " or "
+                                <code>"Referer"</code>
+                                ", or the "
+                                <code>"X-MentisDB-Dashboard: 1"</code>
+                                " header."
+                            </p>
+
+                            <h3 id="dashboard-allowed-hosts">"Host Allowlist"</h3>
+                            <p>
+                                "To block DNS-rebinding attacks, every dashboard route (pages, API \
+                                 and login, GET included) returns "
+                                <strong>"403"</strong>
+                                " unless the request's "
+                                <code>"Host"</code>
+                                " header names this daemon. Accepted hosts:"
+                            </p>
+                            <ul>
+                                <li>
+                                    <code>"localhost"</code>
+                                    ", "
+                                    <code>"127.0.0.1"</code>
+                                    ", "
+                                    <code>"[::1]"</code>
+                                    " and "
+                                    <code>"my.mentisdb.com"</code>
+                                </li>
+                                <li>
+                                    "the configured "
+                                    <code>"MENTISDB_BIND_HOST"</code>
+                                    "; when it is "
+                                    <code>"0.0.0.0"</code>
+                                    " or "
+                                    <code>"::"</code>
+                                    ", the machine's own interface IPs"
+                                </li>
+                                <li>
+                                    "every entry of "
+                                    <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                    " (comma-separated), set in the environment or "
+                                    <code>".env"</code>
+                                    "; it is deliberately not editable from the Settings tab"
+                                </li>
+                            </ul>
+                            <div class="code-block">
+                                <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS=mentis.example.com,10.0.0.5 mentisdb"</code>
+                            </div>
+                            <p>
+                                "A reverse proxy in front of the dashboard must preserve the \
+                                 original "
+                                <code>"Host"</code>
+                                " header (or forward a name you list in "
+                                <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                ")."
                             </p>
 
                             <h3>"Disabling the Dashboard"</h3>
@@ -1726,6 +1795,20 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                         " is clamped to at most 500 and "
                                         <code>"page"</code>
                                         " to at most 1000."
+                                    </li>
+                                    <li>
+                                        <strong>"Settings file. "</strong>
+                                        "Settings saved from the dashboard go to "
+                                        <code>"<MENTISDB_DIR>/.env"</code>
+                                        ", written with mode "
+                                        <code>"0600"</code>
+                                        " because it can hold the PIN."
+                                    </li>
+                                    <li>
+                                        <strong>"Errors. "</strong>
+                                        "500 responses say only "
+                                        <code>"internal server error"</code>
+                                        "; details go to the daemon log."
                                     </li>
                                 </ul>
 
@@ -3036,8 +3119,19 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     </li>
                                     <li>
                                         <strong>"Dashboard scripts "</strong>
-                                        "that POST, PATCH or DELETE without an Origin or Referer header must send "
+                                        "that POST, PATCH or DELETE (including the login form) without an Origin or Referer header must send "
                                         <code>"X-MentisDB-Dashboard: 1"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Dashboard Host allowlist. "</strong>
+                                        "Requests whose Host header is not localhost, a loopback IP, "
+                                        <code>"my.mentisdb.com"</code>
+                                        ", the bind host or a "
+                                        <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                        " entry now get 403. If you reach the dashboard through a public \
+                                         name or a reverse proxy, add that name. See "
+                                        <a href="#dashboard-allowed-hosts">"Host Allowlist"</a>
                                         "."
                                     </li>
                                     <li>
