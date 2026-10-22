@@ -3459,7 +3459,8 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                 </p>
                                 <p>
                                     "Also in 0.10.9: thesaurus synonyms are keyed by stem, so inflected query terms "
-                                    "(\"debugging\", \"deploys\") expand like their base forms; ranked, lexical, vector and "
+                                    "(\"debugging\", \"deploys\") expand like their base forms, at a damped weight of 0.3 with at most 3 "
+                                    "synonyms per term so they aid recall instead of competing with literal matches; ranked, lexical, vector and "
                                     "graph paths are substantially faster; and filtered vector search over an HNSW index "
                                     "falls back to an exact scan or oversamples so filters no longer drop matches."
                                 </p>
