@@ -117,7 +117,10 @@ pub fn AgentDocs() -> impl IntoView {
                                 " to discover existing chains. Match the chain whose name most \
                                  closely corresponds to the current project, repository, or \
                                  working directory. If no chains exist yet, ask the user for a \
-                                 name (the repo or project name works well)."
+                                 name (the repo or project name works well). "
+                                <code>"mentisdb_list_chains"</code>
+                                " needs a global bearer token; with a chain-scoped token it is \
+                                 rejected, so skip this step and use the chain key you were given."
                             </li>
                             <li>
                                 "Call "
@@ -126,7 +129,10 @@ pub fn AgentDocs() -> impl IntoView {
                                  This is safe on existing chains — it will not overwrite prior \
                                  memory. Only pass a meaningful "
                                 <code>"content"</code>
-                                " argument if you are creating a brand-new chain."
+                                " argument if you are creating a brand-new chain. Since 0.10.9 \
+                                 reads (search, head, agents, recent context, get-thought) on an \
+                                 unknown chain key fail with not found instead of creating the \
+                                 chain, so bootstrap a new chain before reading it."
                             </li>
                             <li>
                                 "Immediately load the core operating instructions via "
@@ -1559,7 +1565,7 @@ pub fn AgentDocs() -> impl IntoView {
                             <code>"enable_reranking"</code>
                             " / "
                             <code>"rerank_k"</code>
-                            " for RRF reranking (0.8.6). \
+                            " for RRF reranking (0.8.6; an additive consensus bonus since 0.10.9, safe to enable). \
                              Use "
                             <code>"mentisdb_branch_from"</code>
                             " to create an isolated branch chain for experiments — searches on \
