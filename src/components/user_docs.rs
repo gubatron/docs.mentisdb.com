@@ -3368,7 +3368,7 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "workflows, or mirroring writes to observability pipelines."
                                 </p>
                                 <p>
-                                    "Delivery is fire-and-forget with exponential-backoff retries (up to 5 attempts). "
+                                    "Delivery is fire-and-forget: up to 3 attempts per event (5 s timeout each, exponential backoff from 1 s). "
                                     "Registrations persist to "<code>"mentisdb-webhooks.json"</code>" next to the chain registry "
                                     "and survive daemon restarts. Fan-out is bounded by a queue and concurrency "
                                     "semaphore, so bursty appends cannot spawn unlimited outgoing tasks."
@@ -3378,6 +3378,41 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     <code>"mentisdb_list_webhooks"</code>", "
                                     <code>"mentisdb_delete_webhook"</code>
                                     ". REST routes are documented in the developer guide."
+                                </p>
+                                <h3>"Allowed targets"</h3>
+                                <ul>
+                                    <li>"Only http and https URLs are accepted, and redirects are never followed."</li>
+                                    <li>
+                                        "localhost, loopback, private (RFC 1918), link-local, CGNAT (100.64.0.0/10), \
+                                         documentation and benchmarking ranges, multicast, broadcast, reserved and \
+                                         unspecified addresses are rejected, as are IPv6 unique-local, link-local and \
+                                         documentation addresses and IPv6 forms that embed a blocked IPv4 address \
+                                         (IPv4-mapped, NAT64, 6to4)."
+                                    </li>
+                                    <li>
+                                        "The same check runs on every address a hostname resolves to at delivery \
+                                         time, so DNS names pointing at internal hosts (including DNS rebinding) \
+                                         cannot reach them."
+                                    </li>
+                                    <li>
+                                        "Webhooks already persisted in "
+                                        <code>"mentisdb-webhooks.json"</code>
+                                        " that point at a blocked target are loaded inactive, with a warning in the log."
+                                    </li>
+                                    <li>
+                                        "A circuit breaker pauses a webhook for 5 minutes after 5 consecutive failed \
+                                         deliveries; a successful delivery resets it."
+                                    </li>
+                                    <li>
+                                        "Logs show only the target's scheme, host and port, never paths, query \
+                                         strings or credentials."
+                                    </li>
+                                </ul>
+                                <p>
+                                    "With bearer-token access enabled, listing and deleting webhooks needs a global \
+                                     token. A chain-scoped token may register a webhook only with a "
+                                    <code>"chain_key_filter"</code>
+                                    " inside its scope."
                                 </p>
                             </section>
 
