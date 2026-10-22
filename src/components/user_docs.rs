@@ -107,6 +107,11 @@ pub fn UserDocs() -> impl IntoView {
                                         "."
                                     </li>
                                     <li>
+                                        "Base image: "
+                                        <code>"debian:trixie-slim"</code>
+                                        " (glibc 2.41). The image is self-contained, so the host's glibc does not matter."
+                                    </li>
+                                    <li>
                                         "Any variable from "
                                         <a href="#configuration">"Configuration"</a>
                                         " can be passed with "
