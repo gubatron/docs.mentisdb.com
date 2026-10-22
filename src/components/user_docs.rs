@@ -173,18 +173,31 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"2"</code></td>
                                             <td>
                                                 "Group-commit window in milliseconds for the background \
-                                                 binary writer. The writer batches appends within this \
-                                                 window before flushing to disk. Lower values = lower \
-                                                 latency; higher values = better throughput"
+                                                 binary writer. Appends already queued are batched within \
+                                                 this window; a lone append with nothing else queued is \
+                                                 flushed immediately. Lower values = lower latency; higher \
+                                                 values = better throughput"
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_AUTO_FLUSH"</code></td>
                                             <td><code>"true"</code></td>
                                             <td>
-                                                "Flush to disk on every write. Set to "
+                                                "Each append returns after its group commit is written to \
+                                                 the chain file. Set to "
                                                 <code>"false"</code>
                                                 " for higher throughput (less durability)"
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_FSYNC"</code></td>
+                                            <td><code>"off"</code></td>
+                                            <td>
+                                                "Set "
+                                                <code>"1"</code>
+                                                " to fsync after every group commit (power-loss \
+                                                 durability, roughly 4x append latency). Explicit flush, \
+                                                 shutdown and drop always sync"
                                             </td>
                                         </tr>
                                         <tr class="config-group-header">
@@ -351,6 +364,24 @@ mentisdb agents"#}</code></pre>
                                             <td colspan="3"><strong>"Vector Index &amp; Auto-Edges"</strong></td>
                                         </tr>
                                         <tr>
+                                            <td><code>"MENTISDB_EMBEDDINGS"</code></td>
+                                            <td><em>"unset (auto)"</em></td>
+                                            <td>
+                                                "Embeddings mode for managed vector sidecars: "
+                                                <code>"off"</code>
+                                                ", "
+                                                <code>"local-text"</code>
+                                                " or "
+                                                <code>"fastembed"</code>
+                                                ". Unset uses FastEmbed when compiled in"
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"FASTEMBED_CACHE_DIR"</code></td>
+                                            <td><code>"<MENTISDB_DIR>/.fastembed_cache"</code></td>
+                                            <td>"Where the FastEmbed ONNX model is downloaded and cached"</td>
+                                        </tr>
+                                        <tr>
                                             <td><code>"MENTISDB_HNSW_THRESHOLD"</code></td>
                                             <td><code>"50000"</code></td>
                                             <td>"Minimum number of vectors before the HNSW approximate backend replaces exact cosine search"</td>
@@ -453,6 +484,38 @@ mentisdb agents"#}</code></pre>
                                                 " — set explicitly in ops manifests for future-proofing."
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_EMBEDDINGS"</code></td>
+                                            <td><em>"unset (auto)"</em></td>
+                                            <td>
+                                                "Process-wide embeddings mode: "
+                                                <code>"off"</code>
+                                                " (no vector sidecars, lexical and graph only), "
+                                                <code>"local-text"</code>
+                                                " (built-in hashing, never loads ONNX) or "
+                                                <code>"fastembed"</code>
+                                                ". Unset uses FastEmbed when compiled in, local text \
+                                                 otherwise. Unknown values are logged and ignored."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_EMBEDDINGS=off"</code>
+                                                " — small VPS or container where the ONNX model's \
+                                                 memory is not worth it."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"FASTEMBED_CACHE_DIR"</code></td>
+                                            <td><code>"<MENTISDB_DIR>/.fastembed_cache"</code></td>
+                                            <td>
+                                                "Directory where the FastEmbed ONNX model is \
+                                                 downloaded and cached."
+                                            </td>
+                                            <td>
+                                                <code>"FASTEMBED_CACHE_DIR=/var/cache/fastembed"</code>
+                                                " — share one model download between hosts or \
+                                                 keep it off the data volume."
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
 
@@ -472,7 +535,10 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"true"</code></td>
                                             <td>
                                                 <code>"true"</code>
-                                                " fsyncs on every append (strict durability); "
+                                                " makes every append wait until its group commit is \
+                                                 written to the chain file (crash-safe; add "
+                                                <code>"MENTISDB_FSYNC=1"</code>
+                                                " for power-loss safety); "
                                                 <code>"false"</code>
                                                 " batches up to 16 records in a background writer \
                                                  (higher throughput, up to 15 records may be lost \
@@ -489,12 +555,36 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"2"</code></td>
                                             <td>
                                                 "Window in milliseconds for the strict-mode writer \
-                                                 to coalesce concurrent appends into one flush."
+                                                 to coalesce concurrent appends into one flush. A lone \
+                                                 append with nothing else queued flushes immediately."
                                             </td>
                                             <td>
                                                 <code>"MENTISDB_GROUP_COMMIT_MS=5"</code>
-                                                " — bigger window amortises fsync cost at the price \
-                                                 of 3ms extra p99 latency."
+                                                " — bigger window amortises write and fsync cost under \
+                                                 concurrent load at the price of a few ms extra p99 latency."
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_FSYNC"</code></td>
+                                            <td><em>"unset (off)"</em></td>
+                                            <td>
+                                                "When "
+                                                <code>"1"</code>
+                                                " / "
+                                                <code>"true"</code>
+                                                " / "
+                                                <code>"on"</code>
+                                                " / "
+                                                <code>"yes"</code>
+                                                ", fsync the chain file after every group commit. \
+                                                 Explicit flush, clean shutdown and dropping a chain \
+                                                 always sync regardless."
+                                            </td>
+                                            <td>
+                                                <code>"MENTISDB_FSYNC=1"</code>
+                                                " — when losing the last few appends to a power cut is \
+                                                 unacceptable. Costs roughly 4x append latency \
+                                                 (F_FULLFSYNC on macOS)."
                                             </td>
                                         </tr>
                                         <tr>
@@ -554,6 +644,26 @@ mentisdb agents"#}</code></pre>
                                         </tr>
                                     </tbody>
                                 </table>
+
+                                <h4>"Durability and crash recovery"</h4>
+                                <ul>
+                                    <li>
+                                        "An append returns once its hash-chained record is durable in the chain file. \
+                                         Derived state (search sidecars, overlays, registries) is updated afterwards; a \
+                                         failure there is logged and retried or rebuilt on the next append or open \
+                                         instead of failing an append that already committed."
+                                    </li>
+                                    <li>
+                                        "If the process or machine died mid-write, opening a binary chain truncates the \
+                                         partial final record and saves the dropped bytes beside the chain file as "
+                                        <code>"<chain file>.torn-<unix-millis>"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        "Chain, agent, webhook and other JSON registries are written to a temporary file \
+                                         and renamed into place, so a crash never leaves a half-written registry."
+                                    </li>
+                                </ul>
 
                                 <h3>"Networking / TLS"</h3>
                                 <table class="config-table">
