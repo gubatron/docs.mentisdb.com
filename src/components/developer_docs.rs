@@ -837,7 +837,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <div class="code-block">
                             <pre><code>
     "POST /v1/webhooks HTTP/1.1\n\
-    Host: 127.0.0.1:9471\n\
+    Host: 127.0.0.1:9472\n\
     Content-Type: application/json\n\
     \n\
     {\n\
@@ -858,6 +858,12 @@ pub fn DeveloperDocs() -> impl IntoView {
     }\n\
     }"</code></pre>
                         </div>
+                        <p>
+                            "Targets must be public http or https endpoints: loopback, private, link-local, \
+                             CGNAT, documentation, multicast and IPv4-embedding IPv6 addresses are rejected, \
+                             also after DNS resolution, and redirects are not followed. After 5 consecutive \
+                             failed deliveries a webhook is paused for 5 minutes."
+                        </p>
 
                         // ── 0.8.0 Improvements ──────────────────────────────
                         <h2 id="0.8.0">"0.8.0 Search &amp; Storage Improvements"</h2>
