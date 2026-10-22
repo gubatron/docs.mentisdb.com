@@ -65,6 +65,77 @@ pub fn UserDocs() -> impl IntoView {
                                     <code>"--features server"</code>
                                     ") are supported."
                                 </p>
+                                <h3 id="prebuilt-binaries">"Prebuilt Binaries"</h3>
+                                <p>
+                                    "Every "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/releases">"GitHub release"</a>
+                                    " ships ready-to-run binaries for macOS ("
+                                    <code>"mentisdb-macos-arm64"</code>
+                                    ", "
+                                    <code>"mentisdb-macos-x86_64"</code>
+                                    "), Windows ("
+                                    <code>"mentisdb-windows-x86_64.exe"</code>
+                                    ") and Linux. Since 0.10.10, Linux binaries come in two flavours ("
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/issues/21">"#21"</a>
+                                    "):"
+                                </p>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Asset"</th>
+                                            <th>"Local embeddings"</th>
+                                            <th>"Minimum glibc"</th>
+                                            <th>"Runs on"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>"mentisdb-linux-x86_64"</code>", "<code>"mentisdb-linux-arm64"</code></td>
+                                            <td>"yes (FastEmbed)"</td>
+                                            <td>"2.39"</td>
+                                            <td>"Ubuntu 24.04+, Debian 13+, Fedora 40+, RHEL 10, Arch"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"mentisdb-linux-x86_64-compat"</code>", "<code>"mentisdb-linux-arm64-compat"</code></td>
+                                            <td>"no"</td>
+                                            <td>"2.34"</td>
+                                            <td>"Ubuntu 22.04 LTS, Debian 12, RHEL 9, and everything newer"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p>
+                                    "The full builds need a recent glibc because the prebuilt ONNX Runtime they link \
+                                     for local embeddings is itself built against glibc 2.38+. The "
+                                    <code>"-compat"</code>
+                                    " builds are compiled on Ubuntu 22.04 without the "
+                                    <code>"local-embeddings"</code>
+                                    " feature: lexical search and "
+                                    <code>"local-text-v1"</code>
+                                    " vectors work as usual, but there is no "
+                                    <code>"fastembed-minilm"</code>
+                                    " semantic vector provider (the same trade-off as the Intel macOS binary). \
+                                     Release CI fails the build if a "
+                                    <code>"-compat"</code>
+                                    " binary ever needs a glibc newer than 2.35. Check your glibc with:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"ldd --version | head -1     # e.g. "ldd (Ubuntu GLIBC 2.35-0ubuntu3) 2.35"
+
+# Example: Ubuntu 22.04 on x86_64
+curl -fLo mentisdb https://github.com/CloudLLM-ai/mentisdb/releases/latest/download/mentisdb-linux-x86_64-compat
+chmod +x mentisdb && ./mentisdb --help"#}</code></pre>
+                                </div>
+                                <p>
+                                    "A full binary started on an older glibc fails immediately with "
+                                    <code>"version `GLIBC_2.39' not found"</code>
+                                    ". If you are on an older distro and want local embeddings, use the "
+                                    <a href="#docker">"Docker image"</a>
+                                    ": it is self-contained and has full features regardless of the host's glibc. \
+                                     (Building from source with "
+                                    <code>"--features local-embeddings"</code>
+                                    " does not avoid the floor, because the ONNX Runtime library it downloads \
+                                     needs glibc 2.38+ too.)"
+                                </p>
                                 <h3 id="docker">"Docker"</h3>
                                 <p>
                                     "Multi-arch ("
@@ -72,9 +143,14 @@ pub fn UserDocs() -> impl IntoView {
                                     ", "
                                     <code>"linux/arm64"</code>
                                     ") images are published to GitHub Container Registry on every \
-                                     release, tagged with the release tag, the crate version and "
+                                     release (starting with 0.10.10.55), tagged with the release tag ("
+                                    <code>"0.10.10.55"</code>
+                                    "), the crate version ("
+                                    <code>"0.10.10"</code>
+                                    ") and "
                                     <code>"latest"</code>
-                                    ". The image runs "
+                                    ". It is also the way to get full features, including local embeddings, \
+                                     on Linux distros older than glibc 2.39. The image runs "
                                     <code>"mentisdb --headless"</code>
                                     " as a non-root user under "
                                     <code>"tini"</code>
