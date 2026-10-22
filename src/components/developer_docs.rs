@@ -1001,7 +1001,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                         <ul>
                             <li>
                                 <code>"MENTISDB_BENCH_AUTO_FLUSH=true"</code>
-                                " — durable mode. Appends are queued to the bounded background writer and the request only returns after the writer flushes them. Concurrent appends may share a short group-commit window."
+                                " — durable mode. Appends are queued to the bounded background writer and the request only returns after the writer flushes them. Concurrent appends may share a short group-commit window; a lone append flushes immediately. Since 0.10.9 commits are fsynced only with MENTISDB_FSYNC=1, so benchmark both settings when touching the writer."
                             </li>
                             <li>
                                 <code>"MENTISDB_BENCH_AUTO_FLUSH=false"</code>
