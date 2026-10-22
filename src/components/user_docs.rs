@@ -2139,7 +2139,9 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                                 <code>"mentisdb"</code>
                                                 " is running on the local machine. If so, calls "
                                                 <code>"POST /v1/admin/flush"</code>
-                                                " to force a durability flush before archiving. The backup then proceeds with the daemon either stopped or freshly flushed. Use this to ensure the archive captures all committed thoughts."
+                                                " to force a durability flush before archiving. The backup then proceeds with the daemon either stopped or freshly flushed. Use this to ensure the archive captures all committed thoughts. With "
+                                                <code>"MENTISDB_BEARER_TOKEN_ACCESS=true"</code>
+                                                " the flush endpoint requires a global token, which the backup command does not send: it warns and archives the files as they are on disk. Flush with a global token yourself, or stop the daemon, for a guaranteed-consistent snapshot."
                                             </td>
                                         </tr>
                                         <tr>
@@ -2206,6 +2208,17 @@ Rationale: binary is the only supported format for new chains."#}</code></pre>
                                     <code>"-imported"</code>
                                     " chain key."
                                 </p>
+
+                                <h3>"Restore safety limits"</h3>
+                                <ul>
+                                    <li>"Archives that declare any entry larger than 64 GiB, or more than 256 GiB in total, are rejected before extraction."</li>
+                                    <li>"Restore refuses to write through a symlink anywhere under the target directory."</li>
+                                    <li>
+                                        "Files are staged in a "
+                                        <code>".mentisdb-restore-<uuid>"</code>
+                                        " directory created beside the target (same filesystem) and moved into place from there."
+                                    </li>
+                                </ul>
 
                                 <h3>"Example commands"</h3>
                                 <div class="code-block">
