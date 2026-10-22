@@ -109,12 +109,16 @@ pub fn UserDocs() -> impl IntoView {
                                     <code>"-compat"</code>
                                     " builds are compiled on Ubuntu 22.04 without the "
                                     <code>"local-embeddings"</code>
-                                    " feature: lexical search and "
+                                    " and "
+                                    <code>"startup-sound"</code>
+                                    " features: lexical search and "
                                     <code>"local-text-v1"</code>
                                     " vectors work as usual, but there is no "
                                     <code>"fastembed-minilm"</code>
-                                    " semantic vector provider (the same trade-off as the Intel macOS binary). \
-                                     Release CI fails the build if a "
+                                    " semantic vector provider (the same trade-off as the Intel macOS binary) and no \
+                                     startup chime, so they need no ALSA ("
+                                    <code>"libasound.so.2"</code>
+                                    ") on the host. Release CI fails the build if a "
                                     <code>"-compat"</code>
                                     " binary ever needs a glibc newer than 2.35. Check your glibc with:"
                                 </p>
@@ -477,7 +481,7 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_WEBHOOK_ALLOWED_CIDRS"</code></td>
                                             <td><em>"unset"</em></td>
-                                            <td>"Comma- or space-separated CIDRs or IPs that webhooks may target despite the private-address block (e.g. 100.64.0.0/10,fd7a:115c:a1e0::/48 for Tailscale). Unset = all internal ranges blocked; an invalid entry or /0 stops startup. Set via environment, ./.env or <MENTISDB_DIR>/.env. See "<a href="#webhook-allowed-cidrs">"Private webhook targets"</a></td>
+                                            <td>"Comma- or space-separated CIDRs or IPs that webhooks may target despite the private-address block (e.g. 100.64.0.0/10,fd7a:115c:a1e0::/48 for Tailscale). Unset = all internal ranges blocked; an invalid entry or one broader than /8 stops startup. Set via environment, ./.env or <MENTISDB_DIR>/.env. See "<a href="#webhook-allowed-cidrs">"Private webhook targets"</a></td>
                                         </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
@@ -3816,8 +3820,11 @@ MENTISDB_WEBHOOK_ALLOWED_CIDRS=192.168.1.50"</code></pre>
                                          longer covered, loads that registration inactive again on the next start."
                                     </li>
                                     <li>
-                                        "A /0 entry or any unparsable entry makes the daemon refuse to start. The \
-                                         active ranges are logged as a warning at startup. Unset keeps the strict default."
+                                        "Any unparsable entry, or any entry broader than /8 (IPv4 or IPv6; fd00::/8 still \
+                                         fits), makes the daemon refuse to start. The active ranges are logged as a \
+                                         warning at startup, with a dedicated warning for any listed range that covers \
+                                         loopback (127.0.0.1, ::1) or the cloud metadata address 169.254.169.254. Unset \
+                                         keeps the strict default."
                                     </li>
                                 </ul>
                                 <p>
