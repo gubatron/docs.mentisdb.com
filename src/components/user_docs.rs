@@ -49,6 +49,21 @@ pub fn UserDocs() -> impl IntoView {
                                 <div class="code-block">
                                     <code>"cargo install mentisdb"</code>
                                 </div>
+                                <p>
+                                    "Default features include "
+                                    <code>"local-embeddings"</code>
+                                    " (FastEmbed MiniLM over ONNX Runtime). The prebuilt Intel macOS \
+                                     ("
+                                    <code>"x86_64-apple-darwin"</code>
+                                    ") release binary is built without it, because ONNX Runtime ships \
+                                     no prebuilt library for that target; it uses the built-in "
+                                    <code>"local-text-v1"</code>
+                                    " vectors instead. Builds with "
+                                    <code>"--no-default-features"</code>
+                                    " (optionally re-adding "
+                                    <code>"--features server"</code>
+                                    ") are supported."
+                                </p>
                             </section>
 
                             // ── Running the Daemon ───────────────────────────────────
