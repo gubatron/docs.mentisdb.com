@@ -26,6 +26,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
+                                <a class="docs-nav-link" href="#upgrading-0-10-9">"Upgrading to 0.10.9"</a>
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
@@ -2989,6 +2990,86 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <code>"cargo install mentisdb --locked --force"</code>
                                     " and restart the daemon."
                                 </p>
+
+                                <h3 id="upgrading-0-10-9">"Upgrading to 0.10.9"</h3>
+                                <p>"No data migration is needed. Behaviour changes to check before upgrading:"</p>
+                                <ul>
+                                    <li>
+                                        <strong>"Reads no longer create chains. "</strong>
+                                        "Search, head, agents, thought lookup and metadata calls on an unknown "
+                                        <code>"chain_key"</code>
+                                        " return 404 instead of silently creating an empty chain. Only bootstrap, \
+                                         append, retrospectives, markdown import, agent and entity-type upserts and \
+                                         merge targets create chains (the configured default chain is still created \
+                                         on demand). Call "
+                                        <code>"mentisdb_bootstrap"</code>
+                                        " before reading a new chain. Empty, over-256-byte or control-character \
+                                         chain keys return 400."
+                                    </li>
+                                    <li>
+                                        <strong>"Error statuses. "</strong>
+                                        "400 invalid input, 401 missing or out-of-scope token, 403 permission \
+                                         denied (e.g. bad skill signature), 404 unknown chain or resource, 409 \
+                                         conflict (branch into a non-empty chain), 413 body over 1 MiB with bearer \
+                                         tokens enabled, 500 with a generic "
+                                        <code>"internal server error"</code>
+                                        " body (details only in the daemon log), 501 for memory extraction on a \
+                                         build without "
+                                        <code>"llm-extraction"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Chain-scoped tokens "</strong>
+                                        "lose access to server-wide operations: chain listing, webhook \
+                                         list/delete, skill mutations and "
+                                        <code>"/v1/admin/flush"</code>
+                                        ". See "
+                                        <a href="#bearer-token-access">"Bearer Tokens"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Webhooks "</strong>
+                                        "to private, loopback or other internal targets are refused and load \
+                                         inactive if already persisted; redirects are not followed. See "
+                                        <a href="#webhooks">"Webhook Callbacks"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Dashboard scripts "</strong>
+                                        "that POST, PATCH or DELETE without an Origin or Referer header must send "
+                                        <code>"X-MentisDB-Dashboard: 1"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"fsync is now opt-in. "</strong>
+                                        "Group commits are written to the OS but only fsynced with "
+                                        <code>"MENTISDB_FSYNC=1"</code>
+                                        "; flush, shutdown and drop always sync. Appends are about 4x faster by \
+                                         default."
+                                    </li>
+                                    <li>
+                                        <strong>"Coming from 0.10.1 to 0.10.8 (issue #23). "</strong>
+                                        "Those releases loaded one FastEmbed model per chain and could use \
+                                         gigabytes of RAM with many chains. 0.10.9 shares one model per process \
+                                         and rebuilds large sidecars in the background, so for a while after the \
+                                         first start some chains answer ranked search with lexical and graph \
+                                         results only. The model cache moves to "
+                                        <code>"<MENTISDB_DIR>/.fastembed_cache"</code>
+                                        "; a stray "
+                                        <code>".fastembed_cache"</code>
+                                        " in the directory you used to launch the daemon can be deleted. Set "
+                                        <code>"MENTISDB_EMBEDDINGS=off"</code>
+                                        " or "
+                                        <code>"local-text"</code>
+                                        " to skip the ONNX model entirely."
+                                    </li>
+                                    <li>
+                                        <strong>"Intel Macs: "</strong>
+                                        "the prebuilt "
+                                        <code>"x86_64-apple-darwin"</code>
+                                        " binary has no FastEmbed and uses local text vectors."
+                                    </li>
+                                </ul>
                             </section>
 
                             // ── Cryptographic Signatures ─────────────────────────────
