@@ -311,7 +311,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_register_webhook"</code></td>
-                                    <td>"Register a webhook to receive HTTP POST notifications when thoughts are appended. Delivery is fire-and-forget with exponential backoff retries (up to 5 attempts)"</td>
+                                    <td>"Register a webhook to receive HTTP POST notifications when thoughts are appended. Delivery is fire-and-forget with exponential backoff (up to 3 attempts)"</td>
                                     <td><code>"url"</code>, <code>"chain_key_filter"</code>, <code>"thought_type_filter"</code></td>
                                 </tr>
                                 <tr>
@@ -884,6 +884,13 @@ pub fn DeveloperDocs() -> impl IntoView {
                              CGNAT, documentation, multicast and IPv4-embedding IPv6 addresses are rejected, \
                              also after DNS resolution, and redirects are not followed. After 5 consecutive \
                              failed deliveries a webhook is paused for 5 minutes."
+                        </p>
+                        <p>
+                            "Self-hosted operators can open specific private ranges with "
+                            <code>"MENTISDB_WEBHOOK_ALLOWED_CIDRS"</code>
+                            " (e.g. a Tailscale tailnet); see "
+                            <a href="/user#webhook-allowed-cidrs">"Private webhook targets"</a>
+                            "."
                         </p>
 
                         // ── 0.8.0 Improvements ──────────────────────────────
