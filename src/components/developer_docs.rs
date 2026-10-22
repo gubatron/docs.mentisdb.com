@@ -368,6 +368,22 @@ pub fn DeveloperDocs() -> impl IntoView {
     }\n\
     }"</code></pre>
                         </div>
+                        <p>
+                            "The legacy CloudLLM endpoint "
+                            <code>"POST /tools/execute"</code>
+                            " takes "
+                            <code>"tool"</code>
+                            " + "
+                            <code>"parameters"</code>
+                            "; JSON-RPC "
+                            <code>"tools/call"</code>
+                            " takes "
+                            <code>"name"</code>
+                            " + "
+                            <code>"arguments"</code>
+                            ". Authorization checks exactly the fields the transport executes, and a \
+                             payload that mixes both shapes is rejected with 400."
+                        </p>
 
                         <h3>"MCP HTTP Ports"</h3>
                         <p>
@@ -659,7 +675,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                             ". Every other route returns 404 for an unknown chain and persists nothing; \
                              the configured default chain is the only one created on demand for reads. \
                              Chain keys must be non-empty, at most 256 bytes and free of control \
-                             characters (400 otherwise). The MCP tools behave the same way."
+                             characters (400 otherwise). The source, target and branch keys of "
+                            <code>"/v1/chains/merge"</code>
+                            " and "
+                            <code>"/v1/chains/branch"</code>
+                            " are trimmed of surrounding whitespace before that check. The MCP tools \
+                             behave the same way."
                         </p>
                         <table class="api-table">
                             <thead>
@@ -673,7 +694,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, or a token whose scope does not cover the operation"</td></tr>
                                 <tr><td><code>"403"</code></td><td>"Permission denied, e.g. missing or invalid signature on a signed skill upload"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
-                                <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already holds thoughts"</td></tr>
+                                <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
                                 <tr><td><code>"413"</code></td><td>"Request body over 1 MiB (enforced while bearer-token access is enabled)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
                                 <tr><td><code>"501"</code></td><td>"/v1/extract-memories on a build without the llm-extraction feature"</td></tr>

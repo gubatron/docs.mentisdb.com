@@ -3127,7 +3127,7 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                         <strong>"Error statuses. "</strong>
                                         "400 invalid input, 401 missing or out-of-scope token, 403 permission \
                                          denied (e.g. bad skill signature), 404 unknown chain or resource, 409 \
-                                         conflict (branch into a non-empty chain), 413 body over 1 MiB with bearer \
+                                         conflict (branch into an existing chain), 413 body over 1 MiB with bearer \
                                          tokens enabled, 500 with a generic "
                                         <code>"internal server error"</code>
                                         " body (details only in the daemon log), 501 for memory extraction on a \
