@@ -316,7 +316,7 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code></td>
                                             <td><em>"unset"</em></td>
-                                            <td>"Comma-separated extra hostnames/IPs the dashboard accepts in the Host header (public DNS name, reverse-proxy name). Set via environment or .env; not editable from the dashboard"</td>
+                                            <td>"Comma-separated extra hostnames/IPs the dashboard accepts in the Host header (public DNS name, reverse-proxy name). Set via environment, ./.env or <MENTISDB_DIR>/.env; not editable from the dashboard"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN_ACCESS"</code></td>
@@ -1825,7 +1825,11 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                         <code>"<MENTISDB_DIR>/.env"</code>
                                         ", written with mode "
                                         <code>"0600"</code>
-                                        " because it can hold the PIN."
+                                        " because it can hold the PIN. The daemon loads it at \
+                                         startup after any "
+                                        <code>"./.env"</code>
+                                        " in its working directory; neither file overrides a \
+                                         variable already set in the shell."
                                     </li>
                                     <li>
                                         <strong>"Errors. "</strong>
