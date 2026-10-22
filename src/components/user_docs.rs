@@ -668,7 +668,25 @@ mentisdb agents"#}</code></pre>
                                         "If the process or machine died mid-write, opening a binary chain truncates the \
                                          partial final record and saves the dropped bytes beside the chain file as "
                                         <code>"<chain file>.torn-<unix-millis>"</code>
+                                        " (mode "
+                                        <code>"0600"</code>
+                                        "). Only a genuine partial record is truncated: if the bytes after a bad \
+                                         length prefix still decode as a complete record, the corruption is \
+                                         mid-file, so opening fails with an InvalidData error and the chain file is \
+                                         left untouched."
+                                    </li>
+                                    <li>
+                                        "MentisDB assumes one writer process per chain directory; torn-tail repair \
+                                         takes no cross-process lock. Never point two daemons, or a daemon and an \
+                                         embedded writer, at the same "
+                                        <code>"MENTISDB_DIR"</code>
                                         "."
+                                    </li>
+                                    <li>
+                                        "The implicit-edge overlay records how many thoughts it covers and the \
+                                         chain head it was built against. After a crash it replays the missing \
+                                         tail on open (or rebuilds when the head does not match), so no implicit \
+                                         edges are lost."
                                     </li>
                                     <li>
                                         "Chain, agent, webhook and other JSON registries are written to a temporary file \
