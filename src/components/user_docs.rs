@@ -1581,6 +1581,12 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 ") to prevent timing attacks — the server does not leak information \
                                  about how many characters matched."
                             </p>
+                            <p>
+                                "The Settings API never returns the PIN: "
+                                <code>"GET /dashboard/api/settings"</code>
+                                " reports only whether one is set. Saving settings with the PIN field \
+                                 left blank keeps the current PIN."
+                            </p>
 
                             <h3>"Login Rate Limiting"</h3>
                             <p>
@@ -1687,6 +1693,40 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                     <code>"MENTISDB_DASHBOARD_PIN"</code>
                                     " is set."
                                 </p>
+                                <ul>
+                                    <li>
+                                        <strong>"CSRF protection. "</strong>
+                                        <code>"POST"</code>
+                                        ", "
+                                        <code>"PATCH"</code>
+                                        " and "
+                                        <code>"DELETE"</code>
+                                        " calls must carry an "
+                                        <code>"Origin"</code>
+                                        " (or, without it, "
+                                        <code>"Referer"</code>
+                                        ") header whose host matches the request host. Clients \
+                                         that send neither header, such as curl or scripts, must add "
+                                        <code>"X-MentisDB-Dashboard: 1"</code>
+                                        ". Anything else is rejected with 403."
+                                    </li>
+                                    <li>
+                                        <strong>"Chain keys. "</strong>
+                                        "Chains created from the dashboard (bootstrap, branch \
+                                         target, copy-to target) must use only letters, digits, "
+                                        <code>"_"</code>
+                                        " and "
+                                        <code>"-"</code>
+                                        ", at most 128 characters; otherwise 400."
+                                    </li>
+                                    <li>
+                                        <strong>"Paging. "</strong>
+                                        <code>"per_page"</code>
+                                        " is clamped to at most 500 and "
+                                        <code>"page"</code>
+                                        " to at most 1000."
+                                    </li>
+                                </ul>
 
                                 <h4>"Chains"</h4>
                                 <table class="config-table">
