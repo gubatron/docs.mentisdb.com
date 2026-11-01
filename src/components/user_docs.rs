@@ -3699,6 +3699,109 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     <code>"limit"</code>
                                     " paging, so pages no longer repeat or skip results."
                                 </p>
+
+                                <h3 id="compact-search">"Compact Search Results"</h3>
+                                <p>
+                                    "Pass "<code>"compact: true"</code>" to "
+                                    <code>"mentisdb_ranked_search"</code>" or "<code>"mentisdb_federated_search"</code>
+                                    " (REST "<code>"POST /v1/ranked-search"</code>" and "<code>"POST /v1/federated-search"</code>
+                                    ", CLI "<code>"mentisdb search --compact"</code>" and "<code>"mentisdb search federated --compact"</code>
+                                    ") to get smaller hits. Responses are about a quarter smaller (23.7% on a copy of a "
+                                    "working 11-chain MentisDB, 34.2% on a generated corpus) with the same request time, "
+                                    "which is what an agent pays for in tokens when it scans many hits. The default "
+                                    "response is unchanged. Compact search was contributed by Austin Faulkner-Pearce."
+                                </p>
+                                <p>
+                                    "A compact hit is "<code>"chain_key"</code>", the total "<code>"score"</code>
+                                    " as a plain number, and the thought, in the same order as the full form. The thought "
+                                    "leaves out "<code>"hash"</code>", "<code>"prev_hash"</code>", "<code>"thought_signature"</code>
+                                    ", "<code>"signing_key_id"</code>", "<code>"schema_version"</code>", "<code>"agent_name"</code>
+                                    ", "<code>"agent_owner"</code>" (the last two repeat the agent registry entry for "
+                                    <code>"agent_id"</code>") and top-level fields that are null or empty. Hit-level score "
+                                    "components, "<code>"matched_terms"</code>" and "<code>"match_sources"</code>" are left out too."
+                                </p>
+                                <p>
+                                    "Nothing an agent needs to judge a hit is dropped. The "<code>"provenance"</code>
+                                    " object (segment, signed, signature, verified agent, trust), the version fields ("
+                                    <code>"version_status"</code>", "<code>"successors"</code>", "<code>"current_version"</code>
+                                    ", "<code>"successor_of"</code>", "<code>"collapsed_duplicates"</code>"), relations, concepts, "
+                                    "refs, content and the graph provenance of graph-expanded hits are always kept. Who may "
+                                    "see a thought is decided before compaction, so a public reader still gets only the "
+                                    "public segment of a private chain, and a reader with a valid read proof still gets the "
+                                    "private one."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"POST /v1/ranked-search
+{"chain_key": "project", "text": "job queue storage", "limit": 5, "compact": true}
+
+// Full response (default)
+{
+  "backend": "hybrid",
+  "total": 1,
+  "results": [
+    {
+      "chain_key": "project",
+      "score": {
+        "confidence": 0.0, "graph": 0.0, "importance": 0.17541419, "lexical": 1.9490464,
+        "recency": 0.05, "relation": 0.0, "rrf": 0.0, "seed_support": 0.0,
+        "session_cohesion": 0.0, "total": 5.932654, "vector": 0.34079674
+      },
+      "matched_terms": ["job", "queue", "storag"],
+      "match_sources": ["content", "tags", "concepts"],
+      "graph_distance": null, "graph_path": null,
+      "graph_relation_kinds": [], "graph_seed_paths": 0,
+      "thought": {
+        "agent_id": "builder", "agent_name": "Builder", "agent_owner": "platform",
+        "concepts": ["job queue"], "confidence": null,
+        "content": "Use Postgres for the job queue; revisit if throughput exceeds 5k jobs per second.",
+        "entity_type": null,
+        "hash": "31de8f264b1588a29be30a278a24e8623cf51b8f3ce8483a7e52f69ce80e21e1",
+        "id": "1182d44f-3834-4ff0-9121-eab986b1a4f5",
+        "importance": 0.800000011920929, "index": 0, "prev_hash": "",
+        "provenance": {
+          "segment": "public", "signature": "unsigned", "signature_version": null,
+          "signed": false, "trust": "untrusted_data", "verified_agent": null
+        },
+        "refs": [], "relations": [], "role": "Memory", "schema_version": 3,
+        "session_id": null, "signing_key_id": null, "source_episode": null,
+        "tags": ["storage"], "thought_signature": null, "thought_type": "Decision",
+        "timestamp": "2026-11-01T23:03:19.669167Z"
+      }
+    }
+  ]
+}
+
+// Same request with "compact": true
+{
+  "backend": "hybrid",
+  "total": 1,
+  "results": [
+    {
+      "chain_key": "project",
+      "score": 5.932654,
+      "thought": {
+        "agent_id": "builder",
+        "concepts": ["job queue"],
+        "content": "Use Postgres for the job queue; revisit if throughput exceeds 5k jobs per second.",
+        "id": "1182d44f-3834-4ff0-9121-eab986b1a4f5",
+        "importance": 0.800000011920929, "index": 0,
+        "provenance": {
+          "segment": "public", "signature": "unsigned", "signature_version": null,
+          "signed": false, "trust": "untrusted_data", "verified_agent": null
+        },
+        "role": "Memory", "tags": ["storage"], "thought_type": "Decision",
+        "timestamp": "2026-11-01T23:03:19.669167Z"
+      }
+    }
+  ]
+}"#}</code></pre>
+                                </div>
+                                <p>
+                                    "Use it for routine recall. Leave it off when you need the hashes or signatures to "
+                                    "verify a thought yourself, when you audit a provenance chain, or when you debug "
+                                    "per-component scores. "<code>"mentisdb_get_thought"</code>" returns the full record "
+                                    "of any hit."
+                                </p>
                             </section>
 
                             // ── Entity Types & Provenance ────────────────────────────
