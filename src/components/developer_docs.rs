@@ -152,7 +152,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"mentisdb_ranked_search"</code></td>
                                     <td>"Return flat ranked results with lexical, graph-aware, or heuristic score breakdowns. Supports point-in-time queries and memory scope filtering"</td>
-                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"enable_reranking"</code>, <code>"rerank_k"</code>, <code>"concepts_any"</code>, <code>"roles"</code>, <code>"limit"</code></td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"enable_reranking"</code>, <code>"rerank_k"</code>, <code>"concepts_any"</code>, <code>"roles"</code>, <code>"limit"</code>, <code>"compact"</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_context_bundles"</code></td>
@@ -439,7 +439,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters. Pass compact: true for smaller hits"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -494,7 +494,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/federated-search"</code></td>
-                                    <td>"Ranked search fused across several chains (chain_keys)"</td>
+                                    <td>"Ranked search fused across several chains (chain_keys). Accepts compact: true"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -814,6 +814,92 @@ pub fn DeveloperDocs() -> impl IntoView {
     \"total\": 1,\n\
     \"query_time_ms\": 12\n\
     }"</code></pre>
+                        </div>
+
+                        <h3>"REST Example: compact ranked search"</h3>
+                        <p>
+                            "Ranked and federated search accept an opt-in "<code>"compact: true"</code>
+                            " (MCP "<code>"mentisdb_ranked_search"</code>" / "<code>"mentisdb_federated_search"</code>
+                            ", REST "<code>"/v1/ranked-search"</code>" / "<code>"/v1/federated-search"</code>
+                            ", CLI "<code>"--compact"</code>"). A compact hit is "<code>"chain_key"</code>
+                            ", the total "<code>"score"</code>" as a number and the thought without "
+                            <code>"hash"</code>", "<code>"prev_hash"</code>", "<code>"thought_signature"</code>
+                            ", "<code>"signing_key_id"</code>", "<code>"schema_version"</code>", "<code>"agent_name"</code>
+                            ", "<code>"agent_owner"</code>" and top-level null or empty fields; "
+                            <code>"matched_terms"</code>", "<code>"match_sources"</code>" and the score components are left out. "
+                            "The "<code>"provenance"</code>" object, the version fields ("<code>"version_status"</code>
+                            ", "<code>"successors"</code>", "<code>"current_version"</code>", "<code>"successor_of"</code>
+                            ", "<code>"collapsed_duplicates"</code>") and graph provenance are always kept, and the "
+                            "public/private boundary is applied before compaction. Fields are dropped by name from a "
+                            "fixed list, so any field added to a thought later is kept by default. "
+                            "Skip it when you need hashes or signatures to verify a thought or per-component scores; "
+                            <code>"POST /v1/thought"</code>" returns the full record of any hit."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"POST /v1/ranked-search
+{"chain_key": "project", "text": "job queue storage", "limit": 5, "compact": true}
+
+// Full response (default)
+{
+  "backend": "hybrid",
+  "total": 1,
+  "results": [
+    {
+      "chain_key": "project",
+      "score": {
+        "confidence": 0.0, "graph": 0.0, "importance": 0.17541419, "lexical": 1.9490464,
+        "recency": 0.05, "relation": 0.0, "rrf": 0.0, "seed_support": 0.0,
+        "session_cohesion": 0.0, "total": 5.932654, "vector": 0.34079674
+      },
+      "matched_terms": ["job", "queue", "storag"],
+      "match_sources": ["content", "tags", "concepts"],
+      "graph_distance": null, "graph_path": null,
+      "graph_relation_kinds": [], "graph_seed_paths": 0,
+      "thought": {
+        "agent_id": "builder", "agent_name": "Builder", "agent_owner": "platform",
+        "concepts": ["job queue"], "confidence": null,
+        "content": "Use Postgres for the job queue; revisit if throughput exceeds 5k jobs per second.",
+        "entity_type": null,
+        "hash": "31de8f264b1588a29be30a278a24e8623cf51b8f3ce8483a7e52f69ce80e21e1",
+        "id": "1182d44f-3834-4ff0-9121-eab986b1a4f5",
+        "importance": 0.800000011920929, "index": 0, "prev_hash": "",
+        "provenance": {
+          "segment": "public", "signature": "unsigned", "signature_version": null,
+          "signed": false, "trust": "untrusted_data", "verified_agent": null
+        },
+        "refs": [], "relations": [], "role": "Memory", "schema_version": 3,
+        "session_id": null, "signing_key_id": null, "source_episode": null,
+        "tags": ["storage"], "thought_signature": null, "thought_type": "Decision",
+        "timestamp": "2026-11-01T23:03:19.669167Z"
+      }
+    }
+  ]
+}
+
+// Same request with "compact": true
+{
+  "backend": "hybrid",
+  "total": 1,
+  "results": [
+    {
+      "chain_key": "project",
+      "score": 5.932654,
+      "thought": {
+        "agent_id": "builder",
+        "concepts": ["job queue"],
+        "content": "Use Postgres for the job queue; revisit if throughput exceeds 5k jobs per second.",
+        "id": "1182d44f-3834-4ff0-9121-eab986b1a4f5",
+        "importance": 0.800000011920929, "index": 0,
+        "provenance": {
+          "segment": "public", "signature": "unsigned", "signature_version": null,
+          "signed": false, "trust": "untrusted_data", "verified_agent": null
+        },
+        "role": "Memory", "tags": ["storage"], "thought_type": "Decision",
+        "timestamp": "2026-11-01T23:03:19.669167Z"
+      }
+    }
+  ]
+}"#}</code></pre>
                         </div>
 
                         <h3>"REST Example: POST /v1/context-bundles"</h3>
