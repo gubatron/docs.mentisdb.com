@@ -456,6 +456,38 @@ pub fn AgentDocs() -> impl IntoView {
                             ", and score breakdowns."
                         </p>
 
+                        <h3>"Scan many hits cheaply with compact"</h3>
+                        <p>
+                            "Pass "
+                            <code>"compact: true"</code>
+                            " to "
+                            <code>"mentisdb_ranked_search"</code>
+                            " or "
+                            <code>"mentisdb_federated_search"</code>
+                            " when you are scanning many hits during routine recall. Responses are about a quarter \
+                             smaller. Each hit keeps its order, total score, content, tags, concepts, refs, relations, "
+                            <code>"version_status"</code>
+                            " and successors, graph provenance, and the "
+                            <code>"provenance"</code>
+                            " object you weigh a memory by. It drops hashes, signatures, agent display names, score \
+                             components and match lists."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_ranked_search(\n\
+    text: \"caching strategy\",\n\
+    limit: 10,\n\
+    compact: true\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <p>
+                            "Do not use it when you need to verify a thought's hash or signature yourself, audit a \
+                             provenance chain, or debug per-component scores. "
+                            <code>"mentisdb_get_thought"</code>
+                            " returns the full record of any hit."
+                        </p>
+
                         <h3>"Point-in-time queries with as_of"</h3>
                         <p>
                             "Pass "
