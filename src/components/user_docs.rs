@@ -3981,6 +3981,34 @@ MENTISDB_WEBHOOK_ALLOWED_CIDRS=192.168.1.50"</code></pre>
     client = MentisDbClient(\"http://127.0.0.1:9472\")\n\
     client.append_thought(\n    chain_key=\"my-chain\",\n    agent_id=\"planner\",\n    thought_type=ThoughtType.DECISION,\n    content=\"Adopt LRU eviction for the response cache\",\n)\nhits = client.ranked_search(chain_key=\"my-chain\", text=\"cache eviction\", limit=5)"</code>
                                 </div>
+                                <p>
+                                    "Searches can ask for smaller results with "<code>"compact=True"</code>
+                                    " (see "<a href="#compact-search">"Compact Search Results"</a>"). The default is "
+                                    "unchanged. Compact results come back as a "<code>"CompactRankedSearchResponse"</code>
+                                    " whose hits and thoughts are separate types: the fields the server drops (hashes, "
+                                    "signatures, agent name and owner, score components, matched terms) are not attributes, "
+                                    "so reading one raises "<code>"AttributeError"</code>" instead of returning an invented "
+                                    "value, while "<code>"provenance"</code>" and the version fields are kept. "
+                                    <code>"federated_search"</code>" searches several chains, and "<code>"ranked_search"</code>
+                                    ", "<code>"federated_search"</code>" and "<code>"context_bundles"</code>
+                                    " accept keyword-only "<code>"graph"</code>", "<code>"as_of"</code>", "
+                                    <code>"include_invalidated"</code>" and the ranking knobs. These arrive with the next "
+                                    "pymentisdb release."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"from pymentisdb import MentisDbClient, GraphOptions
+
+client = MentisDbClient()
+response = client.ranked_search(
+    text="job queue", chain_key="project", limit=5,
+    compact=True, graph=GraphOptions(max_depth=1),
+)
+for hit in response.results:          # CompactRankedSearchHit
+    print(f"[{hit.total_score:.2f}] {hit.thought.content}")
+    print(hit.thought.provenance.signature, hit.thought.version_status)
+
+merged = client.federated_search(["backend", "frontend"], text="auth bug", compact=True)"#}</code></pre>
+                                </div>
                                 <p>"See the "
                                     <a href="https://pypi.org/project/pymentisdb/">"PyPI listing"</a>
                                     " and the "
