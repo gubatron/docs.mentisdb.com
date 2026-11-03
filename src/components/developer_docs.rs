@@ -780,15 +780,15 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td><code>"400"</code></td><td>"Invalid input: malformed JSON, bad UUID, unknown thought type or role, invalid chain key, an unknown ranking-knob value, or a v2-signed append built on an older head (fetch the head and sign again)"</td></tr>
+                                <tr><td><code>"400"</code></td><td>"Invalid input: malformed JSON, bad UUID, unknown thought type or role, invalid chain key, an unknown ranking-knob value, a v2-signed append built on an older head (fetch the head and sign again), a result window (offset + limit) above 10,000 on ranked, lexical or federated search or context bundles, or a standing-context per_type_limit above 100"</td></tr>
                                 <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, a token whose scope does not cover the operation, or an X-Mentis-Auth read proof that is present but invalid (bad signature, clock more than 60 s off, reused nonce)"</td></tr>
                                 <tr><td><code>"403"</code></td><td>"Permission denied: missing or invalid signature on a signed skill upload, a write the chain's access policy does not accept (the body does not say whether the agent or key exists), or an operator-only route"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
                                 <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
-                                <tr><td><code>"413"</code></td><td>"Request body over 1 MiB (enforced while bearer-token access is enabled)"</td></tr>
+                                <tr><td><code>"413"</code></td><td>"Request body over 1 MiB, for requests carrying an X-Mentis-Auth read proof and for REST while bearer-token access is enabled (import a large MEMORY.md with a read key in batches)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
                                 <tr><td><code>"501"</code></td><td>"/v1/extract-memories on a build without the llm-extraction feature"</td></tr>
-                                <tr><td><code>"503"</code></td><td>"The chain is being migrated (Retry-After header, retry_after_secs and percent done in the body) or failed to migrate (the body names the fix); also when the read-proof replay cache is full"</td></tr>
+                                <tr><td><code>"503"</code></td><td>"The chain is being migrated (Retry-After header, retry_after_secs and percent done in the body) or failed to migrate (the body names the fix, e.g. mentisdb migrate retry --chain KEY)"</td></tr>
                             </tbody>
                         </table>
                         <p>
@@ -1116,7 +1116,8 @@ pub fn DeveloperDocs() -> impl IntoView {
                             </li>
                         </ul>
                          <p>
-                             "Failed logins are rate-limited per-IP to prevent brute-force enumeration; \
+                             "Failed logins are rate-limited per client (an IPv4 address or IPv6 /64) with a global \
+                              budget and backoff to prevent brute-force enumeration; \
                               the dashboard is always served over TLS so the PIN is never transmitted in \
                               the clear on a local network."
                          </p>
