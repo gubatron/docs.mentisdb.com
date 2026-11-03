@@ -26,6 +26,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#0.8.2"             class="docs-nav-link">"0.8.2 Features"</a>
                             <a href="#0.8.6"             class="docs-nav-link">"0.8.6 Features"</a>
                             <a href="#0.9.x"             class="docs-nav-link">"0.9.x Features"</a>
+                            <a href="#0.11"              class="docs-nav-link">"0.11 Library Changes"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
                         </nav>
@@ -1166,6 +1167,230 @@ pub fn DeveloperDocs() -> impl IntoView {
                              " for long-lived agent chains). Without dedup or agent-written \
                               invalidation edges, the set stays empty and search cannot hide noise."
                          </p>
+
+                        // ── 0.11 Library Changes ────────────────────────────
+                        <h2 id="0.11">"0.11 Library Changes"</h2>
+                        <p>
+                            "MentisDB 0.11.0 changes what default retrieval returns, adds public and \
+                             private chains, and moves format upgrades into a background migration \
+                             manager. Full rustdoc is on "
+                            <a href="https://docs.rs/mentisdb/latest/mentisdb/" target="_blank" rel="noopener noreferrer">"docs.rs"</a>
+                            "; the design of the access model is in "
+                            <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/docs/CHAIN_ACCESS.md" target="_blank" rel="noopener noreferrer">"docs/CHAIN_ACCESS.md"</a>
+                            "."
+                        </p>
+
+                        <h3>"Valid-version retrieval (module lineage)"</h3>
+                        <p>
+                            "Lineage is derived when a chain opens; no migration is needed. A superseded \
+                             thought that would have ranked is replaced by its live successor ("
+                            <code>"RankedSearchHit::version.successor_of"</code>
+                            " names what it stands in for). A thought that a newer Correction, \
+                             AssumptionInvalidated or Decision only references, or that anything "
+                            <code>"Contradicts"</code>
+                            ", stays visible as "
+                            <code>"VersionStatus::Contested"</code>
+                            " with the contesting thought promoted above it. New: "
+                            <code>"MentisDb::{version_status, current_version, version_info, hit_json, append_advice}"</code>
+                            ", "
+                            <code>"VersionStatus"</code>
+                            ", "
+                            <code>"AppendAdvice"</code>
+                            " and "
+                            <code>"lineage::cross_chain_successor"</code>
+                            " for a relation that carries a "
+                            <code>"chain_key"</code>
+                            " (applied wherever one read path sees both chains: branch search and \
+                             federated search). Every thought JSON carries "
+                            <code>"version_status"</code>
+                            ", "
+                            <code>"successors"</code>
+                            " and "
+                            <code>"current_version"</code>
+                            " when it is not plainly current."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"use mentisdb::{RankedSearchQuery, VersionStatus};
+
+let hits = chain.query_ranked(&RankedSearchQuery::new().with_text("release policy Fridays"));
+// The live successor is returned in place of the superseded policy.
+assert_eq!(hits.hits[0].version.successor_of, vec![old.id]);
+assert_eq!(chain.version_status(old.id), VersionStatus::Superseded);"#}</code></pre>
+                        </div>
+
+                        <h3>"RankedSearchQuery defaults changed"</h3>
+                        <p>
+                            <code>"RankedSearchQuery::new()"</code>
+                            " now applies relative vector fusion, near-duplicate collapse at Jaccard 0.9 \
+                             (text queries), successor redirection and thesaurus expansion at weight 0.3 \
+                             (the server default; the library used to apply none). Result lists and "
+                            <code>"total_candidates"</code>
+                            " differ from 0.10. Opt out per query:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"use mentisdb::{RankedSearchQuery, VectorFusion};
+
+let query = RankedSearchQuery::new()
+    .with_text("deploy window")
+    .with_vector_fusion(VectorFusion::Absolute) // the 0.10 blend
+    .with_collapse_duplicates(None)             // keep near-duplicates
+    .with_resolve_successors(false)             // plain hiding of superseded thoughts
+    .with_thesaurus(false);                     // literal terms only"#}</code></pre>
+                        </div>
+                        <p>
+                            "Process-wide: "
+                            <code>"MENTISDB_VECTOR_FUSION=absolute"</code>
+                            ", "
+                            <code>"MENTISDB_COLLAPSE_DUPLICATES=off"</code>
+                            ". "
+                            <code>"with_df_scope"</code>
+                            " and "
+                            <code>"with_df_cutoffs"</code>
+                            " choose how the lexical stop-word gate measures document frequency ("
+                            <code>"DfScope::Global"</code>
+                            " stays the default). Over REST and MCP the same knobs are request fields: "
+                            <code>"resolve_successors"</code>
+                            ", "
+                            <code>"collapse_duplicates"</code>
+                            " (0 disables), "
+                            <code>"vector_fusion"</code>
+                            ", "
+                            <code>"synonym_weight"</code>
+                            " (0 disables), "
+                            <code>"df_scope"</code>
+                            " and "
+                            <code>"df_cutoffs"</code>
+                            "."
+                        </p>
+
+                        <h3>"Standing context (module standing)"</h3>
+                        <p>
+                            <code>"MentisDb::standing_context(&StandingContextQuery)"</code>
+                            " returns the durable half of memory regardless of age: live Constraint, \
+                             PreferenceUpdate, UserTrait, RelationshipUpdate, Goal, Decision and \
+                             LessonLearned thoughts, ranked by importance then recency, restatements \
+                             collapsed, capped at 8 per type and 40 in total, plus the newest Handoff \
+                             and Checkpoint/Summary. The "
+                            <code>"StandingContext"</code>
+                            " result has "
+                            <code>"entries"</code>
+                            ", "
+                            <code>"duplicates_collapsed"</code>
+                            " and a ready-to-load "
+                            <code>"prompt"</code>
+                            ". A superseded constraint or decision is replaced by its successor."
+                        </p>
+
+                        <h3>"Public and private chains"</h3>
+                        <ul>
+                            <li>
+                                <code>"mentisdb::audience::{Audience, Segment, SegmentMap}"</code>
+                                ": every read path takes an audience. "
+                                <code>"ThoughtQuery::audience"</code>
+                                ", "
+                                <code>"StandingContextQuery::audience"</code>
+                                " and "
+                                <code>"*_for(audience)"</code>
+                                " variants ("
+                                <code>"get_thought_for"</code>
+                                ", "
+                                <code>"thought_json_for"</code>
+                                ", "
+                                <code>"hit_json_for"</code>
+                                ", "
+                                <code>"append_advice_for"</code>
+                                ", ...). The library default is "
+                                <code>"Audience::Authorized"</code>
+                                ": a program that holds the data directory holds every byte."
+                            </li>
+                            <li>
+                                <code>"mentisdb::read_auth::{sign_request, ReadSigner}"</code>
+                                " build the "
+                                <code>"X-Mentis-Auth"</code>
+                                " read-proof header for HTTP clients."
+                            </li>
+                            <li>
+                                <code>"mentisdb::operator::apply"</code>
+                                " runs operator commands (mode changes, allowed keys, key registry, \
+                                 agent status) signed with "
+                                <code>"<data dir>/operator/operator.key"</code>
+                                "; "
+                                <code>"MentisDb::add_agent_key_as_operator"</code>
+                                " registers a key the operator vouches for. "
+                                <code>"MentisDb::add_agent_key"</code>
+                                " still requires a "
+                                <code>"&KeyRegistrationProof"</code>
+                                " (proof of possession) and a valid curve point."
+                            </li>
+                            <li>
+                                <code>"MentisDb::verification"</code>
+                                " reports the open-time check of governed chains (quarantined thoughts, \
+                                 rejected policy records)."
+                            </li>
+                            <li>
+                                <code>"AccessError::StaleHead"</code>
+                                " is returned for a v2-signed append built on an older head (fetch the \
+                                 head and sign again); a forged signature stays "
+                                <code>"BadSignature"</code>
+                                "."
+                            </li>
+                            <li>
+                                "A stored zero-length signature is a placeholder and counts as unsigned \
+                                 everywhere; new writes normalize an empty signature to none. "
+                                <code>"Thought::signature_bytes"</code>
+                                " returns the real signature or nothing."
+                            </li>
+                        </ul>
+
+                        <h3>"Storage and validation"</h3>
+                        <ul>
+                            <li>
+                                <code>"mentisdb::validate_chain_key"</code>
+                                " guards every entry point (library open, branch, restore): non-empty, at \
+                                 most 256 bytes, no control characters."
+                            </li>
+                            <li>
+                                <code>"MentisDb::defer_next_embedding"</code>
+                                " lets a caller embed outside the chain's write lock, as the daemon now \
+                                 does for every append (lock hold per append about 0.5 ms instead of \
+                                 about 9.5 ms with a 5 ms model). Library callers that do not opt in are \
+                                 unchanged."
+                            </li>
+                            <li>
+                                "The daemon migrates legacy chains in the background through a journaled, \
+                                 backed-up manager. A library user that opens a legacy chain directly \
+                                 keeps the in-place upgrade, now with a one-time copy of the original under "
+                                <code>"migrations/backup/in-place/"</code>
+                                ". A chain or data directory written by a newer release is refused with a \
+                                 clear message."
+                            </li>
+                            <li>
+                                "Chains from March and April 2026 that stamp schema 4 on schema-3 records \
+                                 open again: schema 4 is an accepted historical alias, so the next thought \
+                                 schema is 5."
+                            </li>
+                        </ul>
+
+                        <h3>"Deprecated"</h3>
+                        <p>
+                            <code>"RankedSearchQuery::{llm_rerank, llm_model, llm_rerank_top_k, with_llm_reranking}"</code>
+                            " and "
+                            <code>"RankedSearchScore::llm_score"</code>
+                            " are no-ops (LLM reranking was never implemented), and "
+                            <code>"search::ppr"</code>
+                            " is never called by ranked search. Both are marked "
+                            <code>"#[deprecated]"</code>
+                            " and will be removed in the next breaking release."
+                        </p>
+
+                        <h3>"Benchmarks"</h3>
+                        <p>
+                            "Full LoCoMo-10P and LongMemEval protocol run on the 0.11 defaults (fresh \
+                             ingest, fastembed-minilm): LoCoMo-10P R@10 76.7% (73.5% in 0.10.9.54), \
+                             LongMemEval R@5 69.8% (68.0%). See "
+                            <a href="https://github.com/CloudLLM-ai/mentisdb/tree/master/results/benchmarks/2026-11-01-full-protocol" target="_blank" rel="noopener noreferrer">"results/benchmarks/2026-11-01-full-protocol"</a>
+                            "."
+                        </p>
 
                          // ── Benchmarking ────────────────────────────────────
                         <h2 id="benchmarking">"Benchmarking"</h2>
