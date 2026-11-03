@@ -34,6 +34,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
                                 <a class="docs-nav-link" href="#invalidation-dedup">"Invalidation & Dedup"</a>
+                                <a class="docs-nav-link" href="#valid-version-retrieval">"Valid-Version Retrieval"</a>
                                 <a class="docs-nav-link" href="#cli-subcommands">"CLI Subcommands"</a>
                             </nav>
                         </aside>
@@ -4059,6 +4060,102 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
 # mentisdb_ranked_search(text: "...", include_invalidated: true)
 "#}</code></pre>
                                 </div>
+                                <p>
+                                    "Since 0.11 dedup never retires a thought the author rated more \
+                                     important than the incoming near-copy, so a throwaway restatement \
+                                     cannot hide a critical Constraint or Decision."
+                                </p>
+
+                                <h3 id="valid-version-retrieval">"Valid-version retrieval (0.11)"</h3>
+                                <p>
+                                    "Agents rarely type invalidating links. On one real installation none \
+                                     of 14 Correction/AssumptionInvalidated thoughts and none of about 90 \
+                                     Decision thoughts carried a "
+                                    <code>"Supersedes"</code>
+                                    ", "
+                                    <code>"Corrects"</code>
+                                    " or "
+                                    <code>"Invalidates"</code>
+                                    " relation, so the invalidation set stayed empty and an old policy kept \
+                                     winning search. Since 0.11 retrieval reasons about lineage, derived \
+                                     when a chain opens (no migration):"
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>"Superseded: "</strong>
+                                        "a superseded thought that would have ranked is replaced by its live \
+                                         successor, which carries "
+                                        <code>"successor_of"</code>
+                                        " naming the thought it stands in for. Hiding the old version never \
+                                         leaves the agent with nothing."
+                                    </li>
+                                    <li>
+                                        <strong>"Contested: "</strong>
+                                        "a thought that a newer Correction, AssumptionInvalidated or \
+                                         Decision only references (through "
+                                        <code>"refs"</code>
+                                        " or "
+                                        <code>"References"</code>
+                                        "), or that anything "
+                                        <code>"Contradicts"</code>
+                                        ", stays visible with "
+                                        <code>"version_status: \"contested\""</code>
+                                        " and the contesting thought is promoted above it. Weak links do not \
+                                         hide memory, because a reference is often just background."
+                                    </li>
+                                    <li>
+                                        "Every thought JSON on every surface (search, get, head, recent, \
+                                         traverse, bundles, dashboard) carries "
+                                        <code>"version_status"</code>
+                                        ", "
+                                        <code>"successors"</code>
+                                        " and "
+                                        <code>"current_version"</code>
+                                        " when it is not plainly current, including results returned with "
+                                        <code>"include_invalidated: true"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        "Appending a Correction, AssumptionInvalidated or a Decision that \
+                                         replaces memory without a typed relation returns "
+                                        <code>"warnings"</code>
+                                        " naming candidate target ids; append the "
+                                        <code>"{\"kind\": \"supersedes\", \"target_id\": \"...\"}"</code>
+                                        " link."
+                                    </li>
+                                    <li>
+                                        "Standing context replaces a superseded constraint or decision with \
+                                         its successor, context bundles redirect their seeds the same way, and \
+                                         the MEMORY.md export drops superseded thoughts and marks contested \
+                                         ones "
+                                        <code>"contested by #N"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Across chains: "</strong>
+                                        "a "
+                                        <code>"Supersedes"</code>
+                                        ", "
+                                        <code>"Corrects"</code>
+                                        " or "
+                                        <code>"Invalidates"</code>
+                                        " relation that carries a "
+                                        <code>"chain_key"</code>
+                                        " applies wherever one search sees both chains (a branch and its \
+                                         ancestors, federated search); the hit names "
+                                        <code>"successor_of_chain"</code>
+                                        ". A chain searched alone is unchanged, untyped links are not applied \
+                                         across chains, and a public reader is never redirected to a private \
+                                         successor."
+                                    </li>
+                                </ul>
+                                <p>
+                                    "Turn redirection off per request with "
+                                    <code>"resolve_successors: false"</code>
+                                    " (plain hiding, as in 0.10). An expired supersession ("
+                                    <code>"invalid_at"</code>
+                                    " in the past) no longer hides its target."
+                                </p>
                             </section>
 
                             // ── Advanced Retrieval ───────────────────────────────────
