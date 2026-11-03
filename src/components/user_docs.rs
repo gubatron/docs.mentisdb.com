@@ -1838,19 +1838,47 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                  the connecting client IP; "
                                 <code>"X-Forwarded-For"</code>
                                 " is ignored, so behind a reverse proxy all clients share the \
-                                 proxy's address and one limit."
+                                 proxy's address and one limit. Since 0.11 the PIN sent as "
+                                <code>"Authorization: Bearer <pin>"</code>
+                                " on any dashboard route (as the CLI does) shares the same limiter, so \
+                                 the PIN cannot be guessed without limit through the API either."
                             </p>
                             <p>
                                 "The login "
                                 <code>"POST"</code>
-                                " is under the same CSRF check as the dashboard API: it needs a \
-                                 same-host "
+                                " is under the same CSRF check as the dashboard API. The first signal \
+                                 present decides: an "
                                 <code>"Origin"</code>
-                                " or "
+                                " whose host matches the request ("
+                                <code>"Origin: null"</code>
+                                " counts as absent), else "
+                                <code>"Sec-Fetch-Site: same-origin"</code>
+                                " (set by browsers, not by pages), else a same-host "
                                 <code>"Referer"</code>
-                                ", or the "
+                                ". Scripts that send none of these add "
                                 <code>"X-MentisDB-Dashboard: 1"</code>
-                                " header."
+                                ". 0.11 fixes real browsers being refused with \"cross-origin request \
+                                 rejected\" at login."
+                            </p>
+
+                            <h3 id="dashboard-security-headers">"Security Headers"</h3>
+                            <p>
+                                "Since 0.11 dashboard responses carry a Content-Security-Policy ("
+                                <code>"frame-ancestors 'none'"</code>
+                                ", "
+                                <code>"base-uri 'none'"</code>
+                                ", same-origin connections), "
+                                <code>"X-Content-Type-Options: nosniff"</code>
+                                ", "
+                                <code>"X-Frame-Options: DENY"</code>
+                                " and "
+                                <code>"Referrer-Policy: same-origin"</code>
+                                ". This stops other sites from framing the dashboard and adds a second \
+                                 layer against script injection through stored text. Chains that have \
+                                 private segments are shown only behind a PIN, and access \
+                                 administration (see "
+                                <a href="#public-private-chains">"Public & Private Chains"</a>
+                                ") is PIN-only."
                             </p>
 
                             <h3 id="dashboard-allowed-hosts">"Host Allowlist"</h3>
@@ -1860,7 +1888,8 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 <strong>"403"</strong>
                                 " unless the request's "
                                 <code>"Host"</code>
-                                " header names this daemon. Accepted hosts:"
+                                " header names this daemon. Since 0.11 the REST and MCP listeners use \
+                                 the same list. Accepted hosts:"
                             </p>
                             <ul>
                                 <li>
@@ -1900,6 +1929,60 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
                                 <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
                                 ")."
                             </p>
+                            <p>"How the MCP and REST listeners apply the list (0.11):"</p>
+                            <ul>
+                                <li>
+                                    <strong>"MCP on a loopback bind (the default) "</strong>
+                                    "refuses any other "
+                                    <code>"Host"</code>
+                                    " with "
+                                    <code>"403 Forbidden host"</code>
+                                    ", for every client, on "
+                                    <code>"POST /"</code>
+                                    ", the "
+                                    <code>"GET /"</code>
+                                    " event stream and the legacy "
+                                    <code>"/tools/*"</code>
+                                    " and "
+                                    <code>"/resources/*"</code>
+                                    " routes. If you reach a VPS by its public IP or domain through a \
+                                     reverse proxy, add that name to "
+                                    <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                    " before the daemon starts; the MCP list is built at startup."
+                                </li>
+                                <li>
+                                    <strong>"MCP on a wildcard bind "</strong>
+                                    "("
+                                    <code>"0.0.0.0"</code>
+                                    " or "
+                                    <code>"::"</code>
+                                    ", as in Docker or on a LAN) does no "
+                                    <code>"Host"</code>
+                                    " check for programmatic clients, which reach the daemon by service \
+                                     name or DHCP address."
+                                </li>
+                                <li>
+                                    <strong>"REST, and MCP with bearer tokens off, "</strong>
+                                    "refuse a request from a browser (one that carries "
+                                    <code>"Origin"</code>
+                                    " or "
+                                    <code>"Sec-Fetch-Site"</code>
+                                    ") unless its "
+                                    <code>"Host"</code>
+                                    " and "
+                                    <code>"Origin"</code>
+                                    " host are in the list. "
+                                    <code>"curl"</code>
+                                    ", the CLI and agents send neither header and are unaffected."
+                                </li>
+                                <li>
+                                    "IPv6 entries match in canonical form ("
+                                    <code>"2001:db8::7"</code>
+                                    ", not "
+                                    <code>"2001:0db8::7"</code>
+                                    ")."
+                                </li>
+                            </ul>
 
                             <h3>"Disabling the Dashboard"</h3>
                                 <div class="code-block">
