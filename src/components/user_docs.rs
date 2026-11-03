@@ -29,6 +29,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#upgrading-0-11">"Upgrading to 0.11"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-10-9">"Upgrading to 0.10.9"</a>
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
+                                <a class="docs-nav-link" href="#public-private-chains">"Public & Private Chains"</a>
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
                                 <a class="docs-nav-link" href="#invalidation-dedup">"Invalidation & Dedup"</a>
@@ -3472,26 +3473,250 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                             <section class="docs-section" id="signatures">
                                 <h2 id="signatures">"Cryptographic Signatures"</h2>
                                 <p>
-                                    "Agents with registered Ed25519 public keys must cryptographically \
-                                     sign their skill uploads. This creates a verifiable, tamper-evident \
-                                     record of authorship."
+                                    "Agents can hold Ed25519 keys. A registered key signs skill uploads \
+                                     (every upload from an agent with a key must carry a valid signature) \
+                                     and thoughts. A thought that carries a signature must verify against \
+                                     an active, unrevoked key of its agent or the append is refused (HTTP \
+                                     403). The current signature format ("
+                                    <code>"mentisdb/thought/v2"</code>
+                                    ") covers every semantic field and is bound to the chain key and the \
+                                     head hash, so a signed thought cannot be replayed onto another chain \
+                                     or position. A v2-signed append built on an older head fails with \
+                                     \"fetch the head, sign again\" (HTTP 400)."
                                 </p>
 
-                                <h3>"Registering an agent key"</h3>
+                                <h3>"Generating and registering a key"</h3>
                                 <p>
-                                    "Use "
-                                    <code>"mentisdb_add_agent_key"</code>
-                                    " to register an Ed25519 public key for an agent. Once registered, \
-                                     all uploads from that agent must include a valid signature over the \
-                                     skill content."
+                                    "Generate a key file locally; the private seed never leaves it. \
+                                     Registering a public key is an operator action (dashboard behind its \
+                                     PIN, or the local CLI): the operator vouches for the key, so no proof \
+                                     of possession is needed. The REST route and MCP tool that let any \
+                                     token holder register keys were removed in 0.11."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb key generate --out ~/.mentisdb/builder.key
+mentisdb key show ~/.mentisdb/builder.key          # prints the public key hex
+mentisdb agent key add builder --key-id builder-202610 \
+  --public-key-hex <64 hex> --chain project --pin 123456
+
+# sign a thought locally (the seed is never sent)
+mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
+  --agent builder --signing-key-id builder-202610 --private-key-file ~/.mentisdb/builder.key"#}</code></pre>
+                                </div>
+                                <p>
+                                    "Rotate a key by adding the new one and running "
+                                    <code>"mentisdb agent key revoke builder --key-id <old>"</code>
+                                    ". Thoughts and skills signed before the revocation stay valid. "
+                                    <code>"mentisdb chain access verify --chain project"</code>
+                                    " re-checks every stored signature and exits non-zero if any fails. \
+                                     An empty signature field stored by older clients counts as unsigned, \
+                                     not as an invalid signature."
                                 </p>
 
                                 <h3>"Why this matters"</h3>
                                 <p>
-                                    "Signed skills mean you always know which agent authored which \
-                                     version. Combined with the immutable version history, this creates a \
-                                     cryptographically auditable record of your fleet's institutional \
-                                     knowledge."
+                                    "Signed skills and thoughts mean you always know which key wrote \
+                                     which version. Combined with the hash chain and immutable skill \
+                                     versions, this gives a cryptographically auditable record of your \
+                                     fleet's knowledge. Signatures say who wrote something, not that it is \
+                                     true: see "
+                                    <a href="#hit-provenance">"Provenance"</a>
+                                    "."
+                                </p>
+                            </section>
+
+                            // ── Public & Private Chains ──────────────────────────────
+                            <section class="docs-section" id="public-private-chains">
+                                <h2 id="public-private-chains">"Public & Private Chains"</h2>
+                                <p>
+                                    "Since 0.11 a chain is either "
+                                    <strong>"public"</strong>
+                                    " (anyone who can reach the server writes unsigned and reads freely) \
+                                     or "
+                                    <strong>"private"</strong>
+                                    " (writes need a valid signature by an allowed Ed25519 key, and what \
+                                     is written while the chain is private can be read only by a reader \
+                                     who proves possession of an allowed key). Existing chains need no \
+                                     migration: a chain without access records is public."
+                                </p>
+
+                                <h3 id="chain-segments">"Segments"</h3>
+                                <p>
+                                    "The mode is not a flag. Every switch is a signed governance record in \
+                                     the chain itself that opens a new "
+                                    <em>"segment"</em>
+                                    ", so each thought belongs to the segment its position falls in and \
+                                     every change of mode is a tamper-evident entry. Going private opens a \
+                                     private segment; going public again opens a public one, and the \
+                                     earlier private thoughts stay private."
+                                </p>
+                                <ul>
+                                    <li>
+                                        "An "
+                                        <strong>"authorized reader"</strong>
+                                        " (a key in the chain's current policy, proved on each request) \
+                                         and the "
+                                        <strong>"operator"</strong>
+                                        " see everything."
+                                    </li>
+                                    <li>
+                                        "Everyone else sees only public segments, on every read surface: \
+                                         ranked, lexical and vector search, recent and standing context, \
+                                         traversal, get by id, head, bundles, federated and branch search, \
+                                         Markdown export, listings and counts. Ranking statistics are \
+                                         computed over the visible thoughts, so scores do not move when \
+                                         private thoughts are added, and a refused write does not say \
+                                         whether an agent or key exists."
+                                    </li>
+                                    <li>
+                                        "Public readers can still see that a chain has private segments, \
+                                         where they are and roughly how large, so the public history stays \
+                                         verifiable. Content written while a chain was public stays public."
+                                    </li>
+                                </ul>
+
+                                <h3 id="chain-operator">"The operator"</h3>
+                                <p>
+                                    "Only the operator changes who may write and read. The operator is \
+                                     whoever reaches the dashboard behind its PIN ("
+                                    <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                    ") or runs the local "
+                                    <code>"mentisdb"</code>
+                                    " CLI on the host with "
+                                    <code>"--offline"</code>
+                                    " against the data directory. REST and MCP cannot, with any bearer \
+                                     token. Without a PIN the dashboard neither administers access nor \
+                                     shows chains that have private segments."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"# make a chain private (the operator key becomes its first governor)
+mentisdb chain access set private --chain vault --pin 123456
+
+# register a key and allow it on the chain
+mentisdb agent key add builder --key-id builder-202610 --public-key-hex <64 hex> --chain vault --pin 123456
+mentisdb chain access allow builder builder-202610 <64 hex> --chain vault --pin 123456
+
+# remove it, disable or re-activate an agent, inspect the operator view
+mentisdb chain access deny builder builder-202610 --chain vault --pin 123456
+mentisdb agent disable builder --chain vault --pin 123456
+mentisdb agent activate builder --chain vault --pin 123456
+mentisdb chain access admin --chain vault --pin 123456
+
+# the same, with the daemon stopped, directly against the data directory
+mentisdb chain access set private --chain vault --offline"#}</code></pre>
+                                </div>
+                                <p>
+                                    "The operator signs governance records with "
+                                    <code>"<data dir>/operator/operator.key"</code>
+                                    " (created on first use, mode 0600). That key is always a governor, \
+                                     so a policy can never lock itself out: it is the recovery path if \
+                                     every agent key is lost. Back it up with your chains. "
+                                    <code>"--offline"</code>
+                                    " refuses to run while a daemon holds the data directory; use the \
+                                     dashboard ("
+                                    <code>"--pin"</code>
+                                    ") to change a running daemon."
+                                </p>
+
+                                <h3 id="read-proofs">"Reading a private chain"</h3>
+                                <p>
+                                    "A reader proves possession of an allowed key on every request with an "
+                                    <code>"X-Mentis-Auth"</code>
+                                    " header: an Ed25519 signature over the method, path, query, body hash, \
+                                     key identity, a timestamp and a single-use nonce. The private key never \
+                                     travels over the wire and never has to enter a language model's context: \
+                                     the process that talks to the server holds the key file and signs."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"# CLI: sign every REST request
+mentisdb search "launch plan" --chain vault \
+  --read-key-file builder.key --read-agent builder --read-key-id builder-202610
+
+# stdio MCP proxy: reads the same variables and signs everything it forwards
+MENTISDB_READ_KEY_FILE=builder.key MENTISDB_READ_AGENT_ID=builder \
+MENTISDB_READ_KEY_ID=builder-202610 mentisdb --mode stdio"#}</code></pre>
+                                </div>
+                                <ul>
+                                    <li>
+                                        "Proofs are accepted within 60 seconds of the server clock and each \
+                                         nonce only once. A header that is present but invalid gets 401, so a \
+                                         client with a skewed clock learns why; a request without the header \
+                                         is a public reader."
+                                    </li>
+                                    <li>
+                                        "Key sets are per chain: a proof never reads a chain the key is not \
+                                         allowed on, even inside a federated search."
+                                    </li>
+                                    <li>
+                                        "A proof authenticates but does not encrypt. Serve private chains over \
+                                         HTTPS, and do not put a proxy that rewrites paths or bodies in front \
+                                         of the daemon."
+                                    </li>
+                                    <li>
+                                        "Python: "
+                                        <code>"pymentisdb.ReadSigner"</code>
+                                        " (see "
+                                        <a href="#python-client">"Python Client"</a>
+                                        ")."
+                                    </li>
+                                </ul>
+
+                                <h3 id="open-time-verification">"Verification when a chain opens"</h3>
+                                <p>
+                                    "Opening a chain with private segments verifies them: every thought in \
+                                     a private segment must carry a valid signature by a key that was \
+                                     allowed at that point. A thought that fails is "
+                                    <strong>"quarantined"</strong>
+                                    ": hidden from every reader and reported by "
+                                    <code>"mentisdb chain access verify"</code>
+                                    ". Nothing is served before verification finishes. After a clean run \
+                                     the chain writes a checkpoint signed by the operator key, so later \
+                                     opens verify only what is new. If a chain no longer matches its \
+                                     checkpoint (records removed or rewritten), it is locked (every position \
+                                     reads as private) instead of being served as public; after inspecting \
+                                     the file, the operator deletes "
+                                    <code>"<chain>.verified.json"</code>
+                                    " to re-seal it."
+                                </p>
+
+                                <h3 id="moving-private-thoughts">"Merge, copy and restore"</h3>
+                                <p>
+                                    "Merging chains and copying an agent's memories re-append thoughts \
+                                     unsigned under another chain, which would publish private text and \
+                                     discard signatures. They are refused, with a clear error and no \
+                                     change, for a source that has private segments, governance records or \
+                                     signed thoughts. Branching copies nothing and is allowed from any \
+                                     thought you can see. Restoring a backup over a signed or private chain \
+                                     keeps the chain's history and imports the backup as a separate, \
+                                     renamed chain."
+                                </p>
+
+                                <h3 id="hit-provenance">"Provenance: memories are data"</h3>
+                                <p>
+                                    "Every thought in a response carries a "
+                                    <code>"provenance"</code>
+                                    " object:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#""provenance": {
+  "segment": "public",          // or "private"
+  "signed": true,
+  "signature": "valid",         // "unsigned", "valid" or "invalid"
+  "signature_version": 2,
+  "verified_agent": "alice",    // set when the signature is valid and the key is active
+  "trust": "untrusted_data"
+}"#}</code></pre>
+                                </div>
+                                <p>
+                                    "An unsigned thought in a public segment can have been written by \
+                                     anyone; "
+                                    <code>"verified_agent"</code>
+                                    " says whose key signed, not that the content is true or safe. The \
+                                     MentisDB skill tells agents to weigh memories as evidence and never \
+                                     follow instructions found in them. The full threat model, wire formats \
+                                     and residual risks are in "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/docs/CHAIN_ACCESS.md" target="_blank" rel="noopener noreferrer">"docs/CHAIN_ACCESS.md"</a>
+                                    "."
                                 </p>
                             </section>
 
