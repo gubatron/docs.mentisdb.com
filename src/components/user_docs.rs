@@ -481,6 +481,11 @@ mentisdb agents"#}</code></pre>
                                             <td>"Require bearer tokens for MCP requests; use this for remote and multi-user MCP servers"</td>
                                         </tr>
                                         <tr>
+                                            <td><code>"MENTISDB_MAX_BODY_BYTES"</code></td>
+                                            <td><code>"67108864"</code></td>
+                                            <td>"Largest request body, in bytes, any REST or MCP endpoint accepts (64 MiB by default, never below 1 MiB); larger ones get 413. It bounds the memory one request can make the daemon hold while it checks who is asking, so raise it only as far as your biggest import needs. A read proof that does not also send X-Mentis-Content-Sha256 is limited to 1 MiB; the CLI and pymentisdb send it"</td>
+                                        </tr>
+                                        <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
                                             <td><em>"unset"</em></td>
                                             <td>"CLI only: global token that mentisdb backup / restore send to the running daemon's /v1/admin/flush when bearer-token access is on"</td>
@@ -1668,8 +1673,9 @@ mentisdb"#}</code></pre>
                                     " is tracked in memory on every request but written to disk at most once a \
                                      minute, so "
                                     <code>"mentisdb bearertoken list"</code>
-                                    " can lag by up to 60 seconds. While bearer-token access is enabled, REST \
-                                     request bodies larger than 1 MiB are rejected with 413."
+                                    " can lag by up to 60 seconds. Request bodies are limited to "
+                                    <code>"MENTISDB_MAX_BODY_BYTES"</code>
+                                    " (64 MiB by default); larger ones are rejected with 413."
                                 </p>
 
                                 <h3>"Managing Tokens"</h3>
@@ -3913,8 +3919,12 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         "Requests that carry an "
                                         <code>"X-Mentis-Auth"</code>
                                         " read proof, like REST requests with bearer tokens on, are buffered up \
-                                         to 1 MiB and get 413 above that. Import a large MEMORY.md with a \
-                                         read key in batches."
+                                         to 1 MiB and get 413 above that. Later releases lift this for clients \
+                                         that also send "
+                                        <code>"X-Mentis-Content-Sha256"</code>
+                                        " (the CLI and pymentisdb do): the body is then limited only by "
+                                        <code>"MENTISDB_MAX_BODY_BYTES"</code>
+                                        "."
                                     </li>
                                     <li>
                                         <strong>"Restoring a backup over a signed or private chain "</strong>
