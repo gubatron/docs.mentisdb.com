@@ -35,6 +35,8 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#temporal-queries">"Temporal Queries"</a>
                                 <a class="docs-nav-link" href="#invalidation-dedup">"Invalidation & Dedup"</a>
                                 <a class="docs-nav-link" href="#valid-version-retrieval">"Valid-Version Retrieval"</a>
+                                <a class="docs-nav-link" href="#ranking-knobs">"Ranking Knobs"</a>
+                                <a class="docs-nav-link" href="#standing-context">"Standing Context"</a>
                                 <a class="docs-nav-link" href="#cli-subcommands">"CLI Subcommands"</a>
                             </nav>
                         </aside>
@@ -4200,6 +4202,68 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "falls back to an exact scan or oversamples so filters no longer drop matches."
                                 </p>
 
+                                <h3 id="ranking-knobs">"Ranking Knobs (0.11)"</h3>
+                                <p>
+                                    "0.11 changes three defaults and makes every ranking knob reachable from \
+                                     REST, MCP and the CLI. Bad values are a 400, not a silent default."
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>"Relative vector fusion. "</strong>
+                                        "The vector weight used to decay with the absolute BM25 score, which \
+                                         grows with the number of query words, so a ten-word paraphrase \
+                                         silenced the vector channel exactly when the wording differed. It \
+                                         now decays with a hit's lexical score relative to the query's best."
+                                    </li>
+                                    <li>
+                                        <strong>"Near-duplicate collapse. "</strong>
+                                        "Hits whose text is at least 90% similar (Jaccard) fold into one; the \
+                                         survivor lists the folded ids in "
+                                        <code>"collapsed_duplicates"</code>
+                                        ". Text queries only. One real chain had 301 of 749 live thoughts in \
+                                         near-duplicate clusters."
+                                    </li>
+                                    <li>
+                                        <strong>"One thesaurus default. "</strong>
+                                        "The library and the server both expand queries with the built-in \
+                                         thesaurus at weight 0.3."
+                                    </li>
+                                </ul>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Request field"</th>
+                                            <th>"CLI flag"</th>
+                                            <th>"Default"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td><code>"resolve_successors"</code></td><td><code>"--resolve-successors BOOL"</code></td><td><code>"true"</code></td></tr>
+                                        <tr><td><code>"collapse_duplicates"</code></td><td><code>"--collapse-duplicates THRESHOLD"</code>" (0 disables)"</td><td><code>"0.9"</code></td></tr>
+                                        <tr><td><code>"vector_fusion"</code></td><td><code>"--vector-fusion relative|absolute"</code></td><td><code>"relative"</code></td></tr>
+                                        <tr><td><code>"synonym_weight"</code></td><td><code>"--synonym-weight WEIGHT"</code>" (0 disables)"</td><td><code>"0.3"</code></td></tr>
+                                        <tr><td><code>"df_scope"</code></td><td><code>"--df-scope global|field"</code></td><td><code>"global"</code></td></tr>
+                                        <tr><td><code>"df_cutoffs.{content,tags,concepts,agent_id,agent_registry}"</code></td><td><code>"--df-cutoff-content"</code>", "<code>"-tags"</code>", "<code>"-concepts"</code>", "<code>"-agent-id"</code>", "<code>"-agent-registry"</code></td><td>"0.30 / 0.30 / 0.30 / 0.70 / 0.60"</td></tr>
+                                    </tbody>
+                                </table>
+                                <p>
+                                    "They apply to ranked search, federated search and context bundles ("
+                                    <code>"mentisdb search"</code>
+                                    ", "
+                                    <code>"search federated"</code>
+                                    ", "
+                                    <code>"search bundles"</code>
+                                    "). Process-wide: "
+                                    <code>"MENTISDB_VECTOR_FUSION=absolute"</code>
+                                    ", "
+                                    <code>"MENTISDB_COLLAPSE_DUPLICATES=off"</code>
+                                    " and "
+                                    <code>"MENTISDB_DF_SCOPE=field"</code>
+                                    " (experimental). On the full LoCoMo-10P and LongMemEval protocol with \
+                                     these defaults, R@10 on LoCoMo is 76.7% (73.5% in 0.10.9.54) and R@5 \
+                                     on LongMemEval is 69.8% (68.0%)."
+                                </p>
+
                                 <h3 id="context-bundles">"Context Bundles"</h3>
                                 <p>
                                     <code>"mentisdb_context_bundles"</code>
@@ -4208,6 +4272,53 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                     "agent can inspect "<em>"why"</em>" a supporting thought surfaced. Use bundles when "
                                     "you want to preserve evidence groupings rather than collapse everything into "
                                     "ranked rows."
+                                </p>
+
+                                <h3 id="standing-context">"Standing Context"</h3>
+                                <p>
+                                    "Recent context only loads the last few thoughts, so a preference stated \
+                                     months ago was never loaded at session start and users had to repeat \
+                                     themselves. Standing context returns the durable half of memory \
+                                     regardless of age: live Constraint, PreferenceUpdate, UserTrait, \
+                                     RelationshipUpdate, Goal, Decision and LessonLearned thoughts (user-scoped \
+                                     or unscoped), ranked by importance then recency, with restatements \
+                                     collapsed, capped at 8 per type and 40 in total, plus the newest Handoff \
+                                     and Checkpoint or Summary. A superseded constraint or decision is \
+                                     replaced by its successor and contested entries are flagged."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"# MCP (load at session start, before mentisdb_recent_context)
+mentisdb_standing_context(chain_key: "project")
+
+# REST
+curl -s http://127.0.0.1:9472/v1/standing-context \
+  -H 'content-type: application/json' -d '{"chain_key":"project"}'
+
+# CLI
+mentisdb thought standing --chain project"#}</code></pre>
+                                </div>
+                                <p>
+                                    "Optional fields: "
+                                    <code>"agent_id"</code>
+                                    ", "
+                                    <code>"types"</code>
+                                    ", "
+                                    <code>"since"</code>
+                                    ", "
+                                    <code>"as_of"</code>
+                                    ", "
+                                    <code>"include_invalidated"</code>
+                                    ", "
+                                    <code>"per_type_limit"</code>
+                                    " (default 8) and "
+                                    <code>"limit"</code>
+                                    " (default 40). The response has the typed "
+                                    <code>"entries"</code>
+                                    ", "
+                                    <code>"duplicates_collapsed"</code>
+                                    " and a ready-to-load "
+                                    <code>"prompt"</code>
+                                    "."
                                 </p>
 
                                 <h3 id="vector-sidecars">"Dense-Vector Sidecars"</h3>
