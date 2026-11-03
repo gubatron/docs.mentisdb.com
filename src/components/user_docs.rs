@@ -1163,8 +1163,10 @@ mentisdb agents"#}</code></pre>
                                         <code>"mentisdb_list_agents"</code>
                                         " and reuses the existing specialist that best matches the current \
                                          task, followed by "
+                                        <code>"mentisdb_standing_context"</code>
+                                        " (durable preferences, constraints and decisions of any age) and "
                                         <code>"mentisdb_recent_context"</code>
-                                        " to reload prior state."
+                                        " (where things left off) to reload prior state."
                                     </li>
                                     <li>
                                         <strong>"Load skill rules"</strong>
