@@ -493,7 +493,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters. Pass compact: true for smaller hits"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters, and the ranking knobs resolve_successors, collapse_duplicates, vector_fusion, synonym_weight, df_scope and df_cutoffs (bad values are a 400). Pass compact: true for smaller hits"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -534,6 +534,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/recent-context"</code></td>
                                     <td>"Render a compact resumption prompt for recent, important context"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/standing-context"</code></td>
+                                    <td>"Durable, age-independent memory as a prompt block plus typed entries (entries, duplicates_collapsed, prompt). Load at session start before recent context"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -683,17 +688,17 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/agents/keys"</code></td>
-                                    <td>"Add a verification key to an agent"</td>
+                                    <td>"Answers 403 (operator-only since 0.11): register keys from the dashboard or with mentisdb agent key add"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/agents/keys/revoke"</code></td>
-                                    <td>"Revoke a verification key from an agent"</td>
+                                    <td>"Answers 403 (operator-only since 0.11): mentisdb agent key revoke"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/agents/disable"</code></td>
-                                    <td>"Disable (revoke) an agent"</td>
+                                    <td>"Answers 403 (operator-only since 0.11): mentisdb agent disable / activate"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -703,7 +708,37 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/chains/merge"</code></td>
-                                    <td>"Merge all thoughts from a source chain into a target, then delete the source"</td>
+                                    <td>"Merge all thoughts from a source chain into a target, then delete the source. Refused for a source with private segments, governance records or signed thoughts"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/access/policy"</code></td>
+                                    <td>"A chain's access policy as the caller may see it: mode, sequence, key-set commitment and segment boundaries; keys and record hashes only for an authorized reader"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/access/verify"</code></td>
+                                    <td>"Re-verify the signatures and governance records the caller may see"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/access/policy/set"</code></td>
+                                    <td>"Answers 403 (operator-only since 0.11): mentisdb chain access set|allow|deny"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"GET"</code></td>
+                                    <td><code>"/v1/migrations"</code></td>
+                                    <td>"Background migration state of every chain (global token)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/migrations/retry"</code></td>
+                                    <td>"Clear a chain's migration quarantine so it is migrated again; body chain_key (global token)"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>"POST"</code></td>
+                                    <td><code>"/v1/migrations/skip"</code></td>
+                                    <td>"Leave a chain unmigrated and unavailable until retried; body chain_key (global token)"</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -744,14 +779,15 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td><code>"400"</code></td><td>"Invalid input: malformed JSON, bad UUID, unknown thought type or role, invalid chain key"</td></tr>
-                                <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, or a token whose scope does not cover the operation"</td></tr>
-                                <tr><td><code>"403"</code></td><td>"Permission denied, e.g. missing or invalid signature on a signed skill upload"</td></tr>
+                                <tr><td><code>"400"</code></td><td>"Invalid input: malformed JSON, bad UUID, unknown thought type or role, invalid chain key, an unknown ranking-knob value, or a v2-signed append built on an older head (fetch the head and sign again)"</td></tr>
+                                <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, a token whose scope does not cover the operation, or an X-Mentis-Auth read proof that is present but invalid (bad signature, clock more than 60 s off, reused nonce)"</td></tr>
+                                <tr><td><code>"403"</code></td><td>"Permission denied: missing or invalid signature on a signed skill upload, a write the chain's access policy does not accept (the body does not say whether the agent or key exists), or an operator-only route"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
                                 <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
                                 <tr><td><code>"413"</code></td><td>"Request body over 1 MiB (enforced while bearer-token access is enabled)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
                                 <tr><td><code>"501"</code></td><td>"/v1/extract-memories on a build without the llm-extraction feature"</td></tr>
+                                <tr><td><code>"503"</code></td><td>"The chain is being migrated (Retry-After header, retry_after_secs and percent done in the body) or failed to migrate (the body names the fix); also when the read-proof replay cache is full"</td></tr>
                             </tbody>
                         </table>
                         <p>
