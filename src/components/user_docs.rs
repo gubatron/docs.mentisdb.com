@@ -26,6 +26,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
+                                <a class="docs-nav-link" href="#upgrading-0-11">"Upgrading to 0.11"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-10-9">"Upgrading to 0.10.9"</a>
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
                                 <a class="docs-nav-link" href="#memory-scopes">"Memory Scopes"</a>
@@ -3266,6 +3267,114 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <code>"cargo install mentisdb --locked --force"</code>
                                     " and restart the daemon."
                                 </p>
+
+                                <h3 id="upgrading-0-11">"Upgrading to 0.11"</h3>
+                                <p>
+                                    "Upgrade with "
+                                    <code>"cargo install mentisdb --locked --force"</code>
+                                    ", a release binary or the Docker image, then restart the daemon. \
+                                     Behaviour changes to check:"
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>"First start may migrate chains in the background. "</strong>
+                                        "The daemon comes up at once and upgrades chains that need it \
+                                         through a journaled, backed-up, resumable worker pool. A request \
+                                         for a chain that is still migrating gets "
+                                        <code>"503"</code>
+                                        " with "
+                                        <code>"Retry-After"</code>
+                                        " and the percent done; every other chain is served normally. \
+                                         Watch progress with "
+                                        <code>"mentisdb migrate status"</code>
+                                        ", "
+                                        <code>"GET /v1/migrations"</code>
+                                        " or the dashboard banner. See "
+                                        <a href="#chain-migrations">"Chain Migrations"</a>
+                                        ". Existing HNSW graph files are rebuilt once in the background."
+                                    </li>
+                                    <li>
+                                        <strong>"One daemon per data directory. "</strong>
+                                        "A second daemon on a directory that is already in use now refuses \
+                                         to start and names the holder's pid. Stop the old daemon first."
+                                    </li>
+                                    <li>
+                                        <strong>"Public IP or domain? Set "</strong>
+                                        <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                        <strong>"."</strong>
+                                        " The Host allowlist now covers the MCP and REST listeners too. \
+                                         On a loopback bind behind a reverse proxy, MCP answers "
+                                        <code>"403 Forbidden host"</code>
+                                        " to any name that is not listed. Add the public name or IP before \
+                                         the daemon starts. See "
+                                        <a href="#dashboard-allowed-hosts">"Host Allowlist"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Key and access administration is operator-only. "</strong>
+                                        "Registering or revoking agent keys, disabling agents and changing a \
+                                         chain's access policy are done from the dashboard (behind its PIN) or \
+                                         the local CLI. The REST routes "
+                                        <code>"/v1/agents/keys"</code>
+                                        ", "
+                                        <code>"/v1/agents/keys/revoke"</code>
+                                        ", "
+                                        <code>"/v1/agents/disable"</code>
+                                        " and "
+                                        <code>"/v1/access/policy/set"</code>
+                                        " answer 403 with any token and the matching MCP tools are gone. \
+                                         Scripts that used them must move to "
+                                        <code>"mentisdb agent key add|revoke"</code>
+                                        ", "
+                                        <code>"mentisdb agent disable|activate"</code>
+                                        " and "
+                                        <code>"mentisdb chain access set|allow|deny"</code>
+                                        ". See "
+                                        <a href="#public-private-chains">"Public & Private Chains"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Search returns the current version. "</strong>
+                                        "A superseded thought that would have ranked is replaced by its live \
+                                         successor, near-duplicates collapse into one hit, vector fusion no \
+                                         longer depends on query length, and the library applies the same \
+                                         thesaurus default as the server. Result lists differ from 0.10; every \
+                                         change has an opt-out. See "
+                                        <a href="#valid-version-retrieval">"Valid-Version Retrieval"</a>
+                                        " and "
+                                        <a href="#ranking-knobs">"Ranking Knobs"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"The MCP event stream "</strong>
+                                        "("
+                                        <code>"GET /"</code>
+                                        " on the MCP port) carries metadata only: tool name, chain key, \
+                                         outcome and duration, never arguments, results or error text. With \
+                                         bearer tokens on, subscribing needs a valid token."
+                                    </li>
+                                    <li>
+                                        <strong>"Restoring a backup over a signed or private chain "</strong>
+                                        "no longer fast-forwards it: the chain keeps its history and the \
+                                         backup is imported as a separate, renamed chain."
+                                    </li>
+                                    <li>
+                                        <strong>"Deprecated: "</strong>
+                                        "LLM reranking fields of "
+                                        <code>"RankedSearchQuery"</code>
+                                        " (never implemented, no-ops) and "
+                                        <code>"search::ppr"</code>
+                                        " (never called by ranked search). Both go away in the next breaking \
+                                         release."
+                                    </li>
+                                    <li>
+                                        <strong>"Older chains from March and April 2026 "</strong>
+                                        "(records stamped schema 4, and a later layout that earlier releases \
+                                         decoded with shifted fields) are now read correctly and verified \
+                                         before they migrate; a record that does not verify is refused \
+                                         instead of being rehashed."
+                                    </li>
+                                </ul>
 
                                 <h3 id="upgrading-0-10-9">"Upgrading to 0.10.9"</h3>
                                 <p>"No data migration is needed. Behaviour changes to check before upgrading:"</p>
