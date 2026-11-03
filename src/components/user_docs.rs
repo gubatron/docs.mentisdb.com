@@ -4832,6 +4832,31 @@ for hit in response.results:          # CompactRankedSearchHit
 
 merged = client.federated_search(["backend", "frontend"], text="auth bug", compact=True)"#}</code></pre>
                                 </div>
+                                <p>
+                                    "To read the private segments of a chain (also in the next pymentisdb \
+                                     release), give the client a "
+                                    <code>"ReadSigner"</code>
+                                    " ("
+                                    <code>"pip install pymentisdb[signing]"</code>
+                                    "). It signs every request locally with the "
+                                    <code>"X-Mentis-Auth"</code>
+                                    " read proof; the key never leaves the process. Without a signer the \
+                                     client reads public segments only. When no signer is passed, the \
+                                     client builds one from "
+                                    <code>"MENTISDB_READ_KEY_FILE"</code>
+                                    ", "
+                                    <code>"MENTISDB_READ_AGENT_ID"</code>
+                                    " and "
+                                    <code>"MENTISDB_READ_KEY_ID"</code>
+                                    " if they are set. See "
+                                    <a href="#read-proofs">"Reading a private chain"</a>
+                                    "."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"from pymentisdb import MentisDbClient, ReadSigner
+
+client = MentisDbClient(read_signer=ReadSigner.from_file("builder.key", "builder", "builder-202610"))"#}</code></pre>
+                                </div>
                                 <p>"See the "
                                     <a href="https://pypi.org/project/pymentisdb/">"PyPI listing"</a>
                                     " and the "
