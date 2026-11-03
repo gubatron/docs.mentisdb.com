@@ -961,20 +961,18 @@ pub fn AgentDocs() -> impl IntoView {
                             ", the server will reject it."
                         </p>
 
-                        <h4>"Step 1 — Register a Public Key"</h4>
+                        <h4>"Step 1 — Have the Operator Register Your Public Key"</h4>
                         <p>
-                            "Call "
-                            <code>"mentisdb_add_agent_key"</code>
-                            " to bind an Ed25519 public key to your agent identity:"
+                            "Since 0.11 registering a key is an operator action: you cannot do it \
+                             through MCP or REST. Ask the user to run, on the host or behind the \
+                             dashboard PIN:"
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdb_add_agent_key(\n\
-    agent_id:         \"orion\",\n\
-    key_id:           \"orion-signing-key-1\",\n\
-    algorithm:        \"ed25519\",\n\
-    public_key_bytes: [<32 raw bytes>]\n\
-    )"
+    "mentisdb key generate --out ~/.mentisdb/orion.key   # the seed never leaves this file\n\
+    mentisdb key show ~/.mentisdb/orion.key              # prints the public key hex\n\
+    mentisdb agent key add orion --key-id orion-signing-key-1 \\\n\
+      --public-key-hex <64 hex> --chain my-project --pin <PIN>"
                             </code></pre>
                         </div>
 
@@ -1010,12 +1008,12 @@ pub fn AgentDocs() -> impl IntoView {
 
                         <div class="docs-callout docs-callout-tip">
                             <strong>"Key rotation:"</strong>
-                            " To rotate your signing key, call "
-                            <code>"mentisdb_add_agent_key"</code>
-                            " with a new "
+                            " To rotate your signing key, the operator registers a new "
                             <code>"key_id"</code>
-                            " and then "
-                            <code>"mentisdb_revoke_agent_key"</code>
+                            " with "
+                            <code>"mentisdb agent key add"</code>
+                            " and then runs "
+                            <code>"mentisdb agent key revoke"</code>
                             " on the old one. New uploads must use the new key_id; old versions \
                              remain verifiable against their original signature."
                         </div>
@@ -2018,36 +2016,65 @@ pub fn AgentDocs() -> impl IntoView {
                             " the updated agent record with the new alias included."
                         </p>
 
-                        // ── mentisdb_disable_agent ──────────────────────────────
-                        <h3>"mentisdb_disable_agent"</h3>
+                        // ── mentisdb_standing_context ───────────────────────────
+                        <h3>"mentisdb_standing_context"</h3>
                         <p>
-                            "Disable one agent by marking its registry status as "
-                            <code>"revoked"</code>
-                            ". The agent's existing thoughts remain in the chain (append-only \
-                             storage), but the agent identity is flagged as inactive. Use this \
-                             when decommissioning an agent from a fleet."
+                            "Render the durable, age-independent half of memory as a prompt block: \
+                             live constraints, preferences, user traits, relationship updates, goals, \
+                             decisions and lessons ranked by importance, restatements collapsed, plus \
+                             the newest handoff and checkpoint. Call it at session start before "
+                            <code>"mentisdb_recent_context"</code>
+                            "."
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdb_disable_agent(\n\
+    "mentisdb_standing_context(\n\
     chain_key: \"my-project\",    // optional\n\
-    agent_id: \"legacy-bot\"      // required\n\
+    agent_id: \"orion\",          // optional: only this agent's thoughts\n\
+    types: [\"Constraint\"],      // optional: restrict to these types\n\
+    per_type_limit: 8,           // optional, default 8\n\
+    limit: 40                    // optional, default 40\n\
     )"
                             </code></pre>
                         </div>
                         <p>
-                            <strong>"Parameters:"</strong>
-                        </p>
-                        <ul>
-                            <li><code>"chain_key"</code>" (string, optional) — durable chain key"</li>
-                            <li><code>"agent_id"</code>" (string, required) — stable agent id to disable"</li>
-                        </ul>
-                        <p>
                             <strong>"Returns:"</strong>
-                            " the updated agent record with status set to "
-                            <code>"revoked"</code>
+                            " typed "
+                            <code>"entries"</code>
+                            ", "
+                            <code>"duplicates_collapsed"</code>
+                            " and a ready-to-load "
+                            <code>"prompt"</code>
+                            ". Also accepts "
+                            <code>"since"</code>
+                            ", "
+                            <code>"as_of"</code>
+                            " and "
+                            <code>"include_invalidated"</code>
                             "."
                         </p>
+
+                        // ── mentisdb_migration_status ───────────────────────────
+                        <h3>"mentisdb_migration_status"</h3>
+                        <p>
+                            "Report the background storage-format migration state of every chain that \
+                             is, was, or failed to be migrated: phase, percent done, attempts and error. \
+                             Needs a global bearer token. Use it when a tool call says a chain is being \
+                             migrated."
+                        </p>
+
+                        <div class="docs-callout docs-callout-tip">
+                            <strong>"Removed in 0.11: "</strong>
+                            <code>"mentisdb_add_agent_key"</code>
+                            ", "
+                            <code>"mentisdb_revoke_agent_key"</code>
+                            ", "
+                            <code>"mentisdb_disable_agent"</code>
+                            " and "
+                            <code>"mentisdb_set_access_policy"</code>
+                            ". Key, agent-status and access administration is operator-only (dashboard \
+                             behind its PIN, or the local CLI). If a task needs one of them, ask the user."
+                        </div>
 
                         // ── mentisdb_skill_manifest ─────────────────────────────
                         <h3>"mentisdb_skill_manifest"</h3>
