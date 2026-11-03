@@ -4870,16 +4870,88 @@ client = MentisDbClient(read_signer=ReadSigner.from_file("builder.key", "builder
                             <section class="docs-section" id="cli-subcommands">
                                 <h2 id="cli-subcommands">"CLI Subcommands"</h2>
                                 <p>
-                                    "The "
+                                    "Since 0.11 the "
                                     <code>"mentisdb"</code>
-                                    " binary includes subcommands for interacting with a running daemon
-                                     from the terminal. These are useful for quick manual entries, scripting,
-                                     and debugging — no MCP client or dashboard needed."
+                                    " binary is a complete command-line client for everything the MCP tools, \
+                                     the REST API and the web dashboard can do. Commands are "
+                                    <code>"mentisdb <group> <command> [options]"</code>
+                                    "; "
+                                    <code>"mentisdb --help"</code>
+                                    " lists them all and every command has "
+                                    <code>"--help"</code>
+                                    " with copy-paste examples. "
+                                    <a href="https://github.com/CloudLLM-ai/mentisdb/blob/master/docs/CLI_PARITY.md" target="_blank" rel="noopener noreferrer">"docs/CLI_PARITY.md"</a>
+                                    " maps every MCP tool, REST route and dashboard action to its command."
                                 </p>
-                                <p>"All three subcommands require a running daemon. They connect to the REST port (default "
+                                <table class="config-table">
+                                    <thead><tr><th>"Group"</th><th>"Commands"</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>"thought"</code></td><td>"append, retro, get, genesis, traverse, recent, standing, candidates"</td></tr>
+                                        <tr><td><code>"search"</code></td><td>"ranked (default), lexical, filter, federated, bundles"</td></tr>
+                                        <tr><td><code>"chain"</code></td><td>"list, head, bootstrap, branch, merge, info, delete, access show|verify|admin|set|allow|deny"</td></tr>
+                                        <tr><td><code>"agent"</code></td><td>"list, get, registry, upsert, describe, alias, key add|revoke, disable, activate, copy"</td></tr>
+                                        <tr><td><code>"entity-type"</code></td><td>"list, upsert"</td></tr>
+                                        <tr><td><code>"memory"</code></td><td>"export, import, extract (MEMORY.md style Markdown)"</td></tr>
+                                        <tr><td><code>"skill"</code></td><td>"guide, manifest, list, search, read, versions, upload, deprecate, revoke, delete, diff"</td></tr>
+                                        <tr><td><code>"webhook"</code></td><td>"list, register, delete"</td></tr>
+                                        <tr><td><code>"vectors"</code></td><td>"enable, disable, sync, rebuild"</td></tr>
+                                        <tr><td><code>"daemon"</code></td><td>"health, version, flush, restart, settings list|set"</td></tr>
+                                        <tr><td><code>"migrate"</code></td><td>"status, run [--dry-run], verify, retry, skip, rollback, purge-backups (see "<a href="#chain-migrations">"Chain Migrations"</a>")"</td></tr>
+                                        <tr><td>"local"</td><td>"setup, wizard, add, backup, restore, bearertoken, cert, key generate|show"</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb chain bootstrap "Project Atlas memory" --chain atlas
+mentisdb thought append "Use UTC everywhere" --chain atlas --type Decision --tag time
+echo "deploy finished" | mentisdb thought append - --chain atlas --type Summary --role Checkpoint
+mentisdb search "why UTC" --chain atlas --type Decision --limit 5
+mentisdb thought standing --chain atlas
+mentisdb memory export --chain atlas > MEMORY.md
+mentisdb chain delete scratch --yes --pin 123456"#}</code></pre>
+                                </div>
+                                <p>
+                                    "Memory and registry commands use the running daemon's REST API at "
+                                    <code>"--url"</code>
+                                    " (default "
                                     <code>"http://127.0.0.1:9472"</code>
-                                    ")."
+                                    ", bearer token from "
+                                    <code>"--token"</code>
+                                    " or "
+                                    <code>"MENTISDB_BEARER_TOKEN"</code>
+                                    "). Dashboard-only and operator actions use the PIN-gated dashboard API at "
+                                    <code>"--dashboard-url"</code>
+                                    " (default "
+                                    <code>"https://127.0.0.1:9475"</code>
+                                    ", PIN from "
+                                    <code>"--pin"</code>
+                                    " or "
+                                    <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                    "); operator commands also run with "
+                                    <code>"--offline [--data-dir DIR]"</code>
+                                    " directly against the data directory while no daemon holds it. Read \
+                                     commands accept "
+                                    <code>"--read-key-file"</code>
+                                    ", "
+                                    <code>"--read-agent"</code>
+                                    " and "
+                                    <code>"--read-key-id"</code>
+                                    " for private chains. Arguments are validated before any request, "
+                                    <code>"--json"</code>
+                                    " prints compact JSON, "
+                                    <code>"-"</code>
+                                    " reads content from standard input, and destructive commands need "
+                                    <code>"--yes"</code>
+                                    ". "
+                                    <code>"backup"</code>
+                                    ", "
+                                    <code>"restore"</code>
+                                    ", "
+                                    <code>"bearertoken"</code>
+                                    " and "
+                                    <code>"cert"</code>
+                                    " work on the data directory and do not need the daemon."
                                 </p>
+                                <p>"The original quick commands remain:"</p>
 
                                 <h3>"add — Add a thought"</h3>
                                 <p>
