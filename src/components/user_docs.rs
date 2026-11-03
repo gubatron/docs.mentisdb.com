@@ -4799,8 +4799,19 @@ MENTISDB_WEBHOOK_ALLOWED_CIDRS=192.168.1.50"</code></pre>
                                     "."
                                 </p>
                                 <div class="code-block">
-                                    <code>"pip install pymentisdb"</code>
+                                    <pre><code>{r#"pip install pymentisdb                 # 0.10.0 or later; needs only requests
+pip install 'pymentisdb[signing]'      # ReadSigner, for reading private chains
+pip install 'pymentisdb[langchain]'    # MentisDbMemory (LangChain BaseMemory)"#}</code></pre>
                                 </div>
+                                <p>
+                                    "Use 0.10.0 or later: the 0.9.0 wheel on PyPI contained no code. "
+                                    <code>"import pymentisdb"</code>
+                                    " needs no LangChain; "
+                                    <code>"MentisDbMemory"</code>
+                                    " needs the "<code>"langchain"</code>" extra (langchain-core before 1.0, or 1.0 and "
+                                    "later with "<code>"langchain-classic"</code>", which the extra installs) and raises "
+                                    <code>"ImportError"</code>" naming it when it is missing."
+                                </p>
                                 <div class="code-block">
                                     <code>"from pymentisdb import MentisDbClient, ThoughtType\n\n\
     client = MentisDbClient(\"http://127.0.0.1:9472\")\n\
@@ -4817,8 +4828,7 @@ MENTISDB_WEBHOOK_ALLOWED_CIDRS=192.168.1.50"</code></pre>
                                     <code>"federated_search"</code>" searches several chains, and "<code>"ranked_search"</code>
                                     ", "<code>"federated_search"</code>" and "<code>"context_bundles"</code>
                                     " accept keyword-only "<code>"graph"</code>", "<code>"as_of"</code>", "
-                                    <code>"include_invalidated"</code>" and the ranking knobs. These arrive with the next "
-                                    "pymentisdb release."
+                                    <code>"include_invalidated"</code>" and the ranking knobs (pymentisdb 0.10.0)."
                                 </p>
                                 <div class="code-block">
                                     <pre><code>{r#"from pymentisdb import MentisDbClient, GraphOptions
@@ -4835,8 +4845,7 @@ for hit in response.results:          # CompactRankedSearchHit
 merged = client.federated_search(["backend", "frontend"], text="auth bug", compact=True)"#}</code></pre>
                                 </div>
                                 <p>
-                                    "To read the private segments of a chain (also in the next pymentisdb \
-                                     release), give the client a "
+                                    "To read the private segments of a chain (pymentisdb 0.10.0), give the client a "
                                     <code>"ReadSigner"</code>
                                     " ("
                                     <code>"pip install pymentisdb[signing]"</code>
