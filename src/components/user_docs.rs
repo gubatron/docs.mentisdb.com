@@ -472,7 +472,7 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code></td>
                                             <td><em>"unset"</em></td>
-                                            <td>"Comma-separated extra hostnames/IPs the dashboard accepts in the Host header (public DNS name, reverse-proxy name). Set via environment, ./.env or <MENTISDB_DIR>/.env; not editable from the dashboard"</td>
+                                            <td>"Comma-separated extra hostnames/IPs accepted in the Host header (public DNS name or IP, reverse-proxy name). Since 0.11 the dashboard, REST and MCP listeners share this list, and the MCP list is read when the daemon starts. Set via environment, ./.env or <MENTISDB_DIR>/.env; not editable from the dashboard. See "<a href="#dashboard-allowed-hosts">"Host Allowlist"</a></td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN_ACCESS"</code></td>
@@ -488,6 +488,37 @@ mentisdb agents"#}</code></pre>
                                             <td><code>"MENTISDB_WEBHOOK_ALLOWED_CIDRS"</code></td>
                                             <td><em>"unset"</em></td>
                                             <td>"Comma- or space-separated CIDRs or IPs that webhooks may target despite the private-address block (e.g. 100.64.0.0/10,fd7a:115c:a1e0::/48 for Tailscale). Unset = all internal ranges blocked; an invalid entry or one broader than /8 stops startup. Set via environment, ./.env or <MENTISDB_DIR>/.env. See "<a href="#webhook-allowed-cidrs">"Private webhook targets"</a></td>
+                                        </tr>
+                                        <tr class="config-group-header">
+                                            <td colspan="3"><strong>"Read Proofs (CLI and stdio proxy)"</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_READ_KEY_FILE"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"Ed25519 key file the CLI and the stdio MCP proxy sign every request with, to read private chains (same as --read-key-file). The key never leaves the process"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_READ_AGENT_ID"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"Agent id of that key (same as --read-agent)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_READ_KEY_ID"</code></td>
+                                            <td><em>"unset"</em></td>
+                                            <td>"Key id of that key (same as --read-key-id)"</td>
+                                        </tr>
+                                        <tr class="config-group-header">
+                                            <td colspan="3"><strong>"Migrations"</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_MIGRATION_CONCURRENCY"</code></td>
+                                            <td><code>"2"</code></td>
+                                            <td>"How many chains the background migration manager rewrites at once"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_MIGRATION_BACKUP_RETENTION_DAYS"</code></td>
+                                            <td><code>"14"</code></td>
+                                            <td>"How long the original of a migrated chain is kept under <MENTISDB_DIR>/migrations/backup/; 0 keeps backups forever"</td>
                                         </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Daemon Self-Update"</strong></td>
@@ -531,6 +562,24 @@ mentisdb agents"#}</code></pre>
                                                 <code>"MENTISDB_DEDUP_THRESHOLD"</code>
                                                 " is set. Raise on chatty chains (e.g. 128)."
                                             </td>
+                                        </tr>
+                                        <tr class="config-group-header">
+                                            <td colspan="3"><strong>"Search Ranking"</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_VECTOR_FUSION"</code></td>
+                                            <td><code>"relative"</code></td>
+                                            <td>"How vector similarity blends with the lexical score: relative (decays with a hit's lexical score relative to the query's best) or absolute (the 0.10 blend). See Ranking Knobs"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_COLLAPSE_DUPLICATES"</code></td>
+                                            <td><code>"0.9"</code></td>
+                                            <td>"Result-time collapse of near-duplicate hits: a Jaccard threshold in (0, 1], or off. Per request: collapse_duplicates (0 disables)"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_DF_SCOPE"</code></td>
+                                            <td><code>"global"</code></td>
+                                            <td>"How the lexical stop-word gate counts document frequency: global (any field) or field (per field, experimental)"</td>
                                         </tr>
                                         <tr class="config-group-header">
                                             <td colspan="3"><strong>"Vector Index &amp; Auto-Edges"</strong></td>
