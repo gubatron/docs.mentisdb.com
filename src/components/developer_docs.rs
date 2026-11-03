@@ -119,7 +119,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             "."
                         </p>
 
-                        <h3>"All 37 MCP Tools"</h3>
+                        <h3>"All 45 MCP Tools"</h3>
                         <table class="api-table">
                             <thead>
                                 <tr>
@@ -160,6 +160,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"enable_reranking"</code>, <code>"rerank_k"</code>, <code>"concepts_any"</code>, <code>"roles"</code>, <code>"limit"</code>, <code>"compact"</code></td>
                                 </tr>
                                 <tr>
+                                    <td><code>"mentisdb_federated_search"</code></td>
+                                    <td>"Ranked retrieval over several chains at once, merged into one list. Each chain is authorized and filtered for the caller on its own"</td>
+                                    <td><code>"chain_keys"</code>, <code>"text"</code>, <code>"limit"</code>, <code>"graph"</code>, <code>"as_of"</code>, <code>"include_invalidated"</code>, <code>"compact"</code></td>
+                                </tr>
+                                <tr>
                                     <td><code>"mentisdb_context_bundles"</code></td>
                                     <td>"Return seed-anchored grouped support context beneath the best lexical seeds"</td>
                                     <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"graph"</code>, <code>"limit"</code></td>
@@ -168,6 +173,11 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"mentisdb_list_chains"</code></td>
                                     <td>"List known chains with version, storage adapter, counts, and storage location"</td>
                                     <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_migration_status"</code></td>
+                                    <td>"Report the background storage-format migration state of every chain that is, was, or failed to be migrated: phase, percent done, attempts and error. Global token only"</td>
+                                    <td></td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_merge_chains"</code></td>
@@ -210,19 +220,19 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td><code>"agent_id"</code>, <code>"alias"</code>, <code>"chain_key"</code></td>
                                 </tr>
                                 <tr>
-                                    <td><code>"mentisdb_add_agent_key"</code></td>
-                                    <td>"Add or replace one public verification key on a registered agent"</td>
-                                    <td><code>"agent_id"</code>, <code>"key_id"</code>, <code>"algorithm"</code>, <code>"public_key_bytes"</code>, <code>"chain_key"</code></td>
+                                    <td><code>"mentisdb_get_access_policy"</code></td>
+                                    <td>"Return the chain's access policy as the caller may see it: mode, sequence, key-set commitment and segment boundaries for everyone; the allowed keys and record hashes only for a reader who proved an authorized key"</td>
+                                    <td><code>"chain_key"</code></td>
                                 </tr>
                                 <tr>
-                                    <td><code>"mentisdb_revoke_agent_key"</code></td>
-                                    <td>"Revoke one previously registered public key"</td>
-                                    <td><code>"agent_id"</code>, <code>"key_id"</code>, <code>"chain_key"</code></td>
+                                    <td><code>"mentisdb_verify_signatures"</code></td>
+                                    <td>"Re-verify the signed thoughts and governance records the caller may see; per-thought status (valid, unsigned, invalid), signature version and totals"</td>
+                                    <td><code>"chain_key"</code></td>
                                 </tr>
                                 <tr>
-                                    <td><code>"mentisdb_disable_agent"</code></td>
-                                    <td>"Disable one agent by marking its registry status as revoked"</td>
-                                    <td><code>"agent_id"</code>, <code>"chain_key"</code></td>
+                                    <td><code>"mentisdb_standing_context"</code></td>
+                                    <td>"Render durable, age-independent memory (constraints, preferences, user traits, goals, decisions, lessons, newest handoff and checkpoint) as a prompt block. Call at session start before mentisdb_recent_context"</td>
+                                    <td><code>"chain_key"</code>, <code>"agent_id"</code>, <code>"types"</code>, <code>"since"</code>, <code>"as_of"</code>, <code>"include_invalidated"</code>, <code>"per_type_limit"</code>, <code>"limit"</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_recent_context"</code></td>
@@ -329,8 +339,47 @@ pub fn DeveloperDocs() -> impl IntoView {
                                     <td>"Remove a webhook registration by its UUID"</td>
                                     <td><code>"id"</code></td>
                                 </tr>
+                                <tr>
+                                    <td><code>"mentisdb_list_entity_types"</code></td>
+                                    <td>"List the entity types registered on a chain"</td>
+                                    <td><code>"chain_key"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_upsert_entity_type"</code></td>
+                                    <td>"Create or update an entity type in the per-chain registry"</td>
+                                    <td><code>"chain_key"</code>, <code>"entity_type"</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>"mentisdb_extract_memories"</code></td>
+                                    <td>"Turn free-form text into typed memory candidates with the configured LLM. Nothing is appended; needs the llm-extraction feature"</td>
+                                    <td><code>"text"</code>, <code>"chain_key"</code>, <code>"agent_id"</code>, <code>"prompt_template"</code></td>
+                                </tr>
                             </tbody>
                         </table>
+                        <p>
+                            "Since 0.11, registering or revoking agent keys, disabling agents and \
+                             changing a chain's access policy are "
+                            <strong>"operator-only"</strong>
+                            ": "
+                            <code>"mentisdb_add_agent_key"</code>
+                            ", "
+                            <code>"mentisdb_revoke_agent_key"</code>
+                            ", "
+                            <code>"mentisdb_disable_agent"</code>
+                            " and "
+                            <code>"mentisdb_set_access_policy"</code>
+                            " are no longer offered, and a "
+                            <code>"status"</code>
+                            " change through "
+                            <code>"mentisdb_upsert_agent"</code>
+                            " is refused (restating the current status is still accepted). \
+                             The operator uses the dashboard behind its PIN or the local "
+                            <code>"mentisdb"</code>
+                            " command line; see "
+                            <a href="/user#public-private-chains">"Public & Private Chains"</a>
+                            ". A tool call against a chain that is still being migrated returns a \
+                             tool error with the retry delay and percent done; retry after it."
+                        </p>
 
                         <h3>"JSON-RPC Request/Response Example"</h3>
                         <p>"MCP uses JSON-RPC 2.0 over HTTP. Send a POST to the MCP endpoint:"</p>
