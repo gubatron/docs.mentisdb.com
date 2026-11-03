@@ -20,6 +20,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                                 <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
                                 <a class="docs-nav-link" href="#backup-restore">"Backup & Restore"</a>
+                                <a class="docs-nav-link" href="#chain-migrations">"Chain Migrations"</a>
                                 <a class="docs-nav-link" href="#connecting">"Connecting AI Tools"</a>
                                 <a class="docs-nav-link" href="#connecting-automated">"Automated Setup"</a>
                                 <a class="docs-nav-link" href="#connecting-manual">"Manual MCP Config"</a>
@@ -2539,6 +2540,154 @@ mentisdb restore /tmp/my-mentisdb-backup.mentis --overwrite"#}</code></pre>
                                     <code>"mentisdb backup"</code>
                                     " before any chain merge, chain deletion, skill revocation, or daemon self-update that involves storage format changes. Backups take only seconds and let you recover exactly where you were if something goes wrong."
                                 </div>
+                            </section>
+
+                            // ── Chain Migrations ─────────────────────────────────────
+                            <section class="docs-section" id="chain-migrations">
+                                <h2 id="chain-migrations">"Chain Migrations"</h2>
+                                <p>
+                                    "A release may need to rewrite chain files (a newer thought layout, a \
+                                     better hash algorithm, JSONL to binary). Since 0.11 the daemon does \
+                                     that in the background: it starts in about a second, keeps serving \
+                                     every other chain, says what it is doing, and can always go back. \
+                                     Measured: a 600,000-thought legacy chain finished migrating 17 seconds \
+                                     after a start that took under a second."
+                                </p>
+
+                                <h3>"What you will see"</h3>
+                                <ul>
+                                    <li>
+                                        "Chains that need work are queued and migrated by a small worker pool ("
+                                        <code>"MENTISDB_MIGRATION_CONCURRENCY"</code>
+                                        ", default 2)."
+                                    </li>
+                                    <li>
+                                        "A request for a chain that is still migrating gets "
+                                        <strong>"HTTP 503"</strong>
+                                        " with a "
+                                        <code>"Retry-After"</code>
+                                        " header and "
+                                        <code>"{\"retry_after_secs\": 5, \"migration\": {\"state\": \"migrating\", \"percent\": 42, ...}}"</code>
+                                        "; MCP clients get the same text as a tool error. Retry after the \
+                                         delay. A chain that is not migrating is never delayed."
+                                    </li>
+                                    <li>
+                                        "Progress is logged, shown in the TUI and on a dashboard banner, and \
+                                         reported by "
+                                        <code>"mentisdb migrate status"</code>
+                                        ", "
+                                        <code>"GET /v1/migrations"</code>
+                                        " and the "
+                                        <code>"mentisdb_migration_status"</code>
+                                        " MCP tool (global token)."
+                                    </li>
+                                </ul>
+
+                                <h3>"Why it is safe"</h3>
+                                <ul>
+                                    <li>
+                                        <strong>"Backup first. "</strong>
+                                        "The original chain file is hard-linked (or copied) to "
+                                        <code>"<MENTISDB_DIR>/migrations/backup/<chain>/"</code>
+                                        " before anything is replaced, and kept "
+                                        <code>"MENTISDB_MIGRATION_BACKUP_RETENTION_DAYS"</code>
+                                        " days (default 14, "
+                                        <code>"0"</code>
+                                        " keeps it forever)."
+                                    </li>
+                                    <li>
+                                        <strong>"Journaled and resumable. "</strong>
+                                        "Each chain moves through planned, backed up, staged, committed and \
+                                         finalized. The upgraded chain is streamed to a staging file, verified \
+                                         end to end, then swapped in with one atomic rename. A kill at any step \
+                                         is resumed or discarded on the next start; a chain interrupted three \
+                                         times is quarantined instead of crash-looping."
+                                    </li>
+                                    <li>
+                                        <strong>"Never launders corruption. "</strong>
+                                        "A stored hash that does not verify (corruption or tampering), or a \
+                                         migration that would invalidate a signature, refuses the migration \
+                                         and leaves the chain byte-for-byte untouched. A failing chain is \
+                                         reported and answers with a 503 naming the fix; the other chains and \
+                                         the daemon carry on."
+                                    </li>
+                                    <li>
+                                        <strong>"Downgrades are refused. "</strong>
+                                        "A chain or data directory written by a newer release is not opened \
+                                         by an older one that has this check; it says so and exits."
+                                    </li>
+                                    <li>
+                                        "Derived data (vector sidecars, HNSW graphs, the implicit-edge \
+                                         overlay, lexical indexes) is rebuilt lazily in the background when a \
+                                         chain's hashes change."
+                                    </li>
+                                </ul>
+
+                                <h3>"Operator commands"</h3>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb migrate status                 # what needs, is in, or finished a migration
+mentisdb migrate run --dry-run          # rehearse: check hashes and signatures, write nothing
+mentisdb migrate run [--chain KEY]      # migrate now (resumes interrupted runs)
+mentisdb migrate verify                 # re-check every hash link of the live chains
+mentisdb migrate retry --chain KEY      # clear a quarantine; migrated on the next run
+mentisdb migrate skip --chain KEY       # leave a chain alone and unavailable until retried
+mentisdb migrate rollback --chain KEY   # restore the backup (stop the daemon first)
+mentisdb migrate purge-backups          # delete preserved originals of finished migrations"#}</code></pre>
+                                </div>
+                                <p>
+                                    <code>"mentisdb migrate status --url http://127.0.0.1:9472"</code>
+                                    " asks a running daemon. "
+                                    <code>"rollback"</code>
+                                    " refuses once new thoughts were appended to the migrated chain unless \
+                                     you pass "
+                                    <code>"--force"</code>
+                                    ", which discards them. Over REST, "
+                                    <code>"POST /v1/migrations/retry"</code>
+                                    " and "
+                                    <code>"POST /v1/migrations/skip"</code>
+                                    " take a "
+                                    <code>"chain_key"</code>
+                                    " (global token)."
+                                </p>
+
+                                <h3 id="one-daemon-per-data-dir">"One daemon per data directory"</h3>
+                                <p>
+                                    "Two processes appending to the same hash chain corrupt it, so the \
+                                     daemon holds an operating-system lock on "
+                                    <code>"<data dir>/mentisdb.lock"</code>
+                                    " for its whole life. The OS releases it when the process exits or is \
+                                     killed, so a crash leaves nothing to clean up."
+                                </p>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr>
+                                            <th>"Process"</th>
+                                            <th>"While another process holds the directory"</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>"A second daemon"</td>
+                                            <td>"Refuses to start; the message names the holder's pid and the directory"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"--offline"</code>" operator commands, "<code>"restore"</code></td>
+                                            <td>"Refuse before touching any file"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"migrate run"</code>", "<code>"retry"</code>", "<code>"skip"</code>", "<code>"rollback"</code>", "<code>"purge-backups"</code></td>
+                                            <td>"Refuse; the daemon runs its own migrations"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"migrate status"</code>", "<code>"migrate verify"</code>", "<code>"migrate run --dry-run"</code></td>
+                                            <td>"Read-only, always allowed"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p>
+                                    "The lock is advisory and network filesystems may not honour it, so \
+                                     keep the data directory on a local disk."
+                                </p>
                             </section>
 
                             // ── Connecting AI Tools ──────────────────────────────────
