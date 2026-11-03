@@ -14,6 +14,7 @@ pub fn AgentDocs() -> impl IntoView {
                         <a class="docs-nav-link" href="#what-to-write">"What Deserves a Memory"</a>
                         <a class="docs-nav-link" href="#thought-types">"Choosing Thought Types"</a>
                         <a class="docs-nav-link" href="#session-bootstrap">"Session Bootstrap"</a>
+                        <a class="docs-nav-link" href="#remote-connection">"Remote MentisDB"</a>
                         <a class="docs-nav-link" href="#thought-roles">"Thought Roles"</a>
                         <a class="docs-nav-link" href="#retrieval">"Retrieval Patterns"</a>
                         <a class="docs-nav-link" href="#recall-triggers">"Recall Triggers"</a>
@@ -185,6 +186,120 @@ pub fn AgentDocs() -> impl IntoView {
                             <code>"chain_key"</code>
                             " explicitly during the bootstrap call."
                         </p>
+                    </section>
+
+                    // ── Remote MentisDB ──────────────────────────────────────
+                    <section class="docs-section" id="remote-connection">
+                        <h2 id="remote-connection">"Connecting to a Remote MentisDB"</h2>
+                        <p>
+                            "Your user may run MentisDB on another machine (a VPS, a home server) \
+                             with bearer tokens turned on. A remote server is configured in your \
+                             harness as an HTTP MCP server with an "
+                            <code>"Authorization: Bearer …"</code>
+                            " header, and every tool works exactly as it does locally. When the \
+                             MentisDB tools are missing or fail, work through this before telling \
+                             the user that memory is unavailable."
+                        </p>
+
+                        <h3>"When the tools are missing or the connection is refused"</h3>
+                        <ol>
+                            <li>
+                                "Tell the user right away that MentisDB is not reachable; do not \
+                                 silently continue without memory."
+                            </li>
+                            <li>
+                                "Find out which entry your harness is actually using. In Claude \
+                                 Code, a local (per-project) or project entry overrides the \
+                                 user-level one, and a stale entry pointing at "
+                                <code>"http://127.0.0.1:9471"</code>
+                                " is the most common reason a project cannot reach a remote server:"
+                                <div class="code-block">
+                                    <pre><code>{r#"claude mcp get mentisdb      # scope, URL and connection status
+claude mcp list"#}</code></pre>
+                                </div>
+                            </li>
+                            <li>
+                                "Check that the server answers before changing any config (this \
+                                 call needs no token):"
+                                <div class="code-block">
+                                    <pre><code>{r#"curl -s https://<host>:9473/health    # or http://<host>:9471/health on a private network"#}</code></pre>
+                                </div>
+                            </li>
+                            <li>
+                                "If the user wants the remote server, remove the stale entry (with \
+                                 their agreement) and keep theirs: "
+                                <code>"claude mcp remove mentisdb -s local"</code>
+                                "."
+                            </li>
+                            <li>
+                                "Your current session keeps its original connection. Ask the user \
+                                 to run "
+                                <code>"/mcp"</code>
+                                " to reconnect (or start a new session); the MentisDB tools \
+                                 appear once the reconnect succeeds."
+                            </li>
+                        </ol>
+
+                        <h3>"Configuring a remote server for the user"</h3>
+                        <p>
+                            "Get the URL and the token from the user. Write the token only into \
+                             the user's own client config (user scope), never into a repository \
+                             file, a memory, a commit or a chat message:"
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"claude mcp add-json mentisdb \
+    '{"type":"http","url":"https://<host>:9473","headers":{"Authorization":"Bearer <token>"}}' \
+    --scope user"#}</code></pre>
+                        </div>
+                        <p>
+                            "For a shared project file, reference an environment variable instead \
+                             of the token: "
+                            <code>"\"Authorization\": \"Bearer ${MENTISDB_TOKEN}\""</code>
+                            " in "
+                            <code>".mcp.json"</code>
+                            ". The "
+                            <a href="/user#remote-setup-checklist">"remote setup checklist"</a>
+                            " has the equivalent snippets for Codex, VS Code and other harnesses."
+                        </p>
+
+                        <h3>"Reading the errors"</h3>
+                        <ul>
+                            <li>
+                                <strong>"Connection refused or timeout:"</strong>
+                                " wrong host or port, a firewall, or a localhost entry winning over \
+                                 the remote one."
+                            </li>
+                            <li>
+                                <strong>"HTTP 401:"</strong>
+                                " the bearer token is missing, malformed (it needs the "
+                                <code>"Bearer "</code>
+                                " prefix) or revoked. Ask the user for a valid token; you cannot \
+                                 mint one yourself."
+                            </li>
+                            <li>
+                                <strong>"Tools fail on one chain but work on another:"</strong>
+                                " the token is chain-scoped. Ask the user for a token that \
+                                 includes that chain instead of writing to a different chain."
+                            </li>
+                            <li>
+                                <strong>"TLS or certificate error:"</strong>
+                                " the server's certificate does not cover the address you use. \
+                                 Point the user to "
+                                <a href="#cert-command">"mentisdb cert"</a>
+                                "; never turn off certificate verification to get around it."
+                            </li>
+                        </ul>
+
+                        <div class="docs-callout docs-callout-warning">
+                            <strong>"Treat the token like a password: "</strong>
+                            "never echo it, log it, store it in a memory or paste it into a \
+                             command whose output is shown. Plain HTTP ("
+                            <code>"9471"</code>
+                            ") sends it in clear text, so it is only for a VPN, a private \
+                             network or an SSH tunnel; use HTTPS ("
+                            <code>"9473"</code>
+                            ") everywhere else."
+                        </div>
                     </section>
 
                     // ── Choosing Thought Types ───────────────────────────────

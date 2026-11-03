@@ -17,6 +17,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#self-update">"Self-Update"</a>
                                 <a class="docs-nav-link" href="#https">"HTTPS & TLS"</a>
                                 <a class="docs-nav-link" href="#bearer-token-access">"Bearer Tokens"</a>
+                                <a class="docs-nav-link" href="#remote-setup-checklist">"Remote MCP Setup"</a>
                                 <a class="docs-nav-link" href="#dashboard">"Web Dashboard"</a>
                                 <a class="docs-nav-link" href="#import-memory-md">"Import MEMORY.md"</a>
                                 <a class="docs-nav-link" href="#backup-restore">"Backup & Restore"</a>
@@ -1769,6 +1770,165 @@ headers = { Authorization = "Bearer mentisdb_replace_me" }"#}</code></pre>
     headers:
       Authorization: "Bearer mentisdb_replace_me""#}</code></pre>
                                 </div>
+
+                                <h3 id="remote-setup-checklist">"Remote Setup Checklist"</h3>
+                                <p>
+                                    "Most remote-connection problems are not MentisDB problems: the \
+                                     client is talking to the wrong address, a leftover local entry \
+                                     wins over the remote one, or the token never reaches the server. \
+                                     Work through these steps in order."
+                                </p>
+
+                                <h4>"1. Test the endpoint before configuring any client"</h4>
+                                <p>
+                                    "Replace the host and token with yours. The first call needs no \
+                                     token; the second proves the token works (it lists the MCP tools)."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"curl -s https://my.mentisdb.com:9473/health
+
+curl -s -X POST https://my.mentisdb.com:9473/ \
+  -H "Authorization: Bearer mentisdb_replace_me" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'"#}</code></pre>
+                                </div>
+                                <p>
+                                    "If the health check fails, fix the network (host, port, \
+                                     firewall, " <code>"MENTISDB_BIND_HOST"</code> ") before touching \
+                                     the client. If " <code>"tools/list"</code> " returns 401, the \
+                                     token is missing, mistyped or revoked."
+                                </p>
+
+                                <h4>"2. Use HTTPS, or plain HTTP only on a private network"</h4>
+                                <p>
+                                    "The bearer token travels in every request. Use the HTTPS port \
+                                     (" <code>"9473"</code> ") from anywhere on the internet. Use the \
+                                     plain-HTTP MCP port (" <code>"9471"</code> ") only over a VPN, a \
+                                     private network or an SSH tunnel, because the token is sent in \
+                                     clear text. If your client rejects the daemon's self-signed \
+                                     certificate for a remote IP or hostname, mint one that covers it \
+                                     with " <code>"mentisdb cert <ip-or-domain>"</code> " (see the "
+                                    <a href="/agent#cert-command">"certificate guide"</a> ") rather \
+                                     than turning off certificate checks."
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"# Private network / VPN: plain HTTP is acceptable
+claude mcp add-json mentisdb \
+    '{"type":"http","url":"http://10.0.0.5:9471","headers":{"Authorization":"Bearer mentisdb_replace_me"}}' \
+    --scope user
+
+# Anything else: HTTPS
+claude mcp add-json mentisdb \
+    '{"type":"http","url":"https://my.mentisdb.com:9473","headers":{"Authorization":"Bearer mentisdb_replace_me"}}' \
+    --scope user"#}</code></pre>
+                                </div>
+
+                                <h4>"3. Keep the token out of files you commit"</h4>
+                                <p>
+                                    "Put the token in your user-level client config, or reference an \
+                                     environment variable from shared project config. Never commit a \
+                                     token to a repository."
+                                </p>
+                                <p>"Claude Code project file " <code>".mcp.json"</code> " (variables are expanded when the server starts):"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "mcpServers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "https://my.mentisdb.com:9473",
+      "headers": {
+        "Authorization": "Bearer ${MENTISDB_TOKEN}"
+      }
+    }
+  }
+}"#}</code></pre>
+                                </div>
+                                <p>"Codex " <code>"~/.codex/config.toml"</code> " (reads the token from the environment):"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"[mcp_servers.mentisdb]
+url = "https://my.mentisdb.com:9473"
+bearer_token_env_var = "MENTISDB_TOKEN""#}</code></pre>
+                                </div>
+                                <p>"VS Code " <code>"mcp.json"</code> " (prompts once and stores the token securely):"</p>
+                                <div class="code-block">
+                                    <pre><code>{r#"{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "mentisdb-token",
+      "description": "MentisDB bearer token",
+      "password": true
+    }
+  ],
+  "servers": {
+    "mentisdb": {
+      "type": "http",
+      "url": "https://my.mentisdb.com:9473",
+      "headers": {
+        "Authorization": "Bearer ${input:mentisdb-token}"
+      }
+    }
+  }
+}"#}</code></pre>
+                                </div>
+
+                                <h4>"4. Make sure the remote entry is the one in use"</h4>
+                                <p>
+                                    "Clients merge MCP entries from several scopes, and the narrower \
+                                     scope wins. In Claude Code a local (per-project) or project "
+                                    <code>"mentisdb"</code>
+                                    " entry overrides your user-level one, so an old entry pointing at "
+                                    <code>"http://127.0.0.1:9471"</code>
+                                    " keeps that project on localhost (connection refused) even after \
+                                     you configured the remote server. Check which entry is active and \
+                                     remove the stale one:"
+                                </p>
+                                <div class="code-block">
+                                    <pre><code>{r#"claude mcp get mentisdb               # scope, URL and status actually in use
+claude mcp list
+claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}</code></pre>
+                                </div>
+                                <p>
+                                    "A session that was already running keeps its old connection: \
+                                     reconnect it with " <code>"/mcp"</code> " (or restart the \
+                                     client). New sessions pick up the change automatically."
+                                </p>
+
+                                <h4>"5. Read the error"</h4>
+                                <table class="config-table">
+                                    <thead>
+                                        <tr><th>"Symptom"</th><th>"Usual cause"</th><th>"Fix"</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>"Connection refused / timeout"</td>
+                                            <td>"Wrong host or port, a firewall, or a local entry still pointing at localhost"</td>
+                                            <td>"Step 1, then step 4"</td>
+                                        </tr>
+                                        <tr>
+                                            <td>"HTTP 401 Unauthorized"</td>
+                                            <td>"Header missing, misspelled, without the " <code>"Bearer "</code> " prefix, or the token was revoked"</td>
+                                            <td>"Check the header; run " <code>"mentisdb bearertoken list"</code> " on the server"</td>
+                                        </tr>
+                                        <tr>
+                                            <td>"HTTP 403 from a browser"</td>
+                                            <td>"A browser request from a host or Origin the daemon does not serve"</td>
+                                            <td>"Use bearer tokens, or list the host in " <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>"Certificate / TLS error"</td>
+                                            <td>"The self-signed certificate does not cover the IP or hostname you use"</td>
+                                            <td><code>"mentisdb cert <ip-or-domain>"</code> " on the server"</td>
+                                        </tr>
+                                        <tr>
+                                            <td>"Tools work on one chain but fail on another"</td>
+                                            <td>"The token is chain-scoped"</td>
+                                            <td>"Issue a token that includes that chain (" <code>"--chain"</code> ")"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
                                 <p>
                                     "The token registry already tracks creation, revocation, and last \
                                      successful use. Later versions can extend those records with \
