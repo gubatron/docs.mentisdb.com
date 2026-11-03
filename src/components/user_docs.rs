@@ -1336,6 +1336,19 @@ mentisdb agents"#}</code></pre>
                                     " as a friendly, stable hostname in MCP configs — no port-forwarding \
                                      or extra DNS setup required."
                                 </p>
+                                <p>
+                                    "Since 0.11 the daemon accepts "
+                                    <code>"my.mentisdb.com"</code>
+                                    " only on its TLS listeners (HTTPS MCP 9473, HTTPS REST 9474, dashboard \
+                                     9475). It is a public DNS name MentisDB does not control, so the plain \
+                                     HTTP ports 9471 and 9472 answer 403 to it unless you list it in "
+                                    <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                    ". Use the "
+                                    <code>"https://"</code>
+                                    " URL, or "
+                                    <code>"http://localhost:9471"</code>
+                                    " for plain HTTP."
+                                </p>
 
                                 <h3>"Trusting the Self-Signed Certificate"</h3>
                                 <p>
@@ -1373,6 +1386,17 @@ sudo update-ca-certificates"#}</code></pre>
                                     <code>"https://my.mentisdb.com:9473"</code>
                                     " as the server URL."
                                 </div>
+
+                                <h3>"Certificate Lifetime"</h3>
+                                <p>
+                                    "A generated certificate is valid from one day before it was made to two \
+                                     years after. Since 0.11 the daemon checks the certificate it is about to \
+                                     serve at startup: an expired certificate that MentisDB generated is \
+                                     regenerated with the same names and a new key pair (clients must trust \
+                                     the new one), a certificate expiring within 30 days logs a warning naming "
+                                    <code>"mentisdb cert --force"</code>
+                                    ", and an expired certificate you supplied yourself is only warned about."
+                                </p>
 
                                 <h3>"Minting a Custom Certificate"</h3>
                                 <p>
@@ -1993,11 +2017,19 @@ claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}<
                             <p>
                                 "The "
                                 <code>"/dashboard/login"</code>
-                                " endpoint enforces rate limiting: 5 failed PIN attempts per IP \
-                                 address within a 5-minute window results in "
+                                " endpoint enforces rate limiting: 5 failed PIN attempts from one \
+                                 client within a 5-minute window results in "
                                 <strong>"HTTP 429 Too Many Requests"</strong>
-                                ". Successful attempts reset the counter. The limiter is keyed by \
-                                 the connecting client IP; "
+                                " with "
+                                <code>"Retry-After"</code>
+                                ". Successful attempts reset the counter. A client is an IPv4 address \
+                                 or an IPv6 "
+                                <code>"/64"</code>
+                                ", and the table holds at most 4,096 clients. On top of that, more than 50 \
+                                 failures from all clients together in 5 minutes lock every PIN attempt \
+                                 for 60 seconds, doubling per repeat up to an hour and forgiven after two \
+                                 quiet hours (a signed-in session is unaffected). Use a long random PIN \
+                                 (12 or more characters) on any dashboard reachable beyond localhost. "
                                 <code>"X-Forwarded-For"</code>
                                 " is ignored, so behind a reverse proxy all clients share the \
                                  proxy's address and one limit. Since 0.11 the PIN sent as "
@@ -2060,8 +2092,9 @@ claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}<
                                     <code>"127.0.0.1"</code>
                                     ", "
                                     <code>"[::1]"</code>
-                                    " and "
+                                    ", and "
                                     <code>"my.mentisdb.com"</code>
+                                    " on TLS listeners only"
                                 </li>
                                 <li>
                                     "the configured "
@@ -2124,7 +2157,23 @@ claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}<
                                      name or DHCP address."
                                 </li>
                                 <li>
-                                    <strong>"REST, and MCP with bearer tokens off, "</strong>
+                                    <strong>"REST on a loopback bind (the default) "</strong>
+                                    "checks "
+                                    <code>"Host"</code>
+                                    " on every request, like MCP: "
+                                    <code>"curl"</code>
+                                    ", the CLI, agents and browsers alike get 403 unless the name is in \
+                                     the list (a request with no "
+                                    <code>"Host"</code>
+                                    " passes). An nginx or Caddy in front of a loopback daemon forwards \
+                                     the public name as "
+                                    <code>"Host"</code>
+                                    " by default: list that name, or have the proxy send "
+                                    <code>"Host: 127.0.0.1:9472"</code>
+                                    "."
+                                </li>
+                                <li>
+                                    <strong>"REST on a wildcard bind, and MCP with bearer tokens off, "</strong>
                                     "refuse a request from a browser (one that carries "
                                     <code>"Origin"</code>
                                     " or "
@@ -3798,7 +3847,74 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         <code>"GET /"</code>
                                         " on the MCP port) carries metadata only: tool name, chain key, \
                                          outcome and duration, never arguments, results or error text. With \
-                                         bearer tokens on, subscribing needs a valid token."
+                                         bearer tokens on, subscribing needs a global token (it reports \
+                                         every chain)."
+                                    </li>
+                                    <li>
+                                        <strong>"Request limits. "</strong>
+                                        <code>"offset + limit"</code>
+                                        " above 10,000 on ranked, lexical and federated search and context \
+                                         bundles, and a standing-context "
+                                        <code>"per_type_limit"</code>
+                                        " above 100, get 400 on REST, MCP and the CLI. Narrow the query with \
+                                         filters or "
+                                        <code>"since"</code>
+                                        "/"
+                                        <code>"until"</code>
+                                        " to read deeper."
+                                    </li>
+                                    <li>
+                                        <strong>"Reverse proxies and my.mentisdb.com. "</strong>
+                                        "REST on a loopback bind now checks "
+                                        <code>"Host"</code>
+                                        " for every client: list the name your proxy forwards in "
+                                        <code>"MENTISDB_DASHBOARD_ALLOWED_HOSTS"</code>
+                                        ". "
+                                        <code>"my.mentisdb.com"</code>
+                                        " works on the HTTPS ports only; switch "
+                                        <code>"http://my.mentisdb.com:9471"</code>
+                                        " clients to "
+                                        <code>"https://my.mentisdb.com:9473"</code>
+                                        " or "
+                                        <code>"http://localhost:9471"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"Private chains need a dashboard PIN for admin routes. "</strong>
+                                        "While the daemon holds a private chain and no "
+                                        <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                        " is set, deleting chains, writing settings, managing bearer tokens and \
+                                         restarting from the dashboard answer 403."
+                                    </li>
+                                    <li>
+                                        <strong>"mentisdb key generate "</strong>
+                                        "never prints the private seed. It writes it to an owner-only file ("
+                                        <code>"--out FILE"</code>
+                                        ", else "
+                                        <code>"$MENTISDB_KEY_DIR"</code>
+                                        ", default "
+                                        <code>"~/.mentisdb/keys/"</code>
+                                        "). Scripts that parsed the seed from the output must pass "
+                                        <code>"--out"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"File permissions. "</strong>
+                                        "New directories are created 0700 and data files 0600; existing ones keep \
+                                         their mode and the daemon warns about a data directory others can \
+                                         read. Run "
+                                        <code>"chmod 700"</code>
+                                        " on it. Backups leave out "
+                                        <code>"operator/operator.key"</code>
+                                        ": back it up separately."
+                                    </li>
+                                    <li>
+                                        <strong>"1 MiB body limit for signed requests. "</strong>
+                                        "Requests that carry an "
+                                        <code>"X-Mentis-Auth"</code>
+                                        " read proof, like REST requests with bearer tokens on, are buffered up \
+                                         to 1 MiB and get 413 above that. Import a large MEMORY.md with a \
+                                         read key in batches."
                                     </li>
                                     <li>
                                         <strong>"Restoring a backup over a signed or private chain "</strong>
@@ -4087,7 +4203,10 @@ MENTISDB_READ_KEY_ID=builder-202610 mentisdb --mode stdio"#}</code></pre>
                                         "Proofs are accepted within 60 seconds of the server clock and each \
                                          nonce only once. A header that is present but invalid gets 401, so a \
                                          client with a skewed clock learns why; a request without the header \
-                                         is a public reader."
+                                         is a public reader. A nonce is spent only when the proof grants \
+                                         access to a private segment, and the replay cache holds at most \
+                                         25,000 nonces per key and 100,000 in total; a proof refused because \
+                                         the cache is full reads the public view."
                                     </li>
                                     <li>
                                         "Key sets are per chain: a proof never reads a chain the key is not \
@@ -4412,6 +4531,28 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                         "."
                                     </li>
                                     <li>
+                                        "Who may replace a thought: on a chain with a signing policy, a strong \
+                                         link replaces its target only when its writer was verified when the \
+                                         chain opened and is the target's own agent or a key authorized on the \
+                                         chain. Anyone else's link only contests (the target stays current with "
+                                        <code>"version_status: \"contested\""</code>
+                                        ", the link listed under "
+                                        <code>"successors"</code>
+                                        " with "
+                                        <code>"authorized: false"</code>
+                                        "). On an open chain a replacement by another agent still redirects but \
+                                         is flagged: successor notes carry "
+                                        <code>"agent_id"</code>
+                                        ", "
+                                        <code>"trust"</code>
+                                        ", "
+                                        <code>"cross_agent"</code>
+                                        " and "
+                                        <code>"authorized"</code>
+                                        ". Cross-chain and branch lineage follow the same rules, and a chain of \
+                                         more than 64 versions of one thought is refused."
+                                    </li>
+                                    <li>
                                         "Appending a Correction, AssumptionInvalidated or a Decision that \
                                          replaces memory without a typed relation returns "
                                         <code>"warnings"</code>
@@ -4580,6 +4721,19 @@ MENTISDB_DEDUP_SCAN_WINDOW=64
                                      and Checkpoint or Summary. A superseded constraint or decision is \
                                      replaced by its successor and contested entries are flagged."
                                 </p>
+                                <p>
+                                    "The "
+                                    <code>"prompt"</code>
+                                    " renders each entry as one escaped line (line breaks and invisible \
+                                     characters become visible marks), so stored text cannot forge entries \
+                                     or instructions. Each entry shows "
+                                    <code>"trust=verified|unsigned|unverified"</code>
+                                    ", replacements by another agent are marked "
+                                    <code>"[REPLACES #n ...]"</code>
+                                    ", and the block says its entries are data, not instructions. On a chain \
+                                     that requires signatures, an unverified writer's importance is capped at \
+                                     0.5 for ranking."
+                                </p>
                                 <div class="code-block">
                                     <pre><code>{r#"# MCP (load at session start, before mentisdb_recent_context)
 mentisdb_standing_context(chain_key: "project")
@@ -4604,7 +4758,7 @@ mentisdb thought standing --chain project"#}</code></pre>
                                     <code>"include_invalidated"</code>
                                     ", "
                                     <code>"per_type_limit"</code>
-                                    " (default 8) and "
+                                    " (default 8, at most 100) and "
                                     <code>"limit"</code>
                                     " (default 40). The response has the typed "
                                     <code>"entries"</code>
