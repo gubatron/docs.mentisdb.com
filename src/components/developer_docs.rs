@@ -42,8 +42,13 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.10.10""#</code>
+                            <code>r#"mentisdb = "0.11.0""#</code>
                         </div>
+                        <p>
+                            "The minimum supported Rust version is 1.90 ("
+                            <code>"rust-version"</code>
+                            " in the crate manifest; CI checks it)."
+                        </p>
                         <p>
                             "The crate provides the full memory engine, skill registry, \
                              storage adapter interface, agent registry, and optional HTTP \
