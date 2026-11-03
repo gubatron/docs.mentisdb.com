@@ -613,6 +613,22 @@ claude mcp list"#}</code></pre>
                                 <code>"current_version"</code>
                                 " point at the replacement."
                             </li>
+                            <li>
+                                <code>"cross_agent: true"</code>
+                                " — another agent wrote the replacement (or a "
+                                <code>"current_version"</code>
+                                " has another "
+                                <code>"agent_id"</code>
+                                " or "
+                                <code>"trust"</code>
+                                " other than verified). Check it before acting on a replaced Constraint \
+                                 or Decision. On a chain that requires signatures, an unauthorized \
+                                 writer's link never replaces anything: it shows as "
+                                <code>"contested"</code>
+                                " with "
+                                <code>"authorized: false"</code>
+                                "."
+                            </li>
                         </ul>
                         <p>
                             "Plain current thoughts carry none of these fields. Use "
