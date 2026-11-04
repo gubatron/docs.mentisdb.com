@@ -1185,7 +1185,10 @@ pub fn DeveloperDocs() -> impl IntoView {
                              chunks shared by the sidecar entries, the exact index, the HNSW graph and the \
                              implicit-edge scanner. Exact search runs a lane-parallel dot product over it \
                              (about 4.3x faster at 100,000 vectors; scores within "<code>"1e-5"</code>
-                            " of the old cosine, so near-ties may swap). Signature changes:"
+                            " of the old cosine, so near-ties may swap; the HNSW and implicit-edge paths keep the \
+                             sequential cosine and can score a pair up to that much apart from exact search). \
+                             The exact index reuses removed slots and compacts once dead rows outnumber live \
+                             ones, so it does not grow under churn. Signature changes:"
                         </p>
                         <ul>
                             <li>
