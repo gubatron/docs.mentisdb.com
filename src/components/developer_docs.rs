@@ -26,6 +26,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                             <a href="#0.8.2"             class="docs-nav-link">"0.8.2 Features"</a>
                             <a href="#0.8.6"             class="docs-nav-link">"0.8.6 Features"</a>
                             <a href="#0.9.x"             class="docs-nav-link">"0.9.x Features"</a>
+                            <a href="#0.12"              class="docs-nav-link">"0.12 Library Changes"</a>
                             <a href="#0.11"              class="docs-nav-link">"0.11 Library Changes"</a>
                             <a href="#benchmarking"      class="docs-nav-link">"Benchmarking"</a>
                             <a href="#contributing"      class="docs-nav-link">"Contributing"</a>
@@ -43,7 +44,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.11.0""#</code>
+                            <code>r#"mentisdb = "0.12.0""#</code>
                         </div>
                         <p>
                             "The minimum supported Rust version is 1.90 ("
@@ -504,7 +505,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"GET"</code></td>
                                     <td><code>"/v1/chains"</code></td>
-                                    <td>"List available chain keys"</td>
+                                    <td>"List available chain keys; each chain summary carries "<code>"derived_backlog"</code>" (0.12)"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -1168,6 +1169,72 @@ pub fn DeveloperDocs() -> impl IntoView {
                              " for long-lived agent chains). Without dedup or agent-written \
                               invalidation edges, the set stays empty and search cannot hide noise."
                          </p>
+
+                        // ── 0.12 Library Changes ────────────────────────────
+                        <h2 id="0.12">"0.12 Library Changes"</h2>
+                        <p>
+                            "MentisDB 0.12.0 is a minor-version release because one public type \
+                             changed. The file format, the wire protocol and the CLI are unchanged."
+                        </p>
+
+                        <h3>"Breaking: VectorSidecarEntry::vector is Arc<[f32]>"</h3>
+                        <p>
+                            <code>"mentisdb::search::VectorSidecarEntry::vector"</code>
+                            " changed from "<code>"Vec<f32>"</code>" to "<code>"Arc<[f32]>"</code>
+                            ", so the background implicit-edge scanner can share the sidecar's \
+                             vectors instead of keeping a second copy (about 150 MB at 100,000 \
+                             thoughts x 384 dimensions). Reading the field as a slice works as before; \
+                             call "<code>".to_vec()"</code>" where you need a "<code>"Vec<f32>"</code>
+                            ". "<code>"VectorSidecarEntry::new"</code>" accepts a "<code>"Vec<f32>"</code>
+                            " or an "<code>"Arc<[f32]>"</code>". The field serializes exactly as before, \
+                             so sidecar files and their digests are unchanged."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"use mentisdb::search::VectorSidecarEntry;
+use std::sync::Arc;
+
+let entry = VectorSidecarEntry::new(id, index, hash, vec![0.1, 0.2, 0.3]); // unchanged
+let owned: Vec<f32> = entry.vector.to_vec();   // 0.11: entry.vector.clone()
+let slice: &[f32] = &entry.vector;            // unchanged
+let literal = VectorSidecarEntry {
+    thought_id: id, thought_index: index, thought_hash: hash.to_string(),
+    vector: Arc::from(vec![0.1, 0.2, 0.3]),   // 0.11: vec![0.1, 0.2, 0.3]
+};"#}</code></pre>
+                        </div>
+                        <p>
+                            <code>"entry.vector.clone()"</code>
+                            " still compiles but now returns an "<code>"Arc<[f32]>"</code>
+                            " (a pointer copy), not a "<code>"Vec<f32>"</code>"."
+                        </p>
+
+                        <h3>"Derived-state backlog"</h3>
+                        <p>
+                            <code>"MentisDb::derived_backlog"</code>" returns a "<code>"DerivedBacklog"</code>
+                            " summing a chain's managed sidecars: "
+                            <code>"embeddings_in_flight"</code>" (requested, not committed), "
+                            <code>"embeddings_parked"</code>" (ready, waiting for an earlier thought's \
+                             vector), "
+                            <code>"embeddings_missing"</code>" (waiting to be embedded again) and "
+                            <code>"implicit_edges"</code>" (applied vectors whose edges have not reached \
+                             the overlay). All are zero when the chain is caught up. "
+                            <code>"GET /v1/chains"</code>" and the MCP chain listing report it per chain as "
+                            <code>"derived_backlog"</code>
+                            ", with zeros for a chain that is not open or whose private segments are \
+                             hidden from the caller."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#""derived_backlog": {
+  "embeddings_in_flight": 0, "embeddings_parked": 0,
+  "embeddings_missing": 0, "implicit_edges": 312
+}"#}</code></pre>
+                        </div>
+                        <p>
+                            "The implicit-edge queue holds positions, not vectors, so a backlog never \
+                             grows memory by more than a few bytes, never blocks an append and never \
+                             drops an edge. The scan sustains about 155 appends per second at 100,000 \
+                             thoughts and 720 at 20,000 (4 threads, 384 dimensions); faster appends make \
+                             "<code>"implicit_edges"</code>" grow, and it drains when they slow down."
+                        </p>
 
                         // ── 0.11 Library Changes ────────────────────────────
                         <h2 id="0.11">"0.11 Library Changes"</h2>
