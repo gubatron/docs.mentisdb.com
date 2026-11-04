@@ -484,7 +484,17 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_MAX_BODY_BYTES"</code></td>
                                             <td><code>"67108864"</code></td>
-                                            <td>"Largest body, in bytes, the import routes (/v1/import-markdown, /v1/skills/upload, /v1/extract-memories) accept from an authenticated caller. 64 MiB by default; must be 1048576 to 1073741824, otherwise the daemon refuses to start. Every other route takes at most 2 MiB; larger bodies get 413. Related: MENTISDB_MAX_INFLIGHT_BODY_BYTES (budget of body bytes in flight, default 4x this, 503 beyond it) and MENTISDB_BODY_IDLE_TIMEOUT_SECS (default 30). A read proof that does not also send X-Mentis-Content-Sha256 is limited to 1 MiB; the CLI and pymentisdb send it"</td>
+                                            <td>"Largest body, in bytes, the import routes (/v1/import-markdown, /v1/skills/upload, /v1/extract-memories) accept from an authenticated caller. 64 MiB by default; must be 1048576 to 1073741824, otherwise the daemon refuses to start. Every other route takes at most 2 MiB; larger bodies get 413. A read proof that does not also send X-Mentis-Content-Sha256 is limited to 1 MiB; the CLI and pymentisdb send it"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_MAX_INFLIGHT_BODY_BYTES"</code></td>
+                                            <td>"4 x MENTISDB_MAX_BODY_BYTES"</td>
+                                            <td>"Body bytes all import requests in flight may hold together; one peer may hold twice the cap and four bodies. Beyond it: 503 with Retry-After. A smaller value is raised to one cap. Ordinary requests use a separate fixed 64 MiB pool (8 MiB for an anonymous caller), so imports never starve them"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_BODY_IDLE_TIMEOUT_SECS"</code></td>
+                                            <td><code>"30"</code></td>
+                                            <td>"A request body that delivers no data for this long fails with 408; small and anonymous bodies also get a total deadline of twice this. Range 1 to 3600; anything else stops the daemon at startup"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
@@ -3776,11 +3786,26 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                 <p>"No data migration. Changes to check:"</p>
                                 <ul>
                                     <li>
-                                        <strong>"Large request bodies. "</strong>
-                                        "Every REST and MCP body is limited to "
+                                        <strong>"Request bodies are admitted before they are read. "</strong>
+                                        "With bearer tokens on, the token is checked from the headers first, and a \
+                                         caller without a valid token is refused without its body being read. \
+                                         Ordinary routes and every MCP request take at most 2 MiB; only "
+                                        <code>"/v1/import-markdown"</code>
+                                        ", "
+                                        <code>"/v1/skills/upload"</code>
+                                        " and "
+                                        <code>"/v1/extract-memories"</code>
+                                        " take up to "
                                         <code>"MENTISDB_MAX_BODY_BYTES"</code>
-                                        " (default 64 MiB, never below 1 MiB), bearer-token requests included. \
-                                         A read proof that also sends "
+                                        " (default 64 MiB), and only from an authenticated caller. Imports and \
+                                         ordinary requests draw on separate budgets, with a per-peer share and \
+                                         8 MiB for an anonymous caller. A stalled body gets 408, an exhausted \
+                                         budget 503 with Retry-After. A large import over MCP fails with 413: \
+                                         use the REST route or the CLI."
+                                    </li>
+                                    <li>
+                                        <strong>"Large signed imports. "</strong>
+                                        "A read proof that also sends "
                                         <code>"X-Mentis-Content-Sha256"</code>
                                         " (the digest the proof signs) is verified before the body is read and \
                                          the body is hashed as it streams; without the header a read proof is \
@@ -3794,7 +3819,7 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         <strong>"Reverse proxies "</strong>
                                         "must allow bodies up to "
                                         <code>"MENTISDB_MAX_BODY_BYTES"</code>
-                                        " (nginx's "
+                                        " on the import routes (nginx's "
                                         <code>"client_max_body_size"</code>
                                         " defaults to 1 MiB), or large imports fail at the proxy."
                                     </li>
@@ -3816,7 +3841,25 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         <code>".to_vec()"</code>
                                         " where you need a "
                                         <code>"Vec<f32>"</code>
-                                        ". See the developer docs."
+                                        ", and "
+                                        <code>"MentisDbServiceConfig"</code>
+                                        " is "
+                                        <code>"#[non_exhaustive]"</code>
+                                        " (build it with "
+                                        <code>"new()"</code>
+                                        " and the "
+                                        <code>"with_*"</code>
+                                        " methods). See the developer docs."
+                                    </li>
+                                    <li>
+                                        <strong>"Body settings are validated. "</strong>
+                                        "A bad "
+                                        <code>"MENTISDB_MAX_BODY_BYTES"</code>
+                                        ", "
+                                        <code>"MENTISDB_MAX_INFLIGHT_BODY_BYTES"</code>
+                                        " or "
+                                        <code>"MENTISDB_BODY_IDLE_TIMEOUT_SECS"</code>
+                                        " stops the daemon at startup instead of falling back to a default."
                                     </li>
                                 </ul>
 
