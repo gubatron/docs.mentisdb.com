@@ -28,6 +28,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
+                                <a class="docs-nav-link" href="#upgrading-0-12">"Upgrading to 0.12"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-11">"Upgrading to 0.11"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-10-9">"Upgrading to 0.10.9"</a>
                                 <a class="docs-nav-link" href="#signatures">"Cryptographic Signatures"</a>
@@ -483,7 +484,7 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_MAX_BODY_BYTES"</code></td>
                                             <td><code>"67108864"</code></td>
-                                            <td>"Largest request body, in bytes, any REST or MCP endpoint accepts (64 MiB by default, never below 1 MiB); larger ones get 413. It bounds the memory one request can make the daemon hold while it checks who is asking, so raise it only as far as your biggest import needs. A read proof that does not also send X-Mentis-Content-Sha256 is limited to 1 MiB; the CLI and pymentisdb send it"</td>
+                                            <td>"Largest body, in bytes, the import routes (/v1/import-markdown, /v1/skills/upload, /v1/extract-memories) accept from an authenticated caller. 64 MiB by default; must be 1048576 to 1073741824, otherwise the daemon refuses to start. Every other route takes at most 2 MiB; larger bodies get 413. Related: MENTISDB_MAX_INFLIGHT_BODY_BYTES (budget of body bytes in flight, default 4x this, 503 beyond it) and MENTISDB_BODY_IDLE_TIMEOUT_SECS (default 30). A read proof that does not also send X-Mentis-Content-Sha256 is limited to 1 MiB; the CLI and pymentisdb send it"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
@@ -1674,8 +1675,9 @@ mentisdb"#}</code></pre>
                                      minute, so "
                                     <code>"mentisdb bearertoken list"</code>
                                     " can lag by up to 60 seconds. Request bodies are limited to "
+                                    "2 MiB on ordinary routes, and up to "
                                     <code>"MENTISDB_MAX_BODY_BYTES"</code>
-                                    " (64 MiB by default); larger ones are rejected with 413."
+                                    " (64 MiB by default) on the import routes for a caller with a valid token; larger ones are rejected with 413."
                                 </p>
 
                                 <h3>"Managing Tokens"</h3>
@@ -3770,6 +3772,54 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                     " and restart the daemon."
                                 </p>
 
+                                <h3 id="upgrading-0-12">"Upgrading to 0.12"</h3>
+                                <p>"No data migration. Changes to check:"</p>
+                                <ul>
+                                    <li>
+                                        <strong>"Large request bodies. "</strong>
+                                        "Every REST and MCP body is limited to "
+                                        <code>"MENTISDB_MAX_BODY_BYTES"</code>
+                                        " (default 64 MiB, never below 1 MiB), bearer-token requests included. \
+                                         A read proof that also sends "
+                                        <code>"X-Mentis-Content-Sha256"</code>
+                                        " (the digest the proof signs) is verified before the body is read and \
+                                         the body is hashed as it streams; without the header a read proof is \
+                                         still limited to 1 MiB. The CLI and pymentisdb 0.10.1 send the header, \
+                                         so a large "
+                                        <code>"mentisdb memory import"</code>
+                                        " with a read key works. Existing clients, mentischat included, need \
+                                         no change."
+                                    </li>
+                                    <li>
+                                        <strong>"Reverse proxies "</strong>
+                                        "must allow bodies up to "
+                                        <code>"MENTISDB_MAX_BODY_BYTES"</code>
+                                        " (nginx's "
+                                        <code>"client_max_body_size"</code>
+                                        " defaults to 1 MiB), or large imports fail at the proxy."
+                                    </li>
+                                    <li>
+                                        <strong>"Chain listing. "</strong>
+                                        "Each chain in "
+                                        <code>"GET /v1/chains"</code>
+                                        " carries "
+                                        <code>"derived_backlog"</code>
+                                        " (embeddings in flight, parked or missing, and the implicit-edge \
+                                         backlog); all zeros means the chain's derived state is caught up."
+                                    </li>
+                                    <li>
+                                        <strong>"Library users: "</strong>
+                                        <code>"VectorSidecarEntry::vector"</code>
+                                        " is "
+                                        <code>"Arc<[f32]>"</code>
+                                        "; call "
+                                        <code>".to_vec()"</code>
+                                        " where you need a "
+                                        <code>"Vec<f32>"</code>
+                                        ". See the developer docs."
+                                    </li>
+                                </ul>
+
                                 <h3 id="upgrading-0-11">"Upgrading to 0.11"</h3>
                                 <p>
                                     "Upgrade with "
@@ -3919,7 +3969,7 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         "Requests that carry an "
                                         <code>"X-Mentis-Auth"</code>
                                         " read proof, like REST requests with bearer tokens on, are buffered up \
-                                         to 1 MiB and get 413 above that. Later releases lift this for clients \
+                                         to 1 MiB and get 413 above that. 0.12 lifts this for clients \
                                          that also send "
                                         <code>"X-Mentis-Content-Sha256"</code>
                                         " (the CLI and pymentisdb do): the body is then limited only by "
@@ -5169,7 +5219,9 @@ for hit in response.results:          # CompactRankedSearchHit
 merged = client.federated_search(["backend", "frontend"], text="auth bug", compact=True)"#}</code></pre>
                                 </div>
                                 <p>
-                                    "To read the private segments of a chain (pymentisdb 0.10.0), give the client a "
+                                    "To read the private segments of a chain (pymentisdb 0.10.0; 0.10.1 also sends "
+                                    <code>"X-Mentis-Content-Sha256"</code>
+                                    " so bodies over 1 MiB work), give the client a "
                                     <code>"ReadSigner"</code>
                                     " ("
                                     <code>"pip install pymentisdb[signing]"</code>
