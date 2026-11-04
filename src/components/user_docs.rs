@@ -494,7 +494,12 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_BODY_IDLE_TIMEOUT_SECS"</code></td>
                                             <td><code>"30"</code></td>
-                                            <td>"A request body that delivers no data for this long fails with 408; small and anonymous bodies also get a total deadline of twice this, and every body must keep up at least 64 KiB/s after a grace period of twice this. Range 1 to 3600; anything else stops the daemon at startup"</td>
+                                            <td>"A request body that delivers no data for this long fails with 408; small and anonymous bodies also get a total deadline of twice this, and the minimum rate below applies after a grace period of twice this. Range 1 to 3600; anything else stops the daemon at startup"</td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>"MENTISDB_MIN_BODY_BYTES_PER_SEC"</code></td>
+                                            <td><code>"65536"</code></td>
+                                            <td>"Slowest rate a request body may sustain, judged in each window of one idle timeout once the grace period (twice the idle timeout) is over; each window counts only its own bytes. A slower body fails with 408. 64 KiB/s by default; 0 switches the rule off (the idle timeout and deadlines still apply). Lower it for imports over a slow link. Range 0 to 1073741824; anything else stops the daemon at startup"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
@@ -3800,8 +3805,10 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         " (default 64 MiB), and only from an authenticated caller. Imports, \
                                          ordinary requests and anonymous requests draw on three separate budgets \
                                          (64 MiB with 32 MiB per peer for ordinary requests, 16 MiB with 8 MiB per \
-                                         peer for anonymous ones). Every body must keep up at least 64 KiB/s after a \
-                                         60-second grace period. A stalled or too-slow body gets 408, an exhausted \
+                                         peer for anonymous ones). Every body must keep up at least \
+                                         MENTISDB_MIN_BODY_BYTES_PER_SEC (64 KiB/s by default, 0 = off) in every \
+                                         window after a 60-second grace period; lower it for imports over a slow \
+                                         link. A stalled or too-slow body gets 408, an exhausted \
                                          budget 503 with Retry-After, on every route. A large import over MCP fails \
                                          with 413: use the REST route or the CLI."
                                     </li>
@@ -3863,8 +3870,10 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         <code>"MENTISDB_MAX_BODY_BYTES"</code>
                                         ", "
                                         <code>"MENTISDB_MAX_INFLIGHT_BODY_BYTES"</code>
-                                        " or "
+                                        ", "
                                         <code>"MENTISDB_BODY_IDLE_TIMEOUT_SECS"</code>
+                                        " or "
+                                        <code>"MENTISDB_MIN_BODY_BYTES_PER_SEC"</code>
                                         " stops the daemon at startup instead of falling back to a default."
                                     </li>
                                 </ul>

@@ -785,7 +785,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, a token whose scope does not cover the operation, or an X-Mentis-Auth read proof that is present but invalid (bad signature, clock more than 60 s off, reused nonce)"</td></tr>
                                 <tr><td><code>"403"</code></td><td>"Permission denied: missing or invalid signature on a signed skill upload, a write the chain's access policy does not accept (the body does not say whether the agent or key exists), or an operator-only route"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
-                                <tr><td><code>"408"</code></td><td>"A request body stopped arriving for MENTISDB_BODY_IDLE_TIMEOUT_SECS, a small or anonymous body missed its total deadline (twice that), or any body fell below MIN_BODY_BYTES_PER_SEC (64 KiB/s) after its grace period (twice the idle timeout); on every route"</td></tr>
+                                <tr><td><code>"408"</code></td><td>"A request body stopped arriving for MENTISDB_BODY_IDLE_TIMEOUT_SECS, a small or anonymous body missed its total deadline (twice that), or any body fell below MENTISDB_MIN_BODY_BYTES_PER_SEC (64 KiB/s by default) in a window after its grace period (twice the idle timeout); on every route"</td></tr>
                                 <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
                                 <tr><td><code>"413"</code></td><td>"Request body over the route limit (2 MiB; MENTISDB_MAX_BODY_BYTES, default 64 MiB, on the import routes for an authenticated caller), or over 1 MiB for an X-Mentis-Auth read proof that does not also send X-Mentis-Content-Sha256 (the SHA-256 the proof signs; the CLI and pymentisdb send it, so a large memory import works)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
@@ -1253,7 +1253,8 @@ let config = MentisDbServiceConfig::new("/var/lib/mentisdb".into(), "project", S
     .with_verbose(true)
     .with_max_body_bytes(128 * 1024 * 1024)
     .with_max_inflight_body_bytes(512 * 1024 * 1024)
-    .with_body_idle_timeout(Duration::from_secs(60));"#}</code></pre>
+    .with_body_idle_timeout(Duration::from_secs(60))
+    .with_min_body_bytes_per_sec(16 * 1024);   // 0 turns the rate floor off"#}</code></pre>
                         </div>
 
                         <h3>"Request body admission"</h3>
@@ -1269,8 +1270,11 @@ let config = MentisDbServiceConfig::new("/var/lib/mentisdb".into(), "project", S
                             " = 32 MiB per peer); anonymous requests (bearer on, no valid token) from their own "
                             <code>"ANONYMOUS_POOL_BYTES"</code>" (16 MiB, "<code>"ANONYMOUS_PEER_BYTES"</code>
                             " = 8 MiB per peer). Small and anonymous bodies have a total deadline of twice the idle \
-                             timeout, and every body must keep up "<code>"MIN_BODY_BYTES_PER_SEC"</code>
-                            " (64 KiB/s) after a grace period of twice the idle timeout. Too slow or stalled is 408, \
+                             timeout, and every body must reach the configured minimum rate ("
+                            <code>"with_min_body_bytes_per_sec"</code>", "<code>"MENTISDB_MIN_BODY_BYTES_PER_SEC"</code>
+                            ", default "<code>"MIN_BODY_BYTES_PER_SEC"</code>" = 64 KiB/s, 0 = off) in every \
+                             window of one idle timeout after a grace period of twice the idle timeout; each \
+                             window counts only its own bytes, so credit cannot be banked. Too slow or stalled is 408, \
                              an exhausted budget 503 with Retry-After, on every route (the layer replaces a \
                              handler's 400 when it was the one that cut the body off). Read proofs that send "<code>"X-Mentis-Content-Sha256"</code>
                             " are verified before the body is read and the body is hashed as it streams."
