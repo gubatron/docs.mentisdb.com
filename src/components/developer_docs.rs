@@ -1174,37 +1174,62 @@ pub fn DeveloperDocs() -> impl IntoView {
                         // ── 0.12 Library Changes ────────────────────────────
                         <h2 id="0.12">"0.12 Library Changes"</h2>
                         <p>
-                            "MentisDB 0.12.0 is a minor-version release because one public type \
-                             changed. The file format, the wire protocol and the CLI are unchanged."
+                            "MentisDB 0.12.0 is a minor-version release because public library types \
+                             changed. Sidecar files, their digests, persisted HNSW graphs, the wire \
+                             protocol and the CLI are unchanged."
                         </p>
 
-                        <h3>"Breaking: VectorSidecarEntry::vector is Arc<[f32]>"</h3>
+                        <h3>"Breaking: one flat vector store (VectorRow)"</h3>
                         <p>
-                            <code>"mentisdb::search::VectorSidecarEntry::vector"</code>
-                            " changed from "<code>"Vec<f32>"</code>" to "<code>"Arc<[f32]>"</code>
-                            ", so the background implicit-edge scanner can share the sidecar's \
-                             vectors instead of keeping a second copy (about 150 MB at 100,000 \
-                             thoughts x 384 dimensions). Reading the field as a slice works as before; \
-                             call "<code>".to_vec()"</code>" where you need a "<code>"Vec<f32>"</code>
-                            ". "<code>"VectorSidecarEntry::new"</code>" accepts a "<code>"Vec<f32>"</code>
-                            " or an "<code>"Arc<[f32]>"</code>". The field serializes exactly as before, \
-                             so sidecar files and their digests are unchanged."
+                            "Every vector of a managed sidecar now lives once, in 128-row, 64-byte-aligned \
+                             chunks shared by the sidecar entries, the exact index, the HNSW graph and the \
+                             implicit-edge scanner. Exact search runs a lane-parallel dot product over it \
+                             (about 4.3x faster at 100,000 vectors; scores within "<code>"1e-5"</code>
+                            " of the old cosine, so near-ties may swap). Signature changes:"
                         </p>
+                        <ul>
+                            <li>
+                                <code>"VectorSidecarEntry::vector"</code>" is a "
+                                <code>"mentisdb::search::flat_store::VectorRow"</code>
+                                " (dereferences to "<code>"&[f32]"</code>"), not a "<code>"Vec<f32>"</code>
+                                ". Use "<code>".to_vec()"</code>" for a "<code>"Vec"</code>" and "
+                                <code>"VectorRow::standalone(&values)"</code>" to make one."
+                            </li>
+                            <li>
+                                <code>"VectorSidecarEntry::new"</code>" takes "<code>"impl Into<VectorRow>"</code>
+                                ": "<code>"Vec<f32>"</code>" and "<code>"&[f32]"</code>" convert, but a bare \
+                                 "<code>".collect()"</code>" whose type is only inferred no longer compiles; \
+                                 annotate it."
+                            </li>
+                            <li>
+                                <code>"VectorSidecar"</code>" has a private field: build it with "
+                                <code>"VectorSidecar::build"</code>", not a struct literal."
+                            </li>
+                            <li>
+                                "New: "<code>"search::flat_store"</code>" ("<code>"VectorStore"</code>", "
+                                <code>"VectorRow"</code>", "<code>"dot"</code>", "<code>"DOT_EPSILON"</code>"), "
+                                <code>"VectorIndex::{from_rows, upsert_row}"</code>", "
+                                <code>"VectorSearchBackend::upsert_row"</code>" (provided, implementors keep \
+                                 compiling) and "<code>"HnswBackend::{from_rows, share_cached_rows}"</code>"."
+                            </li>
+                        </ul>
                         <div class="code-block">
                             <pre><code>{r#"use mentisdb::search::VectorSidecarEntry;
-use std::sync::Arc;
+use mentisdb::search::flat_store::VectorRow;
 
 let entry = VectorSidecarEntry::new(id, index, hash, vec![0.1, 0.2, 0.3]); // unchanged
 let owned: Vec<f32> = entry.vector.to_vec();   // 0.11: entry.vector.clone()
 let slice: &[f32] = &entry.vector;            // unchanged
+let values: Vec<f32> = (0..3).map(|i| i as f32).collect(); // annotate inferred types
+let entry2 = VectorSidecarEntry::new(id, index, hash, values);
 let literal = VectorSidecarEntry {
     thought_id: id, thought_index: index, thought_hash: hash.to_string(),
-    vector: Arc::from(vec![0.1, 0.2, 0.3]),   // 0.11: vec![0.1, 0.2, 0.3]
+    vector: VectorRow::standalone(&[0.1, 0.2, 0.3]),   // 0.11: vec![0.1, 0.2, 0.3]
 };"#}</code></pre>
                         </div>
                         <p>
                             <code>"entry.vector.clone()"</code>
-                            " still compiles but now returns an "<code>"Arc<[f32]>"</code>
+                            " still compiles but now returns a "<code>"VectorRow"</code>
                             " (a pointer copy), not a "<code>"Vec<f32>"</code>"."
                         </p>
 

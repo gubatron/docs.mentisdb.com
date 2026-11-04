@@ -3835,9 +3835,13 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                     <li>
                                         <strong>"Library users: "</strong>
                                         <code>"VectorSidecarEntry::vector"</code>
-                                        " is "
-                                        <code>"Arc<[f32]>"</code>
-                                        "; call "
+                                        " is a "
+                                        <code>"VectorRow"</code>
+                                        " (a handle into one shared vector store; "
+                                        <code>"VectorSidecar"</code>
+                                        " is built with "
+                                        <code>"VectorSidecar::build"</code>
+                                        "); call "
                                         <code>".to_vec()"</code>
                                         " where you need a "
                                         <code>"Vec<f32>"</code>
