@@ -785,7 +785,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, a token whose scope does not cover the operation, or an X-Mentis-Auth read proof that is present but invalid (bad signature, clock more than 60 s off, reused nonce)"</td></tr>
                                 <tr><td><code>"403"</code></td><td>"Permission denied: missing or invalid signature on a signed skill upload, a write the chain's access policy does not accept (the body does not say whether the agent or key exists), or an operator-only route"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
-                                <tr><td><code>"408"</code></td><td>"A request body stopped arriving for MENTISDB_BODY_IDLE_TIMEOUT_SECS, or a small or anonymous body missed its total deadline (twice that)"</td></tr>
+                                <tr><td><code>"408"</code></td><td>"A request body stopped arriving for MENTISDB_BODY_IDLE_TIMEOUT_SECS, a small or anonymous body missed its total deadline (twice that), or any body fell below MIN_BODY_BYTES_PER_SEC (64 KiB/s) after its grace period (twice the idle timeout); on every route"</td></tr>
                                 <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
                                 <tr><td><code>"413"</code></td><td>"Request body over the route limit (2 MiB; MENTISDB_MAX_BODY_BYTES, default 64 MiB, on the import routes for an authenticated caller), or over 1 MiB for an X-Mentis-Auth read proof that does not also send X-Mentis-Content-Sha256 (the SHA-256 the proof signs; the CLI and pymentisdb send it, so a large memory import works)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
@@ -1260,10 +1260,16 @@ let config = MentisDbServiceConfig::new("/var/lib/mentisdb".into(), "project", S
                              request take at most "<code>"SMALL_BODY_BYTES"</code>" (2 MiB); only the routes in "
                             <code>"LARGE_BODY_ROUTES"</code>" take up to the configured cap, from an \
                              authenticated caller. Imports are reserved from their declared length against the \
-                             in-flight budget; other requests are charged per arriving byte from a fixed "
-                            <code>"SMALL_POOL_BYTES"</code>" (64 MiB) pool, of which an anonymous peer may hold "
-                            <code>"ANONYMOUS_PEER_BYTES"</code>" (8 MiB). Stalled bodies are 408, an exhausted \
-                             budget 503 with Retry-After. Read proofs that send "<code>"X-Mentis-Content-Sha256"</code>
+                             in-flight budget (2x the cap and "<code>"LARGE_BODIES_PER_PEER"</code>" (4) bodies per \
+                             peer). Other authenticated requests are charged per arriving byte from "
+                            <code>"SMALL_POOL_BYTES"</code>" (64 MiB, "<code>"SMALL_PEER_BYTES"</code>
+                            " = 32 MiB per peer); anonymous requests (bearer on, no valid token) from their own "
+                            <code>"ANONYMOUS_POOL_BYTES"</code>" (16 MiB, "<code>"ANONYMOUS_PEER_BYTES"</code>
+                            " = 8 MiB per peer). Small and anonymous bodies have a total deadline of twice the idle \
+                             timeout, and every body must keep up "<code>"MIN_BODY_BYTES_PER_SEC"</code>
+                            " (64 KiB/s) after a grace period of twice the idle timeout. Too slow or stalled is 408, \
+                             an exhausted budget 503 with Retry-After, on every route (the layer replaces a \
+                             handler's 400 when it was the one that cut the body off). Read proofs that send "<code>"X-Mentis-Content-Sha256"</code>
                             " are verified before the body is read and the body is hashed as it streams."
                         </p>
 

@@ -489,12 +489,12 @@ mentisdb agents"#}</code></pre>
                                         <tr>
                                             <td><code>"MENTISDB_MAX_INFLIGHT_BODY_BYTES"</code></td>
                                             <td>"4 x MENTISDB_MAX_BODY_BYTES"</td>
-                                            <td>"Body bytes all import requests in flight may hold together; one peer may hold twice the cap and four bodies. Beyond it: 503 with Retry-After. A smaller value is raised to one cap. Ordinary requests use a separate fixed 64 MiB pool (8 MiB for an anonymous caller), so imports never starve them"</td>
+                                            <td>"Body bytes all import requests in flight may hold together; one peer may hold twice the cap and four bodies. Beyond it: 503 with Retry-After. A smaller value is raised to one cap. Other requests use separate fixed pools, so imports never starve them: 64 MiB for authenticated callers (32 MiB per peer) and 16 MiB for anonymous ones (8 MiB per peer)"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BODY_IDLE_TIMEOUT_SECS"</code></td>
                                             <td><code>"30"</code></td>
-                                            <td>"A request body that delivers no data for this long fails with 408; small and anonymous bodies also get a total deadline of twice this. Range 1 to 3600; anything else stops the daemon at startup"</td>
+                                            <td>"A request body that delivers no data for this long fails with 408; small and anonymous bodies also get a total deadline of twice this, and every body must keep up at least 64 KiB/s after a grace period of twice this. Range 1 to 3600; anything else stops the daemon at startup"</td>
                                         </tr>
                                         <tr>
                                             <td><code>"MENTISDB_BEARER_TOKEN"</code></td>
@@ -3797,11 +3797,13 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         <code>"/v1/extract-memories"</code>
                                         " take up to "
                                         <code>"MENTISDB_MAX_BODY_BYTES"</code>
-                                        " (default 64 MiB), and only from an authenticated caller. Imports and \
-                                         ordinary requests draw on separate budgets, with a per-peer share and \
-                                         8 MiB for an anonymous caller. A stalled body gets 408, an exhausted \
-                                         budget 503 with Retry-After. A large import over MCP fails with 413: \
-                                         use the REST route or the CLI."
+                                        " (default 64 MiB), and only from an authenticated caller. Imports, \
+                                         ordinary requests and anonymous requests draw on three separate budgets \
+                                         (64 MiB with 32 MiB per peer for ordinary requests, 16 MiB with 8 MiB per \
+                                         peer for anonymous ones). Every body must keep up at least 64 KiB/s after a \
+                                         60-second grace period. A stalled or too-slow body gets 408, an exhausted \
+                                         budget 503 with Retry-After, on every route. A large import over MCP fails \
+                                         with 413: use the REST route or the CLI."
                                     </li>
                                     <li>
                                         <strong>"Large signed imports. "</strong>
