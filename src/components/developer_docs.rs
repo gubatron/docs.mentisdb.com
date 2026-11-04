@@ -785,11 +785,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr><td><code>"401"</code></td><td>"Missing or invalid bearer token, a token whose scope does not cover the operation, or an X-Mentis-Auth read proof that is present but invalid (bad signature, clock more than 60 s off, reused nonce)"</td></tr>
                                 <tr><td><code>"403"</code></td><td>"Permission denied: missing or invalid signature on a signed skill upload, a write the chain's access policy does not accept (the body does not say whether the agent or key exists), or an operator-only route"</td></tr>
                                 <tr><td><code>"404"</code></td><td>"Unknown chain or other missing resource"</td></tr>
+                                <tr><td><code>"408"</code></td><td>"A request body stopped arriving for MENTISDB_BODY_IDLE_TIMEOUT_SECS, or a small or anonymous body missed its total deadline (twice that)"</td></tr>
                                 <tr><td><code>"409"</code></td><td>"Conflict, e.g. branching into a chain key that already exists"</td></tr>
                                 <tr><td><code>"413"</code></td><td>"Request body over the route limit (2 MiB; MENTISDB_MAX_BODY_BYTES, default 64 MiB, on the import routes for an authenticated caller), or over 1 MiB for an X-Mentis-Auth read proof that does not also send X-Mentis-Content-Sha256 (the SHA-256 the proof signs; the CLI and pymentisdb send it, so a large memory import works)"</td></tr>
                                 <tr><td><code>"500"</code></td><td>"Server fault; the body says only \"internal server error\" and details go to the daemon log"</td></tr>
                                 <tr><td><code>"501"</code></td><td>"/v1/extract-memories on a build without the llm-extraction feature"</td></tr>
-                                <tr><td><code>"503"</code></td><td>"The chain is being migrated (Retry-After header, retry_after_secs and percent done in the body) or failed to migrate (the body names the fix, e.g. mentisdb migrate retry --chain KEY)"</td></tr>
+                                <tr><td><code>"503"</code></td><td>"The chain is being migrated (Retry-After header, retry_after_secs and percent done in the body) or failed to migrate (the body names the fix, e.g. mentisdb migrate retry --chain KEY); also, with Retry-After, when the in-flight body budget is exhausted"</td></tr>
                             </tbody>
                         </table>
                         <p>
@@ -1205,6 +1206,40 @@ let literal = VectorSidecarEntry {
                             <code>"entry.vector.clone()"</code>
                             " still compiles but now returns an "<code>"Arc<[f32]>"</code>
                             " (a pointer copy), not a "<code>"Vec<f32>"</code>"."
+                        </p>
+
+                        <h3>"Breaking: MentisDbServiceConfig is #[non_exhaustive]"</h3>
+                        <p>
+                            "It can no longer be built with a struct literal; the fields stay readable and \
+                             assignable. Build it with "<code>"MentisDbServiceConfig::new(..)"</code>
+                            " and the "<code>"with_*"</code>" builders. The body-admission settings are "
+                            <code>"with_max_body_bytes"</code>" (import routes, clamped to 1 MiB..1 GiB), "
+                            <code>"with_max_inflight_body_bytes"</code>" and "<code>"with_body_idle_timeout"</code>"."
+                        </p>
+                        <div class="code-block">
+                            <pre><code>{r#"use mentisdb::server::MentisDbServiceConfig;
+use mentisdb::StorageAdapterKind;
+use std::time::Duration;
+
+let config = MentisDbServiceConfig::new("/var/lib/mentisdb".into(), "project", StorageAdapterKind::Binary)
+    .with_verbose(true)
+    .with_max_body_bytes(128 * 1024 * 1024)
+    .with_max_inflight_body_bytes(512 * 1024 * 1024)
+    .with_body_idle_timeout(Duration::from_secs(60));"#}</code></pre>
+                        </div>
+
+                        <h3>"Request body admission"</h3>
+                        <p>
+                            "An outermost layer ("<code>"server_body"</code>") decides before reading a body: \
+                             the bearer token is checked from the headers first; ordinary routes and every MCP \
+                             request take at most "<code>"SMALL_BODY_BYTES"</code>" (2 MiB); only the routes in "
+                            <code>"LARGE_BODY_ROUTES"</code>" take up to the configured cap, from an \
+                             authenticated caller. Imports are reserved from their declared length against the \
+                             in-flight budget; other requests are charged per arriving byte from a fixed "
+                            <code>"SMALL_POOL_BYTES"</code>" (64 MiB) pool, of which an anonymous peer may hold "
+                            <code>"ANONYMOUS_PEER_BYTES"</code>" (8 MiB). Stalled bodies are 408, an exhausted \
+                             budget 503 with Retry-After. Read proofs that send "<code>"X-Mentis-Content-Sha256"</code>
+                            " are verified before the body is read and the body is hashed as it streams."
                         </p>
 
                         <h3>"Derived-state backlog"</h3>
