@@ -1159,17 +1159,26 @@ claude mcp list"#}</code></pre>
                         <h4>"Step 1 — Have the Operator Register Your Public Key"</h4>
                         <p>
                             "Since 0.11 registering a key is an operator action: you cannot do it \
-                             through MCP or REST. Ask the user to run, on the host or behind the \
-                             dashboard PIN:"
+                             through MCP or REST. Ask the user to run, on the host (or to use "
+                            <strong>"Generate key pair"</strong>
+                            " on your agent's dashboard page):"
                         </p>
                         <div class="docs-callout">
                             <pre><code>
-    "mentisdb key generate --out ~/.mentisdb/orion.key   # the seed never leaves this file\n\
-    mentisdb key show ~/.mentisdb/orion.key              # prints the public key hex\n\
-    mentisdb agent key add orion --key-id orion-signing-key-1 \\\n\
-      --public-key-hex <64 hex> --chain my-project --pin <PIN>"
+    "mentisdb agent key generate orion --key-id orion-signing-key-1 \\\n\
+      --chain my-project --pin <PIN>   # saves the private key 0600, registers the public key"
                             </code></pre>
                         </div>
+                        <p>
+                            "The command prints the public key and the path of the key file; your client \
+                             signs with that file ("
+                            <code>"--private-key-file"</code>
+                            "). Never ask the user to paste the private key into the conversation, and \
+                             never print or store it yourself: the file is its only copy, and MentisDB \
+                             cannot recover it. A key made elsewhere is registered with "
+                            <code>"mentisdb agent key add ... --public-key-hex <64 hex>"</code>
+                            "."
+                        </p>
 
                         <h4>"Step 2 — Sign the Skill Content"</h4>
                         <p>
