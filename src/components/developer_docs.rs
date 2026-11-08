@@ -121,6 +121,50 @@ pub fn DeveloperDocs() -> impl IntoView {
                             "."
                         </p>
 
+                        <h3 id="lean-mcp-output">"Lean output on MCP"</h3>
+                        <p>
+                            "MCP tool results are read by a language model, so the streamable-HTTP MCP surface \
+                             (JSON-RPC "<code>"tools/call"</code>", and stdio mode, which proxies to it) shapes \
+                             them for its context window. REST, "<code>"POST /tools/execute"</code>
+                            " and the CLI keep the full response. Since 0.12.1:"
+                        </p>
+                        <ul>
+                            <li>
+                                "Results are minified JSON text, with no second "<code>"structuredContent"</code>
+                                " copy. No tool declares an "<code>"outputSchema"</code>", so read the text \
+                                 content; it is one JSON document."
+                            </li>
+                            <li>
+                                <code>"mentisdb_ranked_search"</code>", "<code>"mentisdb_federated_search"</code>", "
+                                <code>"mentisdb_lexical_search"</code>" and "<code>"mentisdb_context_bundles"</code>
+                                " default to "<code>"compact: true"</code>" and leave out defaults: no "
+                                <code>"provenance"</code>" is a public, unsigned thought (each response says so once in "
+                                <code>"default_provenance"</code>"; a thought that arrives without provenance is marked "
+                                <code>"{\"unknown\": true}"</code>"), no "<code>"role"</code>" is "<code>"Memory"</code>
+                                ", no "<code>"importance"</code>" is 0.5, no "<code>"chain_key"</code>
+                                " is the chain searched. Floats are rounded, timestamps keep full precision. "
+                                <code>"successor_of"</code>" is one older version plus a "<code>"superseded_versions"</code>
+                                " count (a lower bound), and "<code>"successor_kind"</code>" keeps the kind of the link it \
+                                 replaces (absent means "<code>"Supersedes"</code>")."
+                            </li>
+                            <li>
+                                <code>"compact: false"</code>" returns the full record. A "<code>"compact"</code>" or "
+                                <code>"include_entries"</code>" that is not a boolean is refused with JSON-RPC "
+                                <code>"-32602"</code>"."
+                            </li>
+                            <li>
+                                <code>"mentisdb_standing_context"</code>" returns "<code>"prompt"</code>" and "
+                                <code>"duplicates_collapsed"</code>"; the "<code>"entries"</code>" array needs "
+                                <code>"include_entries: true"</code>"."
+                            </li>
+                        </ul>
+                        <p>
+                            "On a generated 3,500-thought chain a 10-hit ranked search costs 5,948 characters \
+                             instead of 23,657, and standing context 13,050 instead of 36,191 ("
+                            <code>"cargo run --release --example token_diet"</code>
+                            "). The rules are in the "<code>"mentisdb::server_lean"</code>" rustdoc."
+                        </p>
+
                         <h3>"All 45 MCP Tools"</h3>
                         <table class="api-table">
                             <thead>
@@ -154,7 +198,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"mentisdb_lexical_search"</code></td>
                                     <td>"Return flat ranked lexical matches with explainable term and field provenance"</td>
-                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"thought_types"</code>, <code>"limit"</code>, <code>"offset"</code></td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"thought_types"</code>, <code>"limit"</code>, <code>"offset"</code>, <code>"compact"</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_ranked_search"</code></td>
@@ -169,7 +213,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"mentisdb_context_bundles"</code></td>
                                     <td>"Return seed-anchored grouped support context beneath the best lexical seeds"</td>
-                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"graph"</code>, <code>"limit"</code></td>
+                                    <td><code>"chain_key"</code>, <code>"text"</code>, <code>"as_of"</code>, <code>"scope"</code>, <code>"graph"</code>, <code>"limit"</code>, <code>"compact"</code> (MCP only)</td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_list_chains"</code></td>
@@ -234,7 +278,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"mentisdb_standing_context"</code></td>
                                     <td>"Render durable, age-independent memory (constraints, preferences, user traits, goals, decisions, lessons, newest handoff and checkpoint) as a prompt block. Call at session start before mentisdb_recent_context"</td>
-                                    <td><code>"chain_key"</code>, <code>"agent_id"</code>, <code>"types"</code>, <code>"since"</code>, <code>"as_of"</code>, <code>"include_invalidated"</code>, <code>"per_type_limit"</code>, <code>"limit"</code></td>
+                                    <td><code>"chain_key"</code>, <code>"agent_id"</code>, <code>"types"</code>, <code>"since"</code>, <code>"as_of"</code>, <code>"include_invalidated"</code>, <code>"per_type_limit"</code>, <code>"limit"</code>, <code>"include_entries"</code> (MCP only)</td>
                                 </tr>
                                 <tr>
                                     <td><code>"mentisdb_recent_context"</code></td>
@@ -490,7 +534,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/lexical-search"</code></td>
-                                    <td>"Ranked lexical search with scores and matched-term diagnostics"</td>
+                                    <td>"Ranked lexical search with scores and matched-term diagnostics. Pass compact: true to drop match_sources and the thought's integrity fields"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -540,7 +584,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/standing-context"</code></td>
-                                    <td>"Durable, age-independent memory as a prompt block plus typed entries (entries, duplicates_collapsed, prompt). Load at session start before recent context"</td>
+                                    <td>"Durable, age-independent memory as a prompt block plus typed entries (entries, duplicates_collapsed, prompt). Load at session start before recent context. Over MCP, entries need include_entries: true"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -911,10 +955,10 @@ pub fn DeveloperDocs() -> impl IntoView {
 
                         <h3>"REST Example: compact ranked search"</h3>
                         <p>
-                            "Ranked and federated search accept an opt-in "<code>"compact: true"</code>
-                            " (MCP "<code>"mentisdb_ranked_search"</code>" / "<code>"mentisdb_federated_search"</code>
-                            ", REST "<code>"/v1/ranked-search"</code>" / "<code>"/v1/federated-search"</code>
-                            ", CLI "<code>"--compact"</code>"). A compact hit is "<code>"chain_key"</code>
+                            "Over REST, ranked, federated and lexical search accept an opt-in "<code>"compact: true"</code>
+                            " ("<code>"/v1/ranked-search"</code>", "<code>"/v1/federated-search"</code>", "
+                            <code>"/v1/lexical-search"</code>"; CLI "<code>"--compact"</code>" on ranked and federated search). Over MCP, compact is the \
+                             default and goes further (see "<a href="#lean-mcp-output">"Lean output on MCP"</a>"). A compact hit is "<code>"chain_key"</code>
                             ", the total "<code>"score"</code>" as a number and the thought without "
                             <code>"hash"</code>", "<code>"prev_hash"</code>", "<code>"thought_signature"</code>
                             ", "<code>"signing_key_id"</code>", "<code>"schema_version"</code>", "<code>"agent_name"</code>
@@ -1173,6 +1217,42 @@ pub fn DeveloperDocs() -> impl IntoView {
 
                         // ── 0.12 Library Changes ────────────────────────────
                         <h2 id="0.12">"0.12 Library Changes"</h2>
+                        <h3 id="0.12.1">"0.12.1: pages filled with live memories"</h3>
+                        <p>
+                            "0.12.1 changes no public signature; it adds "<code>"mentisdb::server_lean"</code>
+                            " and "<code>"PROVENANCE_REMINDER"</code>". What changed is how "
+                            <code>"MentisDb::query_ranked"</code>" fills a page:"
+                        </p>
+                        <ul>
+                            <li>
+                                "Only live memories compete. Every match is scored once, a superseded match nominates \
+                                 its live successor, and the walk stops at "<code>"limit"</code>" distinct live \
+                                 memories. It used to rank a fixed "<code>"2 * limit"</code>" window that included \
+                                 superseded thoughts, so one decision rewritten 30 times turned a "
+                                <code>"limit = 5"</code>" search into one hit. "<code>"total_candidates"</code>
+                                " counts live matches. Context-bundle seeds use the same walk."
+                            </li>
+                            <li>
+                                "Score totals are non-increasing in page order: a stand-in or contester that would \
+                                 outscore the hit before it reports a total just below it, so offset paging tiles the \
+                                 ranking."
+                            </li>
+                            <li>
+                                <code>"successor_of"</code>" lists the matched older versions met before the page \
+                                 filled: a lower bound on the lineage, not all of it."
+                            </li>
+                            <li>
+                                "The refill after near-duplicate collapsing resumes instead of restarting and is \
+                                 capped at "<code>"max(16 * limit, 4096)"</code>" ranked slots, so a page whose \
+                                 distinct matches lie deeper comes back short."
+                            </li>
+                            <li>
+                                <code>"MentisDb::query_federated"</code>" still cuts each chain at its query's "
+                                <code>"limit"</code>" before redirecting and removing duplicates; the server's \
+                                 federated search widens the fetch up to "
+                                <code>"max(16 * (offset + limit), 4096)"</code>" per chain."
+                            </li>
+                        </ul>
                         <p>
                             "MentisDB 0.12.0 is a minor-version release because public library types \
                              changed. Sidecar files, their digests, persisted HNSW graphs, the wire \
