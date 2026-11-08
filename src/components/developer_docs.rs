@@ -44,7 +44,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.12.0""#</code>
+                            <code>r#"mentisdb = "0.12.1""#</code>
                         </div>
                         <p>
                             "The minimum supported Rust version is 1.90 ("
