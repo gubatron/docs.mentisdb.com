@@ -3846,6 +3846,24 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         "."
                                     </li>
                                     <li>
+                                        <strong>"Security: key changes on the dashboard need a PIN. "</strong>
+                                        "Before 0.12.1.58 the dashboard's agent-key registration could replace an \
+                                         agent's existing key under the same key id, including a revoked one, so \
+                                         anyone able to reach the dashboard API could register a key that verifies as \
+                                         that agent. Key ids are now never reused or overwritten, and Generate key \
+                                         pair, Add Key and Delete answer 403 on a dashboard without "
+                                        <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                        " (use "
+                                        <code>"mentisdb agent key generate|add|revoke --offline"</code>
+                                        " there). If your dashboard was reachable by untrusted local processes or \
+                                         users, review each agent's registered keys and revoke any you did not register."
+                                    </li>
+                                    <li>
+                                        <strong>"Rotate keys with a new key id. "</strong>
+                                        "A different key under an existing id, active or revoked, is refused: \
+                                         register the new key under a new id, then revoke the old one."
+                                    </li>
+                                    <li>
                                         <strong>"lme-benches/full_bench.sh "</strong>
                                         "no longer kills every MentisDB process. It refuses to run while a daemon \
                                          answers on its REST port ("
@@ -4260,8 +4278,9 @@ mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
                                 <p>
                                     <code>"agent key generate"</code>
                                     " creates an Ed25519 key pair on the machine you run it on, saves the private \
-                                     seed to a file only you can read (mode 0600), registers the public key, and \
-                                     prints the public key and the file's path. Without "
+                                     seed to a file only you can read (mode 0600 on macOS and Linux; on Windows \
+                                     the file inherits its folder's permissions, so restrict the folder), registers \
+                                     the public key, and prints the public key and the file's path. Without "
                                     <code>"--out FILE"</code>
                                     " the file is "
                                     <code>"$MENTISDB_KEY_DIR/<public key prefix>.key"</code>
@@ -4269,6 +4288,8 @@ mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
                                     <code>"~/.mentisdb/keys"</code>
                                     "); an existing file is overwritten only with "
                                     <code>"--force"</code>
+                                    ", which refuses a symbolic link at "
+                                    <code>"--out"</code>
                                     ". The private key is never printed, and "
                                     <code>"--json"</code>
                                     " never includes it. A wrong PIN, an unreachable daemon or a key id the agent \
@@ -4279,22 +4300,27 @@ mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
                                 </p>
                                 <p><strong>"From the dashboard"</strong></p>
                                 <p>
-                                    "Open the agent's page, enter a Key ID in the Public Keys card and click "
+                                    "This needs a dashboard protected by a PIN ("
+                                    <code>"MENTISDB_DASHBOARD_PIN"</code>
+                                    "); a dashboard without one refuses every key change and says why. Open the \
+                                     agent's page, enter a Key ID in the Public Keys card and click "
                                     <strong>"Generate key pair"</strong>
                                     ". Your browser makes the pair (WebCrypto), signs a proof of possession and \
                                      registers only the public key; the private key never crosses the network. \
                                      The private key is then shown once, with "
                                     <strong>"Download key file"</strong>
-                                    " (a file "
+                                    " ("
+                                    <code>"<agent>-<key-id>.key"</code>
+                                    ", which "
                                     <code>"--private-key-file"</code>
-                                    " reads) and "
+                                    " reads; the link is valid for 10 seconds) and "
                                     <strong>"Copy"</strong>
                                     ". The dialog stays open until you tick "
                                     <em>"I have saved this key"</em>
-                                    ", and closing it removes the key from the page. A downloaded file gets your \
-                                     browser's default permissions, so run "
-                                    <code>"chmod 600"</code>
-                                    " on it. A browser without Ed25519 in WebCrypto is told to use the CLI instead."
+                                    ", and closing it removes the key from the page. Browsers save downloads \
+                                     readable by other users of the computer, so, as the dialog reminds you, run "
+                                    <code>"chmod 600 <file>"</code>
+                                    " on macOS or Linux. A browser without Ed25519 in WebCrypto is told to use the CLI instead."
                                 </p>
                                 <div class="docs-callout docs-callout-warning">
                                     <strong>"The key file is the only copy of the private key. "</strong>
@@ -4311,8 +4337,10 @@ mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
                                     <strong>"Add Key"</strong>
                                     " (which works since 0.12.1, and accepts 64 hex characters, "
                                     <code>"0x"</code>
-                                    " hex or 32 comma-separated bytes). The operator vouches for the key, so no \
-                                     proof of possession is needed."
+                                    " hex or 32 comma-separated bytes, and also needs the dashboard PIN). The \
+                                     operator vouches for the key, so no proof of possession is needed. A key id is \
+                                     never reused: to rotate, register the new key under a new id and revoke the \
+                                     old one."
                                 </p>
                                 <div class="code-block">
                                     <pre><code>{r#"mentisdb key generate --out ~/.mentisdb/builder.key
