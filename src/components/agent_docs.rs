@@ -1161,7 +1161,7 @@ claude mcp list"#}</code></pre>
                             "Since 0.11 registering a key is an operator action: you cannot do it \
                              through MCP or REST. Ask the user to run, on the host (or to use "
                             <strong>"Generate key pair"</strong>
-                            " on your agent's dashboard page):"
+                            " on your agent's page of a PIN-protected dashboard):"
                         </p>
                         <div class="docs-callout">
                             <pre><code>
