@@ -3835,6 +3835,24 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                         "), which it used to ignore."
                                     </li>
                                     <li>
+                                        <strong>"Agent key pairs in one step. "</strong>
+                                        <code>"mentisdb agent key generate"</code>
+                                        " and the dashboard's "
+                                        <strong>"Generate key pair"</strong>
+                                        " create an Ed25519 pair and register its public key; the dashboard's "
+                                        <strong>"Add Key"</strong>
+                                        " now works. Existing keys are unaffected. See "
+                                        <a href="#agent-key-pairs">"Giving an agent a key"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"lme-benches/full_bench.sh "</strong>
+                                        "no longer kills every MentisDB process. It refuses to run while a daemon \
+                                         answers on its REST port ("
+                                        <code>"MENTISDB_REST_PORT"</code>
+                                        ", default 9472) and stops only the daemon it started."
+                                    </li>
+                                    <li>
                                         <strong>"Fuller pages. "</strong>
                                         "A search for 5 results on a chain where one decision was rewritten 30 times \
                                          returned 1 hit; it now returns 5 distinct live memories. Paged REST search no \
@@ -4221,23 +4239,86 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                      \"fetch the head, sign again\" (HTTP 400)."
                                 </p>
 
-                                <h3>"Generating and registering a key"</h3>
+                                <h3 id="agent-key-pairs">"Giving an agent a key"</h3>
                                 <p>
-                                    "Generate a key file locally; the private seed never leaves it. \
-                                     Registering a public key is an operator action (dashboard behind its \
-                                     PIN, or the local CLI): the operator vouches for the key, so no proof \
-                                     of possession is needed. The REST route and MCP tool that let any \
-                                     token holder register keys were removed in 0.11."
+                                    "Registering a public key is an operator action (the dashboard behind its \
+                                     PIN, or the local CLI). The REST route and MCP tool that let any token holder \
+                                     register keys were removed in 0.11. Since 0.12.1 the operator can create the \
+                                     key pair and register its public key in one step, from the command line or \
+                                     the dashboard. MentisDB keeps only the public key."
+                                </p>
+                                <p><strong>"From the command line"</strong></p>
+                                <div class="code-block">
+                                    <pre><code>{r#"mentisdb agent key generate builder --key-id builder-202610 --chain project --pin 123456
+# or with the daemon stopped, against the data directory:
+mentisdb agent key generate builder --key-id builder-202610 --chain project --offline
+
+# sign a thought locally with the saved file (the seed is never sent)
+mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
+  --agent builder --signing-key-id builder-202610 --private-key-file ~/.mentisdb/keys/<prefix>.key"#}</code></pre>
+                                </div>
+                                <p>
+                                    <code>"agent key generate"</code>
+                                    " creates an Ed25519 key pair on the machine you run it on, saves the private \
+                                     seed to a file only you can read (mode 0600), registers the public key, and \
+                                     prints the public key and the file's path. Without "
+                                    <code>"--out FILE"</code>
+                                    " the file is "
+                                    <code>"$MENTISDB_KEY_DIR/<public key prefix>.key"</code>
+                                    " (default "
+                                    <code>"~/.mentisdb/keys"</code>
+                                    "); an existing file is overwritten only with "
+                                    <code>"--force"</code>
+                                    ". The private key is never printed, and "
+                                    <code>"--json"</code>
+                                    " never includes it. A wrong PIN, an unreachable daemon or a key id the agent \
+                                     already has is reported before anything is written. If the registration fails \
+                                     after the file was written, the file is kept and the error prints the "
+                                    <code>"mentisdb agent key add ... --public-key-hex"</code>
+                                    " command that registers it later."
+                                </p>
+                                <p><strong>"From the dashboard"</strong></p>
+                                <p>
+                                    "Open the agent's page, enter a Key ID in the Public Keys card and click "
+                                    <strong>"Generate key pair"</strong>
+                                    ". Your browser makes the pair (WebCrypto), signs a proof of possession and \
+                                     registers only the public key; the private key never crosses the network. \
+                                     The private key is then shown once, with "
+                                    <strong>"Download key file"</strong>
+                                    " (a file "
+                                    <code>"--private-key-file"</code>
+                                    " reads) and "
+                                    <strong>"Copy"</strong>
+                                    ". The dialog stays open until you tick "
+                                    <em>"I have saved this key"</em>
+                                    ", and closing it removes the key from the page. A downloaded file gets your \
+                                     browser's default permissions, so run "
+                                    <code>"chmod 600"</code>
+                                    " on it. A browser without Ed25519 in WebCrypto is told to use the CLI instead."
+                                </p>
+                                <div class="docs-callout docs-callout-warning">
+                                    <strong>"The key file is the only copy of the private key. "</strong>
+                                    "MentisDB keeps only the public key and cannot recover it. Back the file up \
+                                     somewhere safe, and never paste it into a chat or give it to an AI agent. To \
+                                     give a key to an agent on another machine, hand over only the key file, over a \
+                                     channel you trust."
+                                </div>
+                                <p><strong>"A key made elsewhere"</strong></p>
+                                <p>
+                                    "To register a public key you already have, use "
+                                    <code>"agent key add"</code>
+                                    " or the dashboard's "
+                                    <strong>"Add Key"</strong>
+                                    " (which works since 0.12.1, and accepts 64 hex characters, "
+                                    <code>"0x"</code>
+                                    " hex or 32 comma-separated bytes). The operator vouches for the key, so no \
+                                     proof of possession is needed."
                                 </p>
                                 <div class="code-block">
                                     <pre><code>{r#"mentisdb key generate --out ~/.mentisdb/builder.key
 mentisdb key show ~/.mentisdb/builder.key          # prints the public key hex
 mentisdb agent key add builder --key-id builder-202610 \
-  --public-key-hex <64 hex> --chain project --pin 123456
-
-# sign a thought locally (the seed is never sent)
-mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
-  --agent builder --signing-key-id builder-202610 --private-key-file ~/.mentisdb/builder.key"#}</code></pre>
+  --public-key-hex <64 hex> --chain project --pin 123456"#}</code></pre>
                                 </div>
                                 <p>
                                     "Rotate a key by adding the new one and running "
@@ -4328,8 +4409,9 @@ mentisdb thought append "Release on Tuesdays" --chain project --type Decision \
                                     <pre><code>{r#"# make a chain private (the operator key becomes its first governor)
 mentisdb chain access set private --chain vault --pin 123456
 
-# register a key and allow it on the chain
-mentisdb agent key add builder --key-id builder-202610 --public-key-hex <64 hex> --chain vault --pin 123456
+# create and register a key (or: agent key add ... --public-key-hex for a key made elsewhere),
+# then allow it on the chain with the public key hex it printed
+mentisdb agent key generate builder --key-id builder-202610 --chain vault --pin 123456
 mentisdb chain access allow builder builder-202610 <64 hex> --chain vault --pin 123456
 
 # remove it, disable or re-activate an agent, inspect the operator view
@@ -5411,7 +5493,7 @@ client = MentisDbClient(read_signer=ReadSigner.from_file("builder.key", "builder
                                         <tr><td><code>"thought"</code></td><td>"append, retro, get, genesis, traverse, recent, standing, candidates"</td></tr>
                                         <tr><td><code>"search"</code></td><td>"ranked (default), lexical, filter, federated, bundles"</td></tr>
                                         <tr><td><code>"chain"</code></td><td>"list, head, bootstrap, branch, merge, info, delete, access show|verify|admin|set|allow|deny"</td></tr>
-                                        <tr><td><code>"agent"</code></td><td>"list, get, registry, upsert, describe, alias, key add|revoke, disable, activate, copy"</td></tr>
+                                        <tr><td><code>"agent"</code></td><td>"list, get, registry, upsert, describe, alias, key generate|add|revoke, disable, activate, copy"</td></tr>
                                         <tr><td><code>"entity-type"</code></td><td>"list, upsert"</td></tr>
                                         <tr><td><code>"memory"</code></td><td>"export, import, extract (MEMORY.md style Markdown)"</td></tr>
                                         <tr><td><code>"skill"</code></td><td>"guide, manifest, list, search, read, versions, upload, deprecate, revoke, delete, diff"</td></tr>
