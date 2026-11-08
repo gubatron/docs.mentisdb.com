@@ -28,6 +28,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
+                                <a class="docs-nav-link" href="#upgrading-0-12-1">"Upgrading to 0.12.1"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-12">"Upgrading to 0.12"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-11">"Upgrading to 0.11"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-10-9">"Upgrading to 0.10.9"</a>
@@ -3787,6 +3788,61 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                     " and restart the daemon."
                                 </p>
 
+                                <h3 id="upgrading-0-12-1">"Upgrading to 0.12.1"</h3>
+                                <p>
+                                    "No data migration. Search costs agents far fewer tokens, and a memory rewritten \
+                                     many times no longer crowds others off the page. Changes to check:"
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>"MCP search is lean by default. "</strong>
+                                        "Ranked, federated and lexical search and context bundles return compact hits \
+                                         over MCP and leave out default values; pass "
+                                        <code>"compact: false"</code>
+                                        " for the full record. See "
+                                        <a href="#compact-search">"Compact Search Results"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"No "<code>"structuredContent"</code>" over MCP. "</strong>
+                                        "Results are minified JSON text, sent once. A client that read "
+                                        <code>"structuredContent"</code>
+                                        " should read the text content instead."
+                                    </li>
+                                    <li>
+                                        <strong>"Standing context over MCP drops "<code>"entries"</code>". "</strong>
+                                        "The rendered "
+                                        <code>"prompt"</code>
+                                        " already holds the same memories; pass "
+                                        <code>"include_entries: true"</code>
+                                        " to get the array as well."
+                                    </li>
+                                    <li>
+                                        <strong>"Non-boolean "<code>"compact"</code>" is refused. "</strong>
+                                        <code>"\"false\""</code>
+                                        " or "
+                                        <code>"0"</code>
+                                        " used to be read as the default; over MCP it is now an invalid-parameter error."
+                                    </li>
+                                    <li>
+                                        <strong>"REST and the CLI are unchanged, "</strong>
+                                        "except that "
+                                        <code>"POST /v1/lexical-search"</code>
+                                        " now honours "
+                                        <code>"compact"</code>
+                                        " (default "
+                                        <code>"false"</code>
+                                        "), which it used to ignore."
+                                    </li>
+                                    <li>
+                                        <strong>"Fuller pages. "</strong>
+                                        "A search for 5 results on a chain where one decision was rewritten 30 times \
+                                         returned 1 hit; it now returns 5 distinct live memories. Paged REST search no \
+                                         longer repeats or skips hits around contested memories, and a hit's score may \
+                                         be reported just below the hit before it so that pages stay in order."
+                                    </li>
+                                </ul>
+
                                 <h3 id="upgrading-0-12">"Upgrading to 0.12"</h3>
                                 <p>"No data migration. Changes to check:"</p>
                                 <ul>
@@ -4884,6 +4940,10 @@ mentisdb thought standing --chain project"#}</code></pre>
                                     <code>"duplicates_collapsed"</code>
                                     " and a ready-to-load "
                                     <code>"prompt"</code>
+                                    ". Over MCP, where the reader is a model, "
+                                    <code>"entries"</code>
+                                    " (a second copy of the memories in the prompt) is returned only with "
+                                    <code>"include_entries: true"</code>
                                     "."
                                 </p>
 
@@ -4965,8 +5025,25 @@ mentisdb thought standing --chain project"#}</code></pre>
                                     ", CLI "<code>"mentisdb search --compact"</code>" and "<code>"mentisdb search federated --compact"</code>
                                     ") to get smaller hits. Responses are about a quarter smaller (23.7% on a copy of a "
                                     "working 11-chain MentisDB, 34.2% on a generated corpus) with the same request time, "
-                                    "which is what an agent pays for in tokens when it scans many hits. The default "
-                                    "response is unchanged. Compact search was contributed by Austin Faulkner-Pearce."
+                                    "which is what an agent pays for in tokens when it scans many hits. Over REST and the "
+                                    "CLI the default response is unchanged. Compact search was contributed by Austin "
+                                    "Faulkner-Pearce. Since 0.12.1, "<code>"POST /v1/lexical-search"</code>" accepts "
+                                    <code>"compact"</code>" too."
+                                </p>
+                                <p>
+                                    <strong>"Over MCP, compact is the default"</strong>
+                                    " (since 0.12.1) for "<code>"mentisdb_ranked_search"</code>", "
+                                    <code>"mentisdb_federated_search"</code>", "<code>"mentisdb_lexical_search"</code>
+                                    " and "<code>"mentisdb_context_bundles"</code>", and it goes further: results are "
+                                    "minified JSON with no "<code>"structuredContent"</code>" copy, and a hit leaves out "
+                                    "default values. No "<code>"provenance"</code>" means public and unsigned (each "
+                                    "response says so once in "<code>"default_provenance"</code>"), no "<code>"role"</code>
+                                    " means "<code>"Memory"</code>", no "<code>"importance"</code>" means 0.5 and no "
+                                    <code>"chain_key"</code>" means the chain you searched. A private segment, a signature "
+                                    "and a verified writer are always shown, and so are "<code>"version_status"</code>", "
+                                    <code>"successors"</code>" and "<code>"current_version"</code>". Pass "
+                                    <code>"compact: false"</code>" for the full record. On a generated 3,500-thought "
+                                    "chain a 10-hit ranked search went from 23,657 to 5,948 characters."
                                 </p>
                                 <p>
                                     "A compact hit is "<code>"chain_key"</code>", the total "<code>"score"</code>
@@ -4978,7 +5055,7 @@ mentisdb thought standing --chain project"#}</code></pre>
                                     "components, "<code>"matched_terms"</code>" and "<code>"match_sources"</code>" are left out too."
                                 </p>
                                 <p>
-                                    "Nothing an agent needs to judge a hit is dropped. The "<code>"provenance"</code>
+                                    "In the REST compact form, nothing an agent needs to judge a hit is dropped. The "<code>"provenance"</code>
                                     " object (segment, signed, signature, verified agent, trust), the version fields ("
                                     <code>"version_status"</code>", "<code>"successors"</code>", "<code>"current_version"</code>
                                     ", "<code>"successor_of"</code>", "<code>"collapsed_duplicates"</code>"), relations, concepts, "
