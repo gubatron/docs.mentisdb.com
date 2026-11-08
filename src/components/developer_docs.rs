@@ -1255,7 +1255,14 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 "). The dashboard's Generate key pair builds the same "
                                 <code>"mentisdb/key-registration/v1"</code>" proof of possession in the browser and posts \
                                  only the public key to "<code>"POST /dashboard/api/agents/{chain}/{agent}/keys"</code>
-                                "; Add Key now uses the operator route."
+                                "; Add Key now uses the operator route. Both dashboard key routes (add and delete) \
+                                 need the dashboard PIN and answer 403 without one."
+                            </li>
+                            <li>
+                                "Security: "<code>"MentisDb::add_agent_key"</code>" (the proof-based path) no longer \
+                                 replaces a key filed under an existing key id or revives a revoked one. A different key \
+                                 under an existing id is refused; the same active key again is a no-op, as \
+                                 operator registration already behaved. Rotate with a new key id."
                             </li>
                             <li>
                                 <code>"MentisDb::query_federated"</code>" still cuts each chain at its query's "
