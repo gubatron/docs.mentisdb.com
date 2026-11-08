@@ -734,7 +734,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/agents/keys"</code></td>
-                                    <td>"Answers 403 (operator-only since 0.11): register keys from the dashboard or with mentisdb agent key add"</td>
+                                    <td>"Answers 403 (operator-only since 0.11): register keys from the dashboard (Generate key pair, Add Key) or with mentisdb agent key generate / agent key add"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -1217,11 +1217,11 @@ pub fn DeveloperDocs() -> impl IntoView {
 
                         // ── 0.12 Library Changes ────────────────────────────
                         <h2 id="0.12">"0.12 Library Changes"</h2>
-                        <h3 id="0.12.1">"0.12.1: pages filled with live memories"</h3>
+                        <h3 id="0.12.1">"0.12.1: live memories, agent key pairs"</h3>
                         <p>
                             "0.12.1 changes no public signature; it adds "<code>"mentisdb::server_lean"</code>
                             " and "<code>"PROVENANCE_REMINDER"</code>". What changed is how "
-                            <code>"MentisDb::query_ranked"</code>" fills a page:"
+                            <code>"MentisDb::query_ranked"</code>" fills a page, and how agent keys are made:"
                         </p>
                         <ul>
                             <li>
@@ -1245,6 +1245,17 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 "The refill after near-duplicate collapsing resumes instead of restarting and is \
                                  capped at "<code>"max(16 * limit, 4096)"</code>" ranked slots, so a page whose \
                                  distinct matches lie deeper comes back short."
+                            </li>
+                            <li>
+                                "Agent keys: "<code>"mentisdb agent key generate AGENT --key-id ID --chain KEY [--out FILE] [--force]"</code>
+                                " creates an Ed25519 pair, writes the 64-hex seed to a 0600 file and sends the operator "
+                                <code>"register_key"</code>" operation with only the public key ("<code>"--json"</code>
+                                ": "<code>"registered"</code>", "<code>"agent_id"</code>", "<code>"key_id"</code>", "
+                                <code>"chain_key"</code>", "<code>"public_key_hex"</code>", "<code>"key_file"</code>
+                                "). The dashboard's Generate key pair builds the same "
+                                <code>"mentisdb/key-registration/v1"</code>" proof of possession in the browser and posts \
+                                 only the public key to "<code>"POST /dashboard/api/agents/{chain}/{agent}/keys"</code>
+                                "; Add Key now uses the operator route."
                             </li>
                             <li>
                                 <code>"MentisDb::query_federated"</code>" still cuts each chain at its query's "
