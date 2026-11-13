@@ -44,7 +44,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                               Add it to your project:"
                         </p>
                         <div class="code-block">
-                            <code>r#"mentisdb = "0.12.1""#</code>
+                            <code>r#"mentisdb = "0.12.2""#</code>
                         </div>
                         <p>
                             "The minimum supported Rust version is 1.90 ("
@@ -524,12 +524,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/thoughts"</code></td>
-                                    <td>"Append a new thought to a chain. Supports scope parameter for memory scope tagging"</td>
+                                    <td>"Append a new thought to a chain. Supports scope parameter for memory scope tagging and source_episode (0.12.2) for provenance"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/search"</code></td>
-                                    <td>"Search/query thoughts. Supports as_of for point-in-time queries and scope for scope filtering"</td>
+                                    <td>"Search/query thoughts. Supports as_of for point-in-time queries, scope for scope filtering and an exact-match source_episode filter (0.12.2)"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -539,12 +539,12 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/ranked-search"</code></td>
-                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters, and the ranking knobs resolve_successors, collapse_duplicates, vector_fusion, synonym_weight, df_scope and df_cutoffs (bad values are a 400). Pass compact: true for smaller hits"</td>
+                                    <td>"Canonical flat ranked retrieval with lexical + vector + graph-aware score breakdowns (hybrid when managed sidecars are available). Supports as_of, scope, enable_reranking, and rerank_k parameters, an exact-match source_episode filter (0.12.2), and the ranking knobs resolve_successors, collapse_duplicates, vector_fusion, synonym_weight, df_scope and df_cutoffs (bad values are a 400). Pass compact: true for smaller hits"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/context-bundles"</code></td>
-                                    <td>"Seed-anchored grouped support context for agent reasoning and dashboard inspection. Supports as_of and scope parameters"</td>
+                                    <td>"Seed-anchored grouped support context for agent reasoning and dashboard inspection. Supports as_of and scope parameters, and an exact-match source_episode filter (0.12.2)"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"GET"</code></td>
@@ -599,7 +599,7 @@ pub fn DeveloperDocs() -> impl IntoView {
                                 <tr>
                                     <td><code>"POST"</code></td>
                                     <td><code>"/v1/federated-search"</code></td>
-                                    <td>"Ranked search fused across several chains (chain_keys). Accepts compact: true"</td>
+                                    <td>"Ranked search fused across several chains (chain_keys). Accepts compact: true and an exact-match source_episode filter (0.12.2)"</td>
                                 </tr>
                                 <tr>
                                     <td><code>"POST"</code></td>
@@ -1217,6 +1217,58 @@ pub fn DeveloperDocs() -> impl IntoView {
 
                         // ── 0.12 Library Changes ────────────────────────────
                         <h2 id="0.12">"0.12 Library Changes"</h2>
+                        <h3 id="0.12.2">"0.12.2: source_episode, size cap, MCP keepalive"</h3>
+                        <p>
+                            "0.12.2 changes no public signature and needs no data migration. What changed:"
+                        </p>
+                        <ul>
+                            <li>
+                                <code>"source_episode"</code>" is stored. "<code>"POST /v1/thoughts"</code>" and the MCP "
+                                <code>"mentisdb_append"</code>" tool accepted the field but dropped it, so the thought \
+                                 came back with "<code>"source_episode: null"</code>". The append now stores it. It is \
+                                 also an exact-match filter on "<code>"/v1/search"</code>", "<code>"/v1/ranked-search"</code>
+                                ", "<code>"/v1/federated-search"</code>" and "<code>"/v1/context-bundles"</code>" and on \
+                                 their MCP tools. "<code>"/v1/lexical-search"</code>", thought traversal, summary \
+                                 candidates and the MEMORY.md export do not take the filter yet. Library: "
+                                <code>"ThoughtInput::with_source_episode"</code>" sets it."
+                            </li>
+                            <li>
+                                "CLI: "<code>"--source-episode ID"</code>" on "<code>"thought append"</code>" (stored) and \
+                                 on "<code>"search"</code>", "<code>"search filter"</code>", "<code>"search federated"</code>
+                                " and "<code>"search bundles"</code>" (filter). "<code>"thought traverse"</code>", "
+                                <code>"thought candidates"</code>", "<code>"memory export"</code>" and "
+                                <code>"search lexical"</code>" refuse the flag instead of sending a field the server \
+                                 would drop."
+                            </li>
+                            <li>
+                                "A thought record over 10 MiB is refused at append. The cap was enforced only when a \
+                                 chain was opened, so an oversized append was written and the next open failed. The \
+                                 append now returns "<code>"InvalidInput"</code>" (HTTP 400) before anything is \
+                                 written. Ordinary REST and MCP bodies are capped at 2 MiB, so the way in was the \
+                                 library or the large-body import routes ("<code>"/v1/import-markdown"</code>", "
+                                <code>"/v1/extract-memories"</code>", "<code>"/v1/skills/upload"</code>")."
+                            </li>
+                            <li>
+                                "MCP event stream keepalive. "<code>"GET /"</code>" on the MCP port sends an SSE comment "
+                                "("<code>": keepalive"</code>") after 15 s with nothing else to send, so clients with an \
+                                 idle-body timeout (Claude Code's HTTP client) stop dropping and reconnecting. It \
+                                 comes from "<code>"cloudllm_mcp"</code>" 0.4.1, which mentisdb now requires. Embedders \
+                                 that build their own server can tune it with "
+                                <code>"StreamableHttpConfig::with_sse_keepalive(Some(duration))"</code>" or turn it off \
+                                 with "<code>"with_sse_keepalive(None)"</code>" (a zero duration also disables it)."
+                            </li>
+                            <li>
+                                "Markdown skill import reads standard YAML frontmatter: block scalars ("
+                                <code>">"</code>", "<code>"|"</code>") for "<code>"description"</code>" and block lists \
+                                 ("<code>"- item"</code>") for "<code>"triggers"</code>", "<code>"tags"</code>" and "
+                                <code>"warnings"</code>". A multi-line description is exported as a literal block."
+                            </li>
+                            <li>
+                                "The dashboard Settings screen lists every daemon setting; one catalog drives which \
+                                 names it shows and accepts and whether a change needs a restart."
+                            </li>
+                        </ul>
+
                         <h3 id="0.12.1">"0.12.1: live memories, agent key pairs"</h3>
                         <p>
                             "0.12.1 changes no public signature; it adds "<code>"mentisdb::server_lean"</code>
