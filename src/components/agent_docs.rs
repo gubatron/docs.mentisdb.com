@@ -1931,6 +1931,43 @@ claude mcp list"#}</code></pre>
                             "Existing thoughts without a scope tag are treated as User-scoped. \
                              No migration needed."
                         </div>
+
+                        <h3>"Tracing derived memories with source_episode"</h3>
+                        <p>
+                            "When a thought is derived from a larger episode (a conversation, a ticket, a batch \
+                             job), pass the same stable string as "
+                            <code>"source_episode"</code>
+                            " on every "
+                            <code>"mentisdb_append"</code>
+                            ". MentisDB stores it and returns it on the thought. To pull back everything from that \
+                             episode, pass the identical string to "
+                            <code>"mentisdb_search"</code>
+                            ", "
+                            <code>"mentisdb_ranked_search"</code>
+                            ", "
+                            <code>"mentisdb_federated_search"</code>
+                            " or "
+                            <code>"mentisdb_context_bundles"</code>
+                            ". The match is exact, not a prefix or substring."
+                        </p>
+                        <div class="docs-callout">
+                            <pre><code>
+    "mentisdb_append(\n\
+    thought_type: \"Decision\",\n\
+    content: \"Use cache-aside for the user profile.\",\n\
+    source_episode: \"ticket-4812\"   // optional\n\
+    )\n\n\
+    mentisdb_ranked_search(\n\
+    text: \"caching\",\n\
+    source_episode: \"ticket-4812\"   // only thoughts appended with exactly this value\n\
+    )"
+                            </code></pre>
+                        </div>
+                        <div class="docs-callout docs-callout-tip">
+                            "Lexical search, traversal, summary candidates and the MEMORY.md export do not accept "
+                            <code>"source_episode"</code>
+                            " yet. Thoughts appended before MentisDB 0.12.2 never stored it."
+                        </div>
                     </section>
 
                     // ── MCP Tool Reference ───────────────────────────────────
