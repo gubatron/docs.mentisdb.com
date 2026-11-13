@@ -28,6 +28,7 @@ pub fn UserDocs() -> impl IntoView {
                                 <a class="docs-nav-link" href="#chain-topologies">"Chain Topologies"</a>
                                 <a class="docs-nav-link" href="#fleet-coordination">"Fleet Coordination"</a>
                                 <a class="docs-nav-link" href="#skills-registry">"The Skills Registry"</a>
+                                <a class="docs-nav-link" href="#upgrading-0-12-2">"Upgrading to 0.12.2"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-12-1">"Upgrading to 0.12.1"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-12">"Upgrading to 0.12"</a>
                                 <a class="docs-nav-link" href="#upgrading-0-11">"Upgrading to 0.11"</a>
@@ -1942,6 +1943,14 @@ claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}<
                                      reconnect it with " <code>"/mcp"</code> " (or restart the \
                                      client). New sessions pick up the change automatically."
                                 </p>
+                                <p>
+                                    "If the log shows "
+                                    <code>"SSE stream disconnected: TimeoutError"</code>
+                                    " over and over, the daemon is older than 0.12.2: the MCP event stream sent no \
+                                     bytes while idle. Upgrade and restart the daemon; it then sends a "
+                                    <code>": keepalive"</code>
+                                    " comment every 15 seconds."
+                                </p>
 
                                 <h4>"5. Read the error"</h4>
                                 <table class="config-table">
@@ -2346,6 +2355,16 @@ claude mcp remove mentisdb -s local    # or -s project for a .mcp.json entry"#}<
                                         " is clamped to at most 500 and "
                                         <code>"page"</code>
                                         " to at most 1000."
+                                    </li>
+                                    <li>
+                                        <strong>"Every setting is listed. "</strong>
+                                        "The Settings screen shows every variable the daemon reads (since 0.12.2). \
+                                         A setting the daemon reads only at startup, such as "
+                                        <code>"MENTISDB_VERBOSE"</code>
+                                        " or the update check, is labelled "
+                                        <em>"restart required"</em>
+                                        "; saving it writes the "<code>".env"</code>" file but changes nothing until \
+                                         the daemon restarts."
                                     </li>
                                     <li>
                                         <strong>"Settings file. "</strong>
@@ -3742,6 +3761,33 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                     " to create a cryptographically verified upload."
                                 </p>
 
+                                <p>
+                                    "The frontmatter at the top of the file is standard YAML (since 0.12.2). "
+                                    <code>"description"</code>
+                                    " may be a folded ("
+                                    <code>">"</code>
+                                    ") or literal ("
+                                    <code>"|"</code>
+                                    ") block spanning several lines, and "
+                                    <code>"triggers"</code>
+                                    ", "
+                                    <code>"tags"</code>
+                                    " and "
+                                    <code>"warnings"</code>
+                                    " may be block lists of "
+                                    <code>"- item"</code>
+                                    " lines or inline "
+                                    <code>"[a, b]"</code>
+                                    " lists. This is what skills written for Claude Code, OpenCode and similar \
+                                     harnesses already use. A one-line value that merely starts with "
+                                    <code>"|"</code>
+                                    " or "
+                                    <code>">"</code>
+                                    ", such as "
+                                    <code>"| separates columns"</code>
+                                    ", is kept as written."
+                                </p>
+
                                 <h3>"Retrieving a skill"</h3>
                                 <p>
                                     "Use "
@@ -3787,6 +3833,94 @@ mentisdb migrate purge-backups          # delete preserved originals of finished
                                     <code>"cargo install mentisdb --locked --force"</code>
                                     " and restart the daemon."
                                 </p>
+
+                                <h3 id="upgrading-0-12-2">"Upgrading to 0.12.2"</h3>
+                                <p>
+                                    "No data migration. Upgrade with "
+                                    <code>"cargo install mentisdb --locked --force"</code>
+                                    " and restart the daemon. Changes to check:"
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>"The MCP event stream stays alive. "</strong>
+                                        "The stream a client opens with "
+                                        <code>"GET /"</code>
+                                        " on the MCP port used to send nothing until a tool call was broadcast, so \
+                                         clients with an idle timeout, Claude Code among them, dropped it and \
+                                         reconnected over and over (the log filled with "
+                                        <code>"SSE stream disconnected: TimeoutError"</code>
+                                        "). The daemon now sends an SSE comment line ("
+                                        <code>": keepalive"</code>
+                                        ") after 15 seconds with nothing else to send; clients ignore comment lines. \
+                                         Restart the daemon to get it, then reconnect the client."
+                                    </li>
+                                    <li>
+                                        <strong>"Oversized thoughts are refused. "</strong>
+                                        "A single thought record (content, tags, concepts and the other fields \
+                                         together) over 10 MiB is now rejected with a 400 before anything is written. \
+                                         Before, such an append was written and the chain then failed to open. \
+                                         Ordinary REST and MCP requests are capped at 2 MiB, so you only meet this \
+                                         through the import routes or the library. If a chain already refuses to open \
+                                         with "
+                                        <code>"binary thought payload length ... exceeds maximum 10485760"</code>
+                                        ", an oversized thought written by an older version is the cause."
+                                    </li>
+                                    <li>
+                                        <strong>"source_episode is stored and filterable. "</strong>
+                                        "Appends accepted the field and dropped it; thoughts now keep it. Search, \
+                                         ranked search, federated search and context bundles take it as an exact-match \
+                                         filter. See "
+                                        <a href="#source-episode">"source_episode"</a>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"CLI "<code>"--source-episode"</code>". "</strong>
+                                        "On "
+                                        <code>"thought append"</code>
+                                        ", "
+                                        <code>"search"</code>
+                                        ", "
+                                        <code>"search filter"</code>
+                                        ", "
+                                        <code>"search federated"</code>
+                                        " and "
+                                        <code>"search bundles"</code>
+                                        "."
+                                    </li>
+                                    <li>
+                                        <strong>"The dashboard Settings screen lists every setting. "</strong>
+                                        "18 daemon variables were missing from it, and the HTTPS ports were shown but \
+                                         refused on save. Settings that the daemon reads only at startup now say "
+                                        <em>"restart required"</em>
+                                        ", including "
+                                        <code>"MENTISDB_VERBOSE"</code>
+                                        ", "
+                                        <code>"MENTISDB_UPDATE_CHECK"</code>
+                                        ", "
+                                        <code>"MENTISDB_UPDATE_REPO"</code>
+                                        ", "
+                                        <code>"MENTISDB_STARTUP_SOUND"</code>
+                                        " and "
+                                        <code>"MENTISDB_THOUGHT_SOUNDS"</code>
+                                        ", which were labelled hot-reload."
+                                    </li>
+                                    <li>
+                                        <strong>"Skills written for agent harnesses import correctly. "</strong>
+                                        "Markdown skill import now reads standard YAML frontmatter: a folded ("
+                                        <code>">"</code>
+                                        ") or literal ("
+                                        <code>"|"</code>
+                                        ") description and block lists for "
+                                        <code>"triggers"</code>
+                                        ", "
+                                        <code>"tags"</code>
+                                        " and "
+                                        <code>"warnings"</code>
+                                        ". Before, such a skill was stored with a description of just "
+                                        <code>">"</code>
+                                        " and no triggers. Re-upload any skill that came in that way."
+                                    </li>
+                                </ul>
 
                                 <h3 id="upgrading-0-12-1">"Upgrading to 0.12.1"</h3>
                                 <p>
@@ -5272,6 +5406,24 @@ mentisdb thought standing --chain project"#}</code></pre>
                                     "stable identifier so every derived thought can later be traced back to its source. "
                                     "Ranked search filters by "<code>"source_episode"</code>" exactly the same way it "
                                     "filters by agent or tag."
+                                </p>
+                                <p>
+                                    "Since 0.12.2 the field is actually stored: "<code>"POST /v1/thoughts"</code>" and "
+                                    <code>"mentisdb_append"</code>" keep it and return it on the thought (earlier \
+                                     versions accepted it and dropped it). It is an exact-match filter (a thought \
+                                     matches only if its "<code>"source_episode"</code>" equals the value) on "
+                                    <code>"/v1/search"</code>", "<code>"/v1/ranked-search"</code>", "
+                                    <code>"/v1/federated-search"</code>" and "<code>"/v1/context-bundles"</code>
+                                    ", and on the matching MCP tools. Lexical search, thought traversal, summary \
+                                     candidates and the MEMORY.md export do not take it yet."
+                                </p>
+                                <p>
+                                    "On the CLI, pass "<code>"--source-episode ID"</code>" to "<code>"thought append"</code>
+                                    " to store it, or to "<code>"search"</code>", "<code>"search filter"</code>", "
+                                    <code>"search federated"</code>" or "<code>"search bundles"</code>" to filter. The \
+                                     commands whose route would ignore it ("<code>"thought traverse"</code>", "
+                                    <code>"thought candidates"</code>", "<code>"memory export"</code>", "
+                                    <code>"search lexical"</code>") refuse the flag rather than silently drop the filter."
                                 </p>
                             </section>
 
